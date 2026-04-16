@@ -1,0 +1,56 @@
+# LaporLingkungan (PantauKota) - Project Context & Status
+
+**Status Terakhir Diperbarui:** Setup Awal & Database Schema (Tahap 5 Selesai)
+
+## 📌 Deskripsi Proyek
+Aplikasi web berbasis **Progressive Web App (PWA)** untuk pelaporan masalah perkotaan (sampah, jalan rusak, fasilitas umum) oleh warga. Laporan ini disertai bukti **foto dan lokasi GPS**, yang ditinjau melalui **peta interaktif**. 
+
+Sistem ini memiliki dua aktor utama:
+1. **Warga**: Melaporkan masalah, melihat progres laporan, dan melakukan sinkronisasi dengan masyarakat luas (peta dan status). Warga dibatasi membuat **maksimal 3 laporan per hari** untuk mencegah spam.
+2. **Admin (Pemerintah)**: Meninjau laporan, mengubah status penyelesaian, meninjau analitik, dan dapat memberikan **catatan serta bukti foto** setelah masalah terselesaikan.
+
+## 🛠️ Tech Stack Utama
+- **Frontend**: Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS.
+- **Backend / API**: Next.js API Routes, NextAuth.js v4.
+- **Database**: PostgreSQL dengan Prisma ORM (Prisma 7).
+- **Peta & Lokasi**: Leaflet.js, React-Leaflet, Geolocation API.
+- **Media Storage**: Cloudinary (Upload foto).
+- **PWA & Form**: `next-pwa`, `react-hook-form`, `zod`.
+- **Real-Time Notification**: Server-Sent Events (SSE).
+
+---
+
+## 📂 Struktur Database Utama (Prisma)
+Aplikasi ini memiliki 5 model inti:
+1. **User**: Mengelola data partisipan (`WARGA` atau `ADMIN`).
+2. **Laporan**: Terdapat _field_ penting seperti `status` (MENUNGGU, DIPROSES, SELESAI), bukti `foto` awal, titik lokasi, serta `catatanAdmin` dan `fotoPenyelesaian` bila masalah sudah dibereskan.
+3. **Kategori**: Fleksibel dan dirancang dengan _soft-delete_ (`isActive` boolean) agar tidak merusak relasi pelaporan lama jika ada kategori yang dinonaktifkan Admin.
+4. **Vote**: Mencegah 1 warga mem-vote 1 laporan lebih dari sekali (`@@unique([userId, laporanId])`).
+5. **Notifikasi**: Dicatat dalam database dan nantinya ditransfer real-time via SSE.
+
+*Schema Prisma lengkap terbaru dapat dilihat pada `prisma/schema.prisma`.*
+
+---
+
+## 📅 Progress Proyek Saat Ini
+
+### ✅ SELESAI (DONE)
+- [x] Diskusi dan desain arsitektur / _tech stack_.
+- [x] Perancangan Model Database (Prisma Schema).
+- [x] Inisialisasi Project (Next.js 14 dengan App Router, TS, Tailwind).
+- [x] Instalasi seluruh _dependencies_ utama.
+- [x] Pembuatan Kerangka Struktur Folder (`/app/(warga)`, `/app/(admin)`, `/components`, `/api`, dll).
+- [x] Setup `next.config.mjs` untuk PWA dan Next Image (Cloudinary Config).
+- [x] Penyesuaian _feedback_ admin (`catatanAdmin` & `fotoPenyelesaian`) serta fitur _soft-delete_ untuk Kategori pada `schema.prisma`.
+- [x] Membersihkan file-file lama dari root folder.
+
+### ⏳ BERIKUTNYA (NEXT STEPS)
+- [ ] **Modul Autentikasi**: Implementasi fitur _Register & Login_ (NextAuth).
+- [ ] **Global UI Component**: Pembuatan _Navbar Warga_, _Sidebar Admin_.
+- [ ] **Database Seeding**: Pembuatan _seed_ awal (Admin User pertama & beberapa Master Kategori).
+- [ ] **Pengembangan Fitur Warga**: Form tambah laporan (dengan limit 3 per hari), Integrasi peta Leaflet.
+- [ ] **Pengembangan Fitur Admin**: Dashboard statistik, tabel laporan, pembaruan status masalah + _feedback_ gambar.
+
+---
+
+*File ini adalah representasi utama dari progres dan dokumentasi proyek. Asisten AI mana pun dapat menjadikan file ini sebagai pedoman langkah kerja pengembangan.*

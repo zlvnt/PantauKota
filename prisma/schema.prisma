@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User - untuk warga dan admin
+model User {
+  id         String       @id @default(cuid())
+  name       String
+  email      String       @unique
+  password   String // hashed
+  role       Role         @default(WARGA)
+  laporan    Laporan[]
+  votes      Vote[]
+  notifikasi Notifikasi[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+enum Role {
+  WARGA
+  ADMIN
+}
+
+// Laporan masalah
+model Laporan {
+  id               String    @id @default(cuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id])
+  judul            String
+  deskripsi        String
+  kategoriId       String
+  kategori         Kategori  @relation(fields: [kategoriId], references: [id])
+  foto             String[] // URLs dari Cloudinary
+  latitude         Float
+  longitude        Float
+  alamat           String? // Geocoded address
+  status           Status    @default(MENUNGGU)
+  votes            Vote[]
+  voteCount        Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  selesaiAt        DateTime?
+  catatanAdmin     String? // Tanggapan admin saat menyelesaikan masalah
+  fotoPenyelesaian String? // URL Bukti penyelesaian dari admin
+}
+
+enum Status {
+  MENUNGGU
+  DIPROSES
+  SELESAI
+}
+
+// Kategori laporan (fleksibel, bisa ditambah admin)
+model Kategori {
+  id        String    @id @default(cuid())
+  nama      String    @unique
+  icon      String? // emoji atau icon name
+  warna     String? // hex color untuk marker di map
+  isActive  Boolean   @default(true) // Untuk fitur soft-delete
+  laporan   Laporan[]
+  createdAt DateTime  @default(now())
+}
+
+// Vote/Upvote
+model Vote {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  laporanId String
+  laporan   Laporan  @relation(fields: [laporanId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, laporanId]) // satu user cuma bisa vote 1x per laporan
+}
+
+// Notifikasi
+model Notifikasi {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  judul     String
+  pesan     String
+  laporanId String? // link ke laporan terkait
+  dibaca    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
