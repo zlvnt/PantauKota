@@ -1,6 +1,6 @@
 # PantauKota (Aplikasi Lapor Lingkungan) - Project Context & Status
+**Status Terakhir Diperbarui:** Setup Sistem Desain (Civic Clarity) & Antarmuka Halaman Auth
 
-**Status Terakhir Diperbarui:** Setup Awal & Database Schema (Tahap 5 Selesai)
 
 ## 📌 Deskripsi Proyek
 Aplikasi web berbasis **Progressive Web App (PWA)** untuk pelaporan masalah perkotaan (sampah, jalan rusak, fasilitas umum) oleh warga. Laporan ini disertai bukti **foto dan lokasi GPS**, yang ditinjau melalui **peta interaktif**. 
@@ -38,18 +38,20 @@ Aplikasi ini memiliki 5 model inti:
 - [x] Diskusi dan desain arsitektur / _tech stack_.
 - [x] Perancangan Model Database (Prisma Schema).
 - [x] Inisialisasi Project (Next.js 14 dengan App Router, TS, Tailwind).
-- [x] Instalasi seluruh _dependencies_ utama.
+- [x] Instalasi seluruh _dependencies_ utama (termasuk library UI: `shadcn`, `lucide-react`).
 - [x] Pembuatan Kerangka Struktur Folder (`/app/(warga)`, `/app/(admin)`, `/components`, `/api`, dll).
-- [x] Setup `next.config.mjs` untuk PWA dan Next Image (Cloudinary Config).
+- [x] Setup `next.config.mjs` untuk PWA dan Next Image (Cloudinary Config & allowed hosts seperti Unsplash).
 - [x] Penyesuaian _feedback_ admin (`catatanAdmin` & `fotoPenyelesaian`) serta fitur _soft-delete_ untuk Kategori pada `schema.prisma`.
-- [x] Membersihkan file-file lama dari root folder.
+- [x] Membersihkan file-file lama dari _root_ folder.
+- [x] **Setup Sistem Desain "Civic Clarity":** Injeksi palet warna kustom, tipografi ganda (Manrope & Inter), dan integrasi komponen gaya jurnalistik.
+- [x] **Pembangunan Antarmuka Visual (UI):** Pembuatan `AuthScreen` menggunakan prinsip _Tonal Layering_ (Halaman Login & Register selesai).
 
 ### ⏳ BERIKUTNYA (NEXT STEPS)
-- [ ] **Modul Autentikasi**: Implementasi fitur _Register & Login_ (NextAuth).
-- [ ] **Global UI Component**: Pembuatan _Navbar Warga_, _Sidebar Admin_.
-- [ ] **Database Seeding**: Pembuatan _seed_ awal (Admin User pertama & beberapa Master Kategori).
-- [ ] **Pengembangan Fitur Warga**: Form tambah laporan (dengan limit 3 per hari), Integrasi peta Leaflet.
-- [ ] **Pengembangan Fitur Admin**: Dashboard statistik, tabel laporan, pembaruan status masalah + _feedback_ gambar.
+- [ ] **Logika Autentikasi Backend**: Mengintegrasikan antarmuka Login/Register dengan **NextAuth.js** dan database (Prisma).
+- [ ] **Komponen UI Global**: Pembuatan _Navbar_ (Warga) & _Sidebar_ (Admin).
+- [ ] **Database Seeding**: Pembuatan file _seed_ awal (Akun Admin pertama & daftar entitas Kategori).
+- [ ] **Fitur Inti Warga**: Pembuatan form tambah laporan (dengan penanganan batas limit 3 per hari) beserta integrasi navigasi peta _Leaflet_.
+- [ ] **Fitur Inti Admin**: Dashboard statistik rekapitulasi, tabel laporan interaktif, pengelolaan status beserta _feedback_ balasan (termasuk unggahan gambar).
 
 ---
 
