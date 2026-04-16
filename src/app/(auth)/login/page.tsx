@@ -1,5 +1,5 @@
-export default function Component() {
-  return (
-    <div>page (src/app/(auth)/login/page.tsx)</div>
-  );
+import AuthScreen from "@/components/auth/AuthScreen";
+
+export default function LoginPage() {
+  return <AuthScreen defaultIsLogin={true} />;
 }

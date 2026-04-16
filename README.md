@@ -1,4 +1,4 @@
-# LaporLingkungan (PantauKota) - Project Context & Status
+# PantauKota (Aplikasi Lapor Lingkungan) - Project Context & Status
 
 **Status Terakhir Diperbarui:** Setup Awal & Database Schema (Tahap 5 Selesai)
 
