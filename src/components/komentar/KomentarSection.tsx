@@ -22,6 +22,7 @@ export default function KomentarSection({ laporanId }: KomentarSectionProps) {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const fetchKomentar = useCallback(async () => {
     setLoading(true);
@@ -41,7 +42,7 @@ export default function KomentarSection({ laporanId }: KomentarSectionProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isi.trim()) return;
-
+    setSubmitError(null);
     setSubmitting(true);
     try {
       const res = await fetch('/api/komentar', {
@@ -54,7 +55,11 @@ export default function KomentarSection({ laporanId }: KomentarSectionProps) {
         const newKomentar = await res.json();
         setKomentar((prev) => [...prev, newKomentar]);
         setIsi('');
+      } else {
+        setSubmitError('Gagal mengirim komentar. Coba lagi.');
       }
+    } catch {
+      setSubmitError('Terjadi kendala pada sistem.');
     } finally {
       setSubmitting(false);
     }
@@ -76,31 +81,34 @@ export default function KomentarSection({ laporanId }: KomentarSectionProps) {
     session?.user?.id === komentarUserId || session?.user?.role === 'ADMIN';
 
   return (
-    <div className="space-y-4">
-      <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-        <MessageSquare className="w-4 h-4" />
+    <div className="space-y-6">
+      <h3 className="font-display font-semibold text-on-surface flex items-center gap-2 text-[11px] uppercase tracking-widest text-muted-foreground">
+        <MessageSquare className="w-3.5 h-3.5" strokeWidth={1.5} />
         Komentar ({komentar.length})
       </h3>
 
       {/* List komentar */}
-      <div className="space-y-3">
+      <div className="space-y-1">
         {loading ? (
-          <div className="flex justify-center py-6">
-            <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" strokeWidth={1.5} />
           </div>
         ) : komentar.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-4">Belum ada komentar.</p>
+          <p className="text-sm text-muted-foreground text-center py-6">Belum ada komentar.</p>
         ) : (
           komentar.map((k) => (
-            <div key={k.id} className="flex gap-3 group">
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold text-gray-600 shrink-0">
-                {k.user.name.charAt(0).toUpperCase()}
+            <div
+              key={k.id}
+              className="flex gap-3 group px-4 py-3 rounded-[0.375rem] hover:bg-surface-container-low transition-colors"
+            >
+              <div className="w-8 h-8 rounded-[0.375rem] bg-surface-container-high flex items-center justify-center text-xs font-semibold text-on-surface shrink-0 font-display">
+                {k.user.name?.charAt(0)?.toUpperCase() ?? '?'}
               </div>
-              <div className="flex-1 bg-gray-50 rounded-xl px-4 py-2.5">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-gray-800">{k.user.name}</span>
+                  <span className="text-sm font-semibold text-on-surface font-sans">{k.user.name}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400">
+                    <span className="text-[11px] uppercase tracking-widest text-muted-foreground">
                       {new Date(k.createdAt).toLocaleDateString('id-ID', {
                         day: 'numeric',
                         month: 'short',
@@ -112,18 +120,19 @@ export default function KomentarSection({ laporanId }: KomentarSectionProps) {
                       <button
                         onClick={() => handleDelete(k.id)}
                         disabled={deletingId === k.id}
-                        className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition"
+                        className="opacity-0 group-hover:opacity-100 text-error hover:text-error/80 transition-opacity"
+                        aria-label="Hapus komentar"
                       >
                         {deletingId === k.id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} />
                         ) : (
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
                         )}
                       </button>
                     )}
                   </div>
                 </div>
-                <p className="text-sm text-gray-700 mt-0.5">{k.isi}</p>
+                <p className="text-sm text-on-surface/80 mt-0.5 leading-relaxed">{k.isi}</p>
               </div>
             </div>
           ))
@@ -132,25 +141,34 @@ export default function KomentarSection({ laporanId }: KomentarSectionProps) {
 
       {/* Form komentar */}
       {session ? (
-        <form onSubmit={handleSubmit} className="flex gap-2 mt-2">
-          <input
-            type="text"
-            value={isi}
-            onChange={(e) => setIsi(e.target.value)}
-            placeholder="Tulis komentar..."
-            maxLength={500}
-            className="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            disabled={submitting || !isi.trim()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition flex items-center gap-1.5 text-sm font-medium"
-          >
-            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-          </button>
-        </form>
+        <div className="space-y-2">
+          <form onSubmit={handleSubmit} className="flex gap-2">
+            <input
+              type="text"
+              value={isi}
+              onChange={(e) => setIsi(e.target.value)}
+              placeholder="Tulis komentar..."
+              maxLength={500}
+              className="flex-1 bg-surface-container-low border border-transparent focus:border-primary px-4 py-2.5 rounded-[0.375rem] text-sm text-on-surface placeholder:text-muted-foreground outline-none transition-colors"
+            />
+            <button
+              type="submit"
+              disabled={submitting || !isi.trim()}
+              className="bg-primary hover:bg-primary-dim text-white px-4 py-2.5 rounded-[0.375rem] disabled:opacity-50 transition-colors flex items-center gap-1.5 text-sm font-semibold shadow-ambient"
+            >
+              {submitting ? (
+                <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.5} />
+              ) : (
+                <Send className="w-4 h-4" strokeWidth={1.5} />
+              )}
+            </button>
+          </form>
+          {submitError && (
+            <p className="text-xs text-error">{submitError}</p>
+          )}
+        </div>
       ) : (
-        <p className="text-sm text-gray-400 text-center">Login untuk berkomentar.</p>
+        <p className="text-sm text-muted-foreground text-center py-2">Masuk untuk berkomentar.</p>
       )}
     </div>
   );

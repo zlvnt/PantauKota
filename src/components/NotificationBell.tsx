@@ -11,7 +11,6 @@ export default function NotificationBell() {
   const router = useRouter();
   const { notifikasi, unreadCount, loading, tandaiBaca, tandaiBacaSemua } = useNotifications();
 
-  // Tutup dropdown saat klik di luar
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -32,56 +31,60 @@ export default function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((prev) => !prev)}
-        className="relative p-2 rounded-full hover:bg-gray-100 transition"
+        className="relative p-2 rounded-[0.375rem] hover:bg-surface-container-low transition-colors"
         aria-label="Notifikasi"
       >
-        <Bell className="w-5 h-5 text-gray-700" />
+        <Bell className="w-5 h-5 text-on-surface" strokeWidth={1.5} />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+          <span className="absolute top-1 right-1 w-4 h-4 bg-error text-white text-[10px] font-bold rounded-full flex items-center justify-center font-sans">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-80 bg-surface-container-lowest/80 backdrop-blur-xl rounded-[0.375rem] shadow-ambient border border-outline-variant/15 z-50 overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <span className="font-semibold text-gray-800 text-sm">Notifikasi</span>
+          <div className="flex items-center justify-between px-4 py-3 bg-surface-container-low">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground font-sans">
+              Notifikasi
+            </span>
             {unreadCount > 0 && (
               <button
                 onClick={tandaiBacaSemua}
-                className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                className="text-xs text-primary hover:text-primary-dim font-semibold flex items-center gap-1 transition-colors"
               >
-                <CheckCheck className="w-3.5 h-3.5" />
+                <CheckCheck className="w-3.5 h-3.5" strokeWidth={1.5} />
                 Tandai semua dibaca
               </button>
             )}
           </div>
 
           {/* List */}
-          <div className="max-h-80 overflow-y-auto divide-y divide-gray-50">
+          <div className="max-h-80 overflow-y-auto">
             {loading ? (
               <div className="flex justify-center py-8">
-                <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" strokeWidth={1.5} />
               </div>
             ) : notifikasi.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">Tidak ada notifikasi.</p>
+              <p className="text-sm text-muted-foreground text-center py-8">Belum ada notifikasi.</p>
             ) : (
               notifikasi.map((n) => (
                 <button
                   key={n.id}
                   onClick={() => handleKlik(n.id, n.laporanId)}
-                  className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition ${!n.dibaca ? 'bg-blue-50' : ''}`}
+                  className={`w-full text-left px-4 py-3 hover:bg-surface-container-low transition-colors ${
+                    !n.dibaca ? 'bg-surface-container-low' : 'bg-surface-container-lowest'
+                  }`}
                 >
-                  <div className="flex items-start gap-2">
+                  <div className="flex items-start gap-3">
                     {!n.dibaca && (
-                      <span className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                     )}
-                    <div className={!n.dibaca ? '' : 'ml-4'}>
-                      <p className="text-sm font-medium text-gray-800">{n.judul}</p>
-                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.pesan}</p>
-                      <p className="text-[10px] text-gray-400 mt-1">
+                    <div className={!n.dibaca ? '' : 'ml-[18px]'}>
+                      <p className="text-sm font-semibold text-on-surface font-sans">{n.judul}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{n.pesan}</p>
+                      <p className="text-[11px] uppercase tracking-widest text-muted-foreground mt-1.5">
                         {new Date(n.createdAt).toLocaleDateString('id-ID', {
                           day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
                         })}

@@ -1,5 +1,5 @@
 # PantauKota (Aplikasi Lapor Lingkungan) - Project Context & Status
-**Status Terakhir Diperbarui:** Setup Sistem Desain (Civic Clarity) & Antarmuka Halaman Auth
+**Status Terakhir Diperbarui:** Implementasi PBI-04 (Notifikasi Real-time), PBI-05 (Location Picker), PBI-06 (Komentar Laporan) & Logika Auth
 
 
 ## 📌 Deskripsi Proyek
@@ -21,12 +21,13 @@ Sistem ini memiliki dua aktor utama:
 ---
 
 ## 📂 Struktur Database Utama (Prisma)
-Aplikasi ini memiliki 5 model inti:
+Aplikasi ini memiliki 6 model inti:
 1. **User**: Mengelola data partisipan (`WARGA` atau `ADMIN`).
 2. **Laporan**: Terdapat _field_ penting seperti `status` (MENUNGGU, DIPROSES, SELESAI), bukti `foto` awal, titik lokasi, serta `catatanAdmin` dan `fotoPenyelesaian` bila masalah sudah dibereskan.
 3. **Kategori**: Fleksibel dan dirancang dengan _soft-delete_ (`isActive` boolean) agar tidak merusak relasi pelaporan lama jika ada kategori yang dinonaktifkan Admin.
 4. **Vote**: Mencegah 1 warga mem-vote 1 laporan lebih dari sekali (`@@unique([userId, laporanId])`).
 5. **Notifikasi**: Dicatat dalam database dan nantinya ditransfer real-time via SSE.
+6. **Komentar**: Komentar warga dan admin pada laporan. Bisa dihapus oleh pemilik atau admin.
 
 *Schema Prisma lengkap terbaru dapat dilihat pada `prisma/schema.prisma`.*
 
@@ -45,6 +46,10 @@ Aplikasi ini memiliki 5 model inti:
 - [x] Membersihkan file-file lama dari _root_ folder.
 - [x] **Setup Sistem Desain "Civic Clarity":** Injeksi palet warna kustom, tipografi ganda (Manrope & Inter), dan integrasi komponen gaya jurnalistik.
 - [x] **Pembangunan Antarmuka Visual (UI):** Pembuatan `AuthScreen` menggunakan prinsip _Tonal Layering_ (Halaman Login & Register selesai).
+- [x] **PBI-04 Notifikasi Real-time:** SSE endpoint, API notifikasi (GET/PATCH), `useNotifications` hook, `NotificationBell` component.
+- [x] **PBI-05 Location Picker:** `LocationPicker` component dengan GPS + reverse geocode Nominatim, `useGeolocation` hook.
+- [x] **PBI-06 Komentar Laporan:** API komentar (GET/POST/DELETE), `KomentarSection` component, model `Komentar` di schema.
+- [x] **Infra Auth:** `authOptions` NextAuth, wire `[...nextauth]` handler, `next-auth.d.ts` module augmentation.
 
 ### ⏳ BERIKUTNYA (NEXT STEPS)
 - [ ] **Logika Autentikasi Backend**: Mengintegrasikan antarmuka Login/Register dengan **NextAuth.js** dan database (Prisma).
