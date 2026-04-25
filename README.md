@@ -1,5 +1,5 @@
 # PantauKota (Aplikasi Lapor Lingkungan) - Project Context & Status
-**Status Terakhir Diperbarui:** Implementasi PBI-04 (Notifikasi Real-time), PBI-05 (Location Picker), PBI-06 (Komentar Laporan) & Logika Auth
+**Status Terakhir Diperbarui:** Auth Login/Register, Proteksi Route, SessionProvider
 
 
 ## 📌 Deskripsi Proyek
@@ -50,9 +50,10 @@ Aplikasi ini memiliki 6 model inti:
 - [x] **PBI-05 Location Picker:** `LocationPicker` component dengan GPS + reverse geocode Nominatim, `useGeolocation` hook.
 - [x] **PBI-06 Komentar Laporan:** API komentar (GET/POST/DELETE), `KomentarSection` component, model `Komentar` di schema.
 - [x] **Infra Auth:** `authOptions` NextAuth, wire `[...nextauth]` handler, `next-auth.d.ts` module augmentation.
+- [x] **Auth Login & Register:** API register dengan validasi Zod, integrasi `AuthScreen` dengan NextAuth `signIn`, redirect berbasis role (WARGA → `/`, ADMIN → `/dashboard`).
+- [x] **Proteksi Route:** `middleware.ts` dengan `withAuth`, server-side guard di layout `(warga)` dan `(admin)`, `SessionProvider` di root layout.
 
 ### ⏳ BERIKUTNYA (NEXT STEPS)
-- [ ] **Logika Autentikasi Backend**: Mengintegrasikan antarmuka Login/Register dengan **NextAuth.js** dan database (Prisma).
 - [ ] **Komponen UI Global**: Pembuatan _Navbar_ (Warga) & _Sidebar_ (Admin).
 - [ ] **Database Seeding**: Pembuatan file _seed_ awal (Akun Admin pertama & daftar entitas Kategori).
 - [ ] **Fitur Inti Warga**: Pembuatan form tambah laporan (dengan penanganan batas limit 3 per hari) beserta integrasi navigasi peta _Leaflet_.
