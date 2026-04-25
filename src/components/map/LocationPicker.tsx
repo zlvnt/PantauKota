@@ -83,11 +83,14 @@ export default function LocationPicker({ value, onChange }: LocationPickerProps)
 
   const center: [number, number] = value
     ? [value.latitude, value.longitude]
-    : [-6.2, 106.816]; // Default: Jakarta
+    : [-6.2, 106.816];
 
   return (
-    <div className="space-y-2">
-      <div className="relative rounded-xl overflow-hidden border border-gray-200 shadow-sm" style={{ height: 320 }}>
+    <div className="space-y-3">
+      <div
+        className="relative rounded-[0.375rem] overflow-hidden bg-surface-container-low"
+        style={{ height: 320 }}
+      >
         <MapContainer
           center={center}
           zoom={14}
@@ -112,12 +115,12 @@ export default function LocationPicker({ value, onChange }: LocationPickerProps)
           type="button"
           onClick={handleGpsClick}
           disabled={loading}
-          className="absolute bottom-3 right-3 z-[1000] flex items-center gap-1.5 bg-white text-gray-700 px-3 py-2 rounded-lg shadow-md text-sm font-medium hover:bg-gray-50 disabled:opacity-60 transition"
+          className="absolute bottom-3 right-3 z-[1000] flex items-center gap-1.5 bg-surface-container-lowest/80 backdrop-blur-xl text-on-surface px-3 py-2 rounded-[0.375rem] shadow-ambient text-sm font-semibold hover:bg-surface-container-lowest disabled:opacity-50 transition-colors"
         >
           {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.5} />
           ) : (
-            <LocateFixed className="w-4 h-4" />
+            <LocateFixed className="w-4 h-4" strokeWidth={1.5} />
           )}
           Lokasi Saya
         </button>
@@ -125,17 +128,17 @@ export default function LocationPicker({ value, onChange }: LocationPickerProps)
 
       {/* Info */}
       {error && (
-        <p className="text-sm text-red-500 flex items-center gap-1">
-          <MapPin className="w-3.5 h-3.5" /> {error}
+        <p className="text-xs text-error flex items-center gap-1.5">
+          <MapPin className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} /> {error}
         </p>
       )}
       {value && (
-        <p className="text-xs text-gray-500">
+        <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
           {value.latitude.toFixed(6)}, {value.longitude.toFixed(6)}
         </p>
       )}
       {!value && !loading && (
-        <p className="text-sm text-gray-400">Klik peta atau tekan tombol untuk pilih lokasi.</p>
+        <p className="text-sm text-muted-foreground">Klik peta atau tekan tombol untuk memilih lokasi.</p>
       )}
     </div>
   );
