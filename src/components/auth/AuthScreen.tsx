@@ -1,35 +1,83 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Eye, EyeOff, MapPin, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import { signIn, getSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export default function AuthScreen({ defaultIsLogin = true }) {
   const [isLogin, setIsLogin] = useState(defaultIsLogin);
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    name: ''
-  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState({ email: '', password: '', name: '' });
+  const router = useRouter();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    // TODO: Handle NextAuth login/signup logic
+    setError(null);
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        const result = await signIn('credentials', {
+          email: formData.email,
+          password: formData.password,
+          redirect: false,
+        });
+
+        if (result?.error) {
+          setError('Email atau kata sandi salah.');
+        } else {
+          const session = await getSession();
+          router.push(session?.user?.role === 'ADMIN' ? '/dashboard' : '/');
+          router.refresh();
+        }
+      } else {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          setError(data.error ?? 'Terjadi kendala pada sistem.');
+        } else {
+          // Auto login setelah register
+          const result = await signIn('credentials', {
+            email: formData.email,
+            password: formData.password,
+            redirect: false,
+          });
+
+          if (result?.error) {
+            setError('Pendaftaran berhasil. Silakan masuk.');
+            setIsLogin(true);
+          } else {
+            const session = await getSession();
+            router.push(session?.user?.role === 'ADMIN' ? '/dashboard' : '/');
+            router.refresh();
+          }
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
     setFormData({ email: '', password: '', name: '' });
     setShowPassword(false);
+    setError(null);
   };
 
   return (
@@ -151,12 +199,25 @@ export default function AuthScreen({ defaultIsLogin = true }) {
               </div>
             )}
 
+            {error && (
+              <p className="text-sm text-error bg-error/10 px-4 py-2.5 rounded-[0.375rem]">
+                {error}
+              </p>
+            )}
+
             <button
               type="submit"
-              className="w-full mt-8 bg-primary hover:bg-primary-dim text-white font-semibold py-3.5 px-4 rounded-[0.375rem] transition-colors flex items-center justify-center gap-2 shadow-ambient"
+              disabled={loading}
+              className="w-full mt-2 bg-primary hover:bg-primary-dim text-white font-semibold py-3.5 px-4 rounded-[0.375rem] transition-colors flex items-center justify-center gap-2 shadow-ambient disabled:opacity-60"
             >
-              {isLogin ? 'Masuk' : 'Daftar Sekarang'}
-              <ArrowRight className="w-4 h-4" strokeWidth={2} />
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} />
+              ) : (
+                <>
+                  {isLogin ? 'Masuk' : 'Daftar Sekarang'}
+                  <ArrowRight className="w-4 h-4" strokeWidth={2} />
+                </>
+              )}
             </button>
 
             {/* Pemisah Berbasis Whitespace (No Line) */}
