@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // User - untuk warga dan admin
@@ -16,6 +17,7 @@ model User {
   laporan    Laporan[]
   votes      Vote[]
   notifikasi Notifikasi[]
+  komentar   Komentar[]
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
 }
@@ -41,6 +43,7 @@ model Laporan {
   status           Status    @default(MENUNGGU)
   votes            Vote[]
   voteCount        Int       @default(0)
+  komentar         Komentar[]
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
   selesaiAt        DateTime?
@@ -75,6 +78,18 @@ model Vote {
   createdAt DateTime @default(now())
 
   @@unique([userId, laporanId]) // satu user cuma bisa vote 1x per laporan
+}
+
+// Komentar laporan
+model Komentar {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  laporanId String
+  laporan   Laporan  @relation(fields: [laporanId], references: [id])
+  isi       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Notifikasi
