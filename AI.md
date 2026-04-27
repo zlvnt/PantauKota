@@ -147,7 +147,88 @@ const { latitude, longitude, loading, error, getCurrentPosition } = useGeolocati
 
 ---
 
-## 7. Tipe Data Shared (`src/types/laporan.ts`)
+## 7. Sistem Notifikasi Real-Time (SSE)
+
+Infrastruktur notifikasi sudah **lengkap dan aktif**. Berikut alur kerjanya:
+
+```
+Admin ubah status laporan
+        │
+        ▼
+PATCH /api/laporan/[id]
+        │
+        ├─ Update DB (prisma.laporan.update)
+        │
+        └─ kirimNotifikasi({ userId, judul, pesan, laporanId })
+                │
+                ├─ Simpan ke DB (prisma.notifikasi.create)
+                │
+                └─ Push real-time via SSE jika user sedang online
+                        (sseClients.get(userId) → controller.enqueue)
+```
+
+### File-file Kunci Notifikasi
+
+| File | Fungsi |
+|------|--------|
+| `src/lib/notifications.ts` | Fungsi `kirimNotifikasi()` + manajemen SSE client in-memory |
+| `src/app/api/notifikasi/route.ts` | `GET` ambil daftar, `PATCH` tandai dibaca |
+| `src/app/api/notifikasi/sse/route.ts` | Stream SSE per user (ReadableStream) |
+| `src/hooks/useNotifications.ts` | Hook: fetch + listen SSE + tandai baca |
+| `src/components/NotificationBell.tsx` | UI bell dengan badge unread count + dropdown list |
+
+### Kapan Notifikasi Dikirim (saat ini)
+- ✅ **Admin ubah status laporan** → notifikasi real-time ke pemilik laporan
+
+### Fitur Notifikasi yang Sudah Aktif
+- ✅ Simpan ke database (`prisma.notifikasi.create`)
+- ✅ Push real-time via SSE (jika user sedang online)
+- ✅ Fetch daftar notifikasi saat halaman dimuat
+- ✅ Tandai satu notifikasi sebagai dibaca
+- ✅ Tandai semua notifikasi sebagai dibaca
+- ✅ **Hapus notifikasi** yang sudah dibaca (`DELETE /api/notifikasi?id=xxx`)
+- ✅ Badge unread count di bell icon
+
+### Notifikasi yang Perlu Ditambahkan di Masa Depan
+- 🔲 Laporan baru masuk → notifikasi ke semua admin (untuk PBI-23)
+- 🔲 Laporan jadi prioritas (≥30 vote + MENUNGGU) → notifikasi ke admin (untuk PBI-12)
+- 🔲 Ada komentar baru pada laporan → notifikasi ke pemilik laporan
+
+### Cara Menambah Trigger Notifikasi Baru
+Cukup panggil `kirimNotifikasi()` di API route mana pun setelah operasi DB:
+```typescript
+import { kirimNotifikasi } from '@/lib/notifications';
+
+await kirimNotifikasi({
+  userId: 'user-yang-dituju',
+  judul: 'Judul notifikasi',
+  pesan: 'Isi pesan notifikasi.',
+  laporanId: 'id-laporan-terkait', // opsional
+});
+```
+
+### Posisi NotificationBell
+- **Admin Desktop**: Fixed di sudut kanan atas (`AdminLayoutClient.tsx`)
+- **Admin Mobile**: Di header mobile, sebelah kiri avatar (`AdminMobileHeader.tsx`)
+- **Warga**: Di `WargaNavbar.tsx`, sudah terintegrasi sejak awal
+
+### Keterbatasan SSE Saat Ini & Fix yang Sudah Diterapkan
+
+**Fix HMR (Development Mode):** `sseClients` Map disimpan di `globalThis` agar tidak di-reset
+saat Next.js Hot Module Replacement terjadi:
+```typescript
+// src/lib/notifications.ts
+declare global { var sseClients: Map<string, ReadableStreamDefaultController> | undefined; }
+const sseClients = globalThis.sseClients ?? (globalThis.sseClients = new Map());
+```
+
+**Keterbatasan yang masih ada:**
+- Tidak bekerja di environment multi-instance (misalnya deployment dengan beberapa server)
+- Untuk produksi skala besar, pertimbangkan Redis Pub/Sub sebagai pengganti
+
+---
+
+## 8. Tipe Data Shared (`src/types/laporan.ts`)
 
 ```typescript
 // Status laporan

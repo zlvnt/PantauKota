@@ -64,5 +64,10 @@ export function useNotifications() {
     setNotifikasi((prev) => prev.map((n) => (n.id === id ? { ...n, dibaca: true } : n)));
   }, []);
 
-  return { notifikasi, unreadCount, loading, tandaiBaca, tandaiBacaSemua };
+  const hapusNotifikasi = useCallback(async (id: string) => {
+    await fetch(`/api/notifikasi?id=${id}`, { method: 'DELETE' });
+    setNotifikasi((prev) => prev.filter((n) => n.id !== id));
+  }, []);
+
+  return { notifikasi, unreadCount, loading, tandaiBaca, tandaiBacaSemua, hapusNotifikasi };
 }

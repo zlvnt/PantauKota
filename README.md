@@ -1,6 +1,6 @@
 # PantauKota — Aplikasi Lapor Lingkungan
 
-**Status:** PBI-02 Filter & Search Peta ✅ SELESAI  
+**Status:** PBI-02 Filter & Search Peta ✅ | Notifikasi Admin & Real-Time Delete ✅  
 **Terakhir Diperbarui:** April 2026
 
 ---
@@ -154,7 +154,7 @@ Ringkasan prinsip utama:
 | PBI-01 | Visualisasi Peta Interaktif | ✅ Selesai |
 | PBI-02 | Filter & Search Peta | ✅ Selesai |
 | PBI-03 | Manajemen Profil | 🔲 Belum |
-| PBI-04 | Notifikasi Real-time | 🔲 Belum |
+| PBI-04 | Notifikasi Real-time | 🟡 Sebagian (infrastruktur SSE + push aktif, UI bell admin & warga selesai, trigger hapus notif selesai) |
 | PBI-05 | Location Picker | 🔲 Belum |
 | PBI-06 | Komentar Laporan | 🔲 Belum |
 | PBI-07 | Form Laporan | 🔲 Belum |
@@ -172,7 +172,7 @@ Ringkasan prinsip utama:
 | PBI-19 | Kelola Kategori | 🔲 Belum |
 | PBI-20 | Daftar Laporan | 🔲 Belum |
 | PBI-21 | PWA Support | ✅ Selesai (konfigurasi next.config) |
-| PBI-22 | Update Status Laporan | ✅ Selesai (aksi cepat di peta admin) |
+| PBI-22 | Update Status Laporan | ✅ Selesai (aksi cepat peta admin + notifikasi otomatis ke warga) |
 | PBI-23 | Notifikasi Otomatis | 🔲 Belum |
 
 ---

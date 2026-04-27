@@ -10,7 +10,7 @@ import {
   Tag,
   Map,
   LogOut,
-  Shield,
+  UserCircle2,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -106,7 +106,7 @@ export default function AdminSidebar({ adminName, isOpen = true, onToggle, isLoc
           {/* User Profile */}
           <div className={`flex items-center px-4 py-4 ${isOpen ? 'gap-3' : 'justify-center'}`}>
             <div className="w-10 h-10 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center shrink-0 border border-[rgba(169,180,185,0.2)]">
-              <Shield className="w-5 h-5 text-primary" strokeWidth={1.5} />
+              <UserCircle2 className="w-5 h-5 text-primary" strokeWidth={1.5} />
             </div>
             <div className={`min-w-0 overflow-hidden transition-all duration-300 whitespace-nowrap ${isOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
               <p className="text-sm font-bold text-on-surface truncate">{adminName}</p>
