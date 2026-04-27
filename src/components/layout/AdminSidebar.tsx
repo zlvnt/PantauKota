@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import {
@@ -10,6 +11,8 @@ import {
   Map,
   LogOut,
   Shield,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 const navLinks = [
@@ -19,65 +22,143 @@ const navLinks = [
   { href: '/kelola-kategori',  label: 'Kelola Kategori',  icon: Tag },
 ];
 
-export default function AdminSidebar({ adminName }: { adminName: string }) {
+interface AdminSidebarProps {
+  adminName: string;
+  isOpen?: boolean;
+  onToggle?: () => void;
+  isLocked?: boolean;
+}
+
+export default function AdminSidebar({ adminName, isOpen = true, onToggle, isLocked = false }: AdminSidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-surface-container-lowest border-r border-[rgba(169,180,185,0.15)] shadow-ambient flex flex-col z-40">
-      {/* Brand */}
-      <div className="px-6 py-5 border-b border-[rgba(169,180,185,0.12)]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Shield className="w-4 h-4 text-white" strokeWidth={2} />
+    <>
+      {/* ── DESKTOP: Floating Sidebar ── */}
+      <aside 
+        className={`hidden sm:flex fixed left-4 top-4 bottom-4 bg-surface-container-lowest rounded-[1.5rem] shadow-[0_8px_30px_rgba(42,52,57,0.12)] flex-col z-40 overflow-hidden transition-all duration-300 ${
+          isOpen ? 'w-64' : 'w-20'
+        }`}
+      >
+        {/* Brand & Toggle */}
+        <div className={`py-6 pb-2 shrink-0 flex ${isOpen ? 'flex-row items-center justify-between px-5' : 'flex-col items-center justify-center gap-4 px-2'}`}>
+          <div className={`flex items-center ${isOpen ? 'gap-3' : 'justify-center'}`}>
+            <Image 
+              src="/images/LogoPantauKota.png" 
+              alt="Logo PantauKota" 
+              width={40} 
+              height={40} 
+              className="w-10 h-10 object-contain shrink-0 drop-shadow-sm"
+            />
+            <div className={`overflow-hidden transition-all duration-300 whitespace-nowrap ${isOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>
+              <p className="font-display font-bold text-on-surface text-base leading-none">PantauKota</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#677177] mt-1">Admin Panel</p>
+            </div>
           </div>
-          <div>
-            <p className="font-display font-semibold text-on-surface text-sm leading-none">PantauKota</p>
-            <p className="text-[10px] uppercase tracking-widest text-[#677177] mt-0.5">Admin Panel</p>
+
+          {!isLocked && (
+            <button
+              onClick={onToggle}
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-[#677177] hover:bg-surface-container-low hover:text-on-surface transition-colors shrink-0"
+              title={isOpen ? 'Tutup Sidebar' : 'Buka Sidebar'}
+            >
+              {isOpen ? (
+                <ChevronLeft className="w-5 h-5" strokeWidth={2} />
+              ) : (
+                <ChevronRight className="w-5 h-5" strokeWidth={2} />
+              )}
+            </button>
+          )}
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto overflow-x-hidden">
+          {navLinks.map(({ href, label, icon: Icon }) => {
+            const isActive = href === '/dashboard' 
+              ? pathname === '/dashboard' 
+              : pathname === href || pathname.startsWith(href + '/');
+
+            return (
+              <Link
+                key={href}
+                href={href}
+                title={!isOpen ? label : undefined}
+                className={`flex items-center px-3 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  isOpen ? 'gap-3' : 'justify-center'
+                } ${
+                  isActive
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-[#677177] hover:bg-surface-container-low hover:text-on-surface'
+                }`}
+              >
+                <Icon className="w-5 h-5 shrink-0" strokeWidth={isActive ? 2 : 1.5} />
+                <span className={`overflow-hidden transition-all duration-300 whitespace-nowrap ${isOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>
+                  {label}
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* User info + Toggle + Logout */}
+        <div className="bg-surface-container-low/50 mt-auto flex flex-col shrink-0">
+          
+          {/* User Profile */}
+          <div className={`flex items-center px-4 py-4 ${isOpen ? 'gap-3' : 'justify-center'}`}>
+            <div className="w-10 h-10 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center shrink-0 border border-[rgba(169,180,185,0.2)]">
+              <Shield className="w-5 h-5 text-primary" strokeWidth={1.5} />
+            </div>
+            <div className={`min-w-0 overflow-hidden transition-all duration-300 whitespace-nowrap ${isOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+              <p className="text-sm font-bold text-on-surface truncate">{adminName}</p>
+              <p className="text-[10px] font-bold text-[#677177] uppercase tracking-wider mt-0.5">Administrator</p>
+            </div>
+          </div>
+
+          <div className="px-4 pb-4">
+            {/* Logout Button */}
+            <button
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              title={!isOpen ? 'Keluar' : undefined}
+              className={`w-full flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-bold text-error bg-error/10 hover:bg-error/20 transition-colors ${
+                isOpen ? 'gap-2' : ''
+              }`}
+            >
+              <LogOut className="w-4 h-4 shrink-0" strokeWidth={2} />
+              <span className={`overflow-hidden transition-all duration-300 whitespace-nowrap ${isOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>
+                Keluar
+              </span>
+            </button>
           </div>
         </div>
-      </div>
+      </aside>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
+      {/* ── MOBILE: Floating Bottom Nav ── */}
+      <nav className="sm:hidden fixed bottom-4 left-4 right-4 h-16 bg-surface-container-lowest rounded-full shadow-[0_8px_30px_rgba(42,52,57,0.12)] border border-[rgba(169,180,185,0.15)] flex items-center justify-around px-2 z-50">
         {navLinks.map(({ href, label, icon: Icon }) => {
-          const isActive = pathname === href || pathname.startsWith(href + '/');
+          const isActive = href === '/dashboard' 
+            ? pathname === '/dashboard' 
+            : pathname === href || pathname.startsWith(href + '/');
+
           return (
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-colors ${
                 isActive
-                  ? 'bg-primary/10 text-primary'
+                  ? 'text-primary'
                   : 'text-[#677177] hover:bg-surface-container-low hover:text-on-surface'
               }`}
             >
-              <Icon className="w-4 h-4 flex-shrink-0" strokeWidth={isActive ? 2 : 1.5} />
-              {label}
+              <div className={`p-1.5 rounded-lg ${isActive ? 'bg-primary/10' : ''}`}>
+                <Icon className="w-5 h-5" strokeWidth={isActive ? 2 : 1.5} />
+              </div>
+              <span className="text-[9px] font-bold mt-0.5 max-w-full truncate px-1">
+                {label.split(' ')[0]}
+              </span>
             </Link>
           );
         })}
-
       </nav>
-
-      {/* User info + Logout */}
-      <div className="px-3 py-4 border-t border-[rgba(169,180,185,0.12)]">
-        <div className="flex items-center gap-3 px-3 py-2 mb-1">
-          <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
-            <Shield className="w-4 h-4 text-primary" strokeWidth={1.5} />
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-on-surface truncate">{adminName}</p>
-            <p className="text-[10px] text-[#677177] uppercase tracking-wider">Administrator</p>
-          </div>
-        </div>
-        <button
-          onClick={() => signOut({ callbackUrl: '/login' })}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-error hover:bg-red-50 transition-colors"
-        >
-          <LogOut className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
-          Keluar
-        </button>
-      </div>
-    </aside>
+    </>
   );
 }
