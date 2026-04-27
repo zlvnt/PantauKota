@@ -53,11 +53,74 @@ Aplikasi ini memiliki 6 model inti:
 - [x] **Auth Login & Register:** API register dengan validasi Zod, integrasi `AuthScreen` dengan NextAuth `signIn`, redirect berbasis role (WARGA → `/`, ADMIN → `/dashboard`).
 - [x] **Proteksi Route:** `middleware.ts` dengan `withAuth`, server-side guard di layout `(warga)` dan `(admin)`, `SessionProvider` di root layout.
 
-### ⏳ BERIKUTNYA (NEXT STEPS)
-- [ ] **Komponen UI Global**: Pembuatan _Navbar_ (Warga) & _Sidebar_ (Admin).
-- [ ] **Database Seeding**: Pembuatan file _seed_ awal (Akun Admin pertama & daftar entitas Kategori).
-- [ ] **Fitur Inti Warga**: Pembuatan form tambah laporan (dengan penanganan batas limit 3 per hari) beserta integrasi navigasi peta _Leaflet_.
-- [ ] **Fitur Inti Admin**: Dashboard statistik rekapitulasi, tabel laporan interaktif, pengelolaan status beserta _feedback_ balasan (termasuk unggahan gambar).
+### ✅ SKALA PBI (PRODUCT BACKLOG ITEM) YANG SELESAI
+- [x] **PBI-01** Visualisasi Peta Interaktif
+- [ ] **PBI-02** Filter & Search Peta
+- [ ] **PBI-03** Manajemen Profil
+- [ ] **PBI-04** Notifikasi Real-time
+- [ ] **PBI-05** Location Picker
+- [ ] **PBI-06** Komentar Laporan
+- [ ] **PBI-07** Form Laporan
+- [ ] **PBI-08** Upload Foto & Geolocation
+- [ ] **PBI-09** Lihat Detail Laporan
+- [ ] **PBI-10** Upvote/Vote Laporan
+- [ ] **PBI-11** Tracking Status
+- [ ] **PBI-12** Sistem Prioritas Laporan *(Sebagian selesai: Marker Darurat di Peta Admin)*
+- [ ] **PBI-13** Riwayat Laporan
+- [ ] **PBI-14** Kelola Laporan
+- [ ] **PBI-15** Deteksi Duplikasi
+- [ ] **PBI-16** Kelola User / Admin
+- [x] **PBI-17** Statistik & Grafik Laporan *(Selesai di Dashboard Admin (Lakukan Penyesuaian Lagi))*
+- [x] **PBI-18** Tabel Monitoring Laporan *(Selesai di Dashboard Admin (Lakukan Penyesuain lagi))*
+- [ ] **PBI-19** Kelola kategori
+- [ ] **PBI-20** Daftar Laporan
+- [x] **PBI-21** PWA Support *(Selesai di konfigurasi Next.js)*
+- [x] **PBI-22** Update Status Laporan *(Selesai via Aksi Cepat Peta Admin)*
+- [ ] **PBI-23** Notifikasi Otomatis
+
+---
+
+## 📁 Struktur File Penting
+
+```
+src/
+├── app/
+│   ├── (auth)/login/page.tsx          # Halaman login
+│   ├── (auth)/register/page.tsx       # Halaman register
+│   ├── (warga)/
+│   │   ├── layout.tsx                 # ← Navbar + auth guard
+│   │   ├── peta/page.tsx              # ← PBI-01 Peta Warga
+│   │   └── riwayat/, notifikasi/      # Placeholder
+│   ├── (admin)/
+│   │   ├── layout.tsx                 # ← Sidebar + admin guard
+│   │   └── dashboard/
+│   │       ├── page.tsx               # ← Dashboard statistik
+│   │       └── peta/page.tsx          # ← PBI-01 Peta Admin
+│   └── api/
+│       ├── auth/[...nextauth]/        # NextAuth handler
+│       ├── auth/register/route.ts     # API register
+│       └── laporan/
+│           ├── route.ts               # GET laporan (filter, search, adminView)
+│           └── [id]/route.ts          # PATCH status (admin-only)
+├── components/
+│   ├── auth/AuthScreen.tsx            # Form login/register + NextAuth
+│   ├── layout/WargaNavbar.tsx         # Navbar warga
+│   ├── layout/AdminSidebar.tsx        # Sidebar admin
+│   ├── map/MapView.tsx                # Peta warga (Leaflet)
+│   ├── map/AdminMapView.tsx           # Peta admin (aksi cepat)
+│   ├── map/LocationPicker.tsx         # Picker lokasi (dari tim)
+│   ├── Providers.tsx                  # SessionProvider wrapper
+│   └── NotificationBell.tsx           # Notifikasi (dari tim)
+├── hooks/
+│   ├── useLaporanMap.ts               # Hook fetch data peta
+│   ├── useGeolocation.ts              # Hook GPS (dari tim)
+│   └── useNotifications.ts            # Hook notifikasi (dari tim)
+├── lib/
+│   ├── auth.ts                        # NextAuth config (credentials)
+│   └── prisma.ts                      # PrismaClient singleton + PrismaPg adapter
+└── types/
+    └── laporan.ts                     # Shared types + STATUS_CONFIG
+```
 
 ---
 
