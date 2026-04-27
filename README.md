@@ -161,14 +161,30 @@ Terdapat **dua versi peta** yang terpisah untuk dua aktor berbeda:
 - [x] **API Laporan:** `GET /api/laporan` (filter, search, adminView) + `PATCH /api/laporan/[id]` (update status, admin-only).
 - [x] **Tipe Data Shared:** `LaporanMapItem`, `LaporanAdminMapItem`, `STATUS_CONFIG` di `src/types/laporan.ts`.
 
-### ⏳ BERIKUTNYA (NEXT STEPS)
-- [ ] **PBI-02 Filter & Search Peta**: Panel filter kategori, rentang tanggal, dan search bar di halaman peta.
-- [ ] **PBI-07 Form Laporan**: Form tambah laporan dengan upload foto, LocationPicker, validasi limit 3/hari.
-- [ ] **PBI-08 Upload Foto & Geolocation**: Integrasi Cloudinary upload + LocationPicker di form laporan.
-- [ ] **PBI-09 Lihat Detail Laporan**: Halaman detail lengkap (`/laporan/[id]`) dengan foto, deskripsi, komentar, vote.
-- [ ] **PBI-10 Upvote/Vote Laporan**: Tombol vote di detail laporan, cek duplikat vote per user.
-- [ ] **PBI-11 Tracking Status**: Timeline status perubahan laporan.
-- [ ] **PBI-12 Sistem Prioritas Laporan**: Sorting/ranking laporan berdasarkan voteCount.
+### ✅ STATUS PBI (PRODUCT BACKLOG ITEM)
+- [x] **PBI-01** Visualisasi Peta Interaktif
+- [ ] **PBI-02** Filter & Search Peta
+- [ ] **PBI-03** Manajemen Profil
+- [ ] **PBI-04** Notifikasi Real-time
+- [ ] **PBI-05** Location Picker
+- [ ] **PBI-06** Komentar Laporan
+- [ ] **PBI-07** Form Laporan
+- [ ] **PBI-08** Upload Foto & Geolocation
+- [ ] **PBI-09** Lihat Detail Laporan
+- [ ] **PBI-10** Upvote/Vote Laporan
+- [ ] **PBI-11** Tracking Status
+- [ ] **PBI-12** Sistem Prioritas Laporan *(Sebagian selesai: Marker Darurat di Peta Admin)*
+- [ ] **PBI-13** Riwayat Laporan
+- [ ] **PBI-14** Kelola Laporan
+- [ ] **PBI-15** Deteksi Duplikasi
+- [ ] **PBI-16** Kelola User / Admin
+- [x] **PBI-17** Statistik & Grafik Laporan *(Selesai di Dashboard Admin (Butuh Penyesuain Lagi))*
+- [x] **PBI-18** Tabel Monitoring Laporan *(Selesai di Dashboard Admin (Butuh Penyesuain Lagi))*
+- [ ] **PBI-19** Kelola kategori
+- [ ] **PBI-20** Daftar Laporan
+- [x] **PBI-21** PWA Support *(Selesai di konfigurasi Next.js)*
+- [x] **PBI-22** Update Status Laporan *(Selesai via Aksi Cepat Peta Admin)*
+- [ ] **PBI-23** Notifikasi Otomatis
 
 ---
 
