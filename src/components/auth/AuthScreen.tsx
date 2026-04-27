@@ -99,7 +99,7 @@ export default function AuthScreen({ defaultIsLogin = true }: AuthScreenProps) {
     router.push('/peta');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLogin) {
       handleLogin();
@@ -236,6 +236,12 @@ export default function AuthScreen({ defaultIsLogin = true }: AuthScreenProps) {
                   <span className="ml-3 text-sm text-[#677177] group-hover:text-on-surface transition-colors">Tetap masuk</span>
                 </label>
               </div>
+            )}
+
+            {error && (
+              <p className="text-sm text-error bg-error/10 px-4 py-2.5 rounded-[0.375rem]">
+                {error}
+              </p>
             )}
 
             <button

@@ -27,7 +27,7 @@ Aplikasi ini memiliki 6 model inti:
 3. **Kategori**: Fleksibel dan dirancang dengan _soft-delete_ (`isActive` boolean) agar tidak merusak relasi pelaporan lama jika ada kategori yang dinonaktifkan Admin.
 4. **Vote**: Mencegah 1 warga mem-vote 1 laporan lebih dari sekali (`@@unique([userId, laporanId])`).
 5. **Notifikasi**: Dicatat dalam database dan nantinya ditransfer real-time via SSE.
-6. **Komentar**: Komentar warga dan admin pada laporan.
+6. **Komentar**: Komentar warga dan admin pada laporan. Bisa dihapus oleh pemilik atau admin.
 
 *Schema Prisma lengkap terbaru dapat dilihat pada `prisma/schema.prisma`.*
 
