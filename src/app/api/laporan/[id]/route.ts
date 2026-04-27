@@ -58,3 +58,34 @@ export async function PATCH(
     );
   }
 }
+
+// GET /api/laporan/[id] — Detail laporan
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const laporan = await prisma.laporan.findUnique({
+      where: { id: params.id },
+      include: {
+        kategori: { select: { nama: true } },
+        user: { select: { name: true, email: true } },
+      },
+    });
+
+    if (!laporan) {
+      return NextResponse.json({ error: "Tidak ditemukan" }, { status: 404 });
+    }
+
+    return NextResponse.json(laporan);
+  } catch (error) {
+    console.error("[API /laporan/[id] GET]", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
