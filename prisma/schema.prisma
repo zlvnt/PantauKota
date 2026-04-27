@@ -6,6 +6,7 @@ datasource db {
   provider = "postgresql"
 }
 
+
 // User - untuk warga dan admin
 model User {
   id         String       @id @default(cuid())
