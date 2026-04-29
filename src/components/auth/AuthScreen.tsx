@@ -53,7 +53,7 @@ export default function AuthScreen({ defaultIsLogin = true }: AuthScreenProps) {
     if (session?.user?.role === 'ADMIN') {
       router.push('/dashboard');
     } else {
-      router.push('/peta');
+      router.push('/beranda');
     }
   };
 
@@ -96,7 +96,7 @@ export default function AuthScreen({ defaultIsLogin = true }: AuthScreenProps) {
     });
 
     setIsLoading(false);
-    router.push('/peta');
+    router.push('/beranda');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -130,7 +130,7 @@ export default function AuthScreen({ defaultIsLogin = true }: AuthScreenProps) {
           <div className="absolute inset-0 bg-[#426464]/85 mix-blend-multiply" />
         </div>
 
-        <div className="relative z-10 text-white max-w-xl p-12 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-ambient">
+        <div className="relative z-10 text-white max-w-xl p-12 bg-[#2a3439]/90 rounded-2xl shadow-ambient">
           <h1 className="text-5xl font-display font-semibold mb-6 leading-[1.1] text-surface-container-lowest">
             PantauKota. Lapor Cepat, Tindak Tepat.
           </h1>

@@ -7,6 +7,7 @@ import {
   Marker,
   Popup,
   useMap,
+  ZoomControl,
 } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -15,14 +16,10 @@ import type { LaporanMapItem } from '@/types/laporan';
 import { STATUS_CONFIG } from '@/types/laporan';
 import Link from 'next/link';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
+import { initLeafletIcons, OSM_TILE_URL, OSM_ATTRIBUTION, MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM } from '@/lib/map';
 
-// ─── Fix Leaflet default icon ─────────────────────────────────────────────────
-delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
+// Inisialisasi icon Leaflet (mencegah broken image di Next.js)
+initLeafletIcons();
 
 // ─── Marker berwarna berdasarkan status ───────────────────────────────────────
 function createStatusIcon(status: LaporanMapItem['status'], warna?: string | null) {
@@ -170,6 +167,19 @@ function LaporanMarker({
   );
 }
 
+// ─── Sub-komponen: Memperbarui ukuran peta jika kontainer berubah ───
+function MapResizer() {
+  const map = useMap();
+  useEffect(() => {
+    const observer = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    observer.observe(map.getContainer());
+    return () => observer.disconnect();
+  }, [map]);
+  return null;
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface MapViewProps {
   laporan: LaporanMapItem[];
@@ -181,15 +191,16 @@ interface MapViewProps {
 export default function MapView({ laporan, selectedId, onMarkerClick }: MapViewProps) {
   return (
     <MapContainer
-      center={[-6.9175, 107.6191]}
-      zoom={13}
+      center={MAP_DEFAULT_CENTER}
+      zoom={MAP_DEFAULT_ZOOM}
       className="h-full w-full z-0"
       scrollWheelZoom
+      zoomControl={false}
     >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <MapResizer />
+      <ZoomControl position="bottomleft" />
+
+      <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
 
       {laporan.map((item) => (
         <LaporanMarker

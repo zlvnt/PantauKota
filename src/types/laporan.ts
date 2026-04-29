@@ -1,4 +1,32 @@
-// Tipe data untuk peta (subset ringan, hanya field yang dibutuhkan)
+// ─── Tipe untuk dashboard warga (/api/laporan/saya) ────────────────────────
+export interface LaporanSaya {
+  id: string;
+  judul: string;
+  alamat: string | null;
+  status: 'MENUNGGU' | 'DIPROSES' | 'SELESAI';
+  voteCount: number;
+  createdAt: string;
+  foto: string[];
+  kategori: {
+    id: string;
+    nama: string;
+    icon: string | null;
+    warna: string | null;
+  };
+  _count: {
+    komentar: number;
+  };
+}
+
+// ─── Tipe untuk chips filter di peta (/api/kategori) ───────────────────────
+export interface KategoriItem {
+  id: string;
+  nama: string;
+  icon: string | null;
+  warna: string | null;
+}
+
+// ─── Tipe data untuk peta (subset ringan, hanya field yang dibutuhkan) ──────
 export interface LaporanMapItem {
   id: string;
   judul: string;

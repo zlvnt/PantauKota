@@ -1,7 +1,15 @@
 import { prisma } from '@/lib/prisma';
 
-// In-memory map: userId -> SSE response controller
-const sseClients = new Map<string, ReadableStreamDefaultController>();
+// Simpan di globalThis agar tidak di-reset saat Next.js HMR (hot reload).
+// Tanpa ini, Map akan dikosongkan setiap kali ada perubahan kode di development,
+// menyebabkan SSE push tidak bekerja meski koneksi masih aktif.
+declare global {
+  // eslint-disable-next-line no-var
+  var sseClients: Map<string, ReadableStreamDefaultController> | undefined;
+}
+
+const sseClients: Map<string, ReadableStreamDefaultController> =
+  globalThis.sseClients ?? (globalThis.sseClients = new Map());
 
 export function registerSSEClient(userId: string, controller: ReadableStreamDefaultController) {
   sseClients.set(userId, controller);

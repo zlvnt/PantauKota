@@ -36,9 +36,9 @@ async function getDashboardStats() {
 }
 
 const STATUS_STYLE = {
-  MENUNGGU: { label: 'Menunggu', class: 'bg-amber-100 text-amber-700' },
-  DIPROSES: { label: 'Diproses', class: 'bg-blue-100 text-blue-700' },
-  SELESAI:  { label: 'Selesai',  class: 'bg-green-100 text-green-700' },
+  MENUNGGU: { label: 'Menunggu', class: 'bg-error/10 text-error' },
+  DIPROSES: { label: 'Diproses', class: 'bg-primary-dim/10 text-primary-dim' },
+  SELESAI:  { label: 'Selesai',  class: 'bg-tertiary/10 text-tertiary' },
 };
 
 export default async function DashboardPage() {
@@ -49,31 +49,31 @@ export default async function DashboardPage() {
       label: 'Total Laporan',
       value: stats.totalLaporan,
       icon: FileText,
-      color: 'bg-primary/10 text-primary',
+      color: 'bg-surface-container-high text-on-surface',
     },
     {
       label: 'Menunggu',
       value: stats.menunggu,
       icon: Clock,
-      color: 'bg-amber-100 text-amber-600',
+      color: 'bg-error/10 text-error',
     },
     {
       label: 'Diproses',
       value: stats.diproses,
       icon: Loader,
-      color: 'bg-blue-100 text-blue-600',
+      color: 'bg-primary-dim/10 text-primary-dim',
     },
     {
       label: 'Selesai',
       value: stats.selesai,
       icon: CheckCircle,
-      color: 'bg-green-100 text-green-600',
+      color: 'bg-tertiary/10 text-tertiary',
     },
     {
       label: 'Total Warga',
       value: stats.totalUser,
       icon: Users,
-      color: 'bg-purple-100 text-purple-600',
+      color: 'bg-surface-container-high text-on-surface',
     },
     {
       label: 'Tingkat Penyelesaian',
@@ -81,7 +81,7 @@ export default async function DashboardPage() {
         ? `${Math.round((stats.selesai / stats.totalLaporan) * 100)}%`
         : '0%',
       icon: TrendingUp,
-      color: 'bg-tertiary/10 text-tertiary',
+      color: 'bg-primary/10 text-primary',
     },
   ];
 
@@ -125,34 +125,34 @@ export default async function DashboardPage() {
       </div>
 
       {/* Laporan Terbaru */}
-      <div className="bg-surface-container-lowest rounded-xl shadow-ambient border border-[rgba(169,180,185,0.1)] overflow-hidden">
-        <div className="px-6 py-4 border-b border-[rgba(169,180,185,0.1)]">
-          <h2 className="font-display font-semibold text-on-surface">
+      <div className="bg-surface-container-low rounded-xl p-4 sm:p-6 overflow-hidden">
+        <div className="mb-4 px-2">
+          <h2 className="font-display font-semibold text-on-surface text-lg">
             Laporan Terbaru
           </h2>
         </div>
-        <div className="divide-y-0 space-y-2 p-4">
+        <div className="space-y-3">
           {stats.laporanTerbaru.length === 0 && (
-            <p className="px-6 py-8 text-sm text-[#677177] text-center">
+            <p className="py-8 text-sm text-[#677177] text-center bg-surface-container-lowest rounded-xl">
               Belum ada laporan masuk
             </p>
           )}
           {stats.laporanTerbaru.map((l) => {
             const st = STATUS_STYLE[l.status];
             return (
-              <div key={l.id} className="p-4 rounded-xl flex items-center justify-between gap-4 bg-surface hover:bg-surface-container-low border border-[rgba(169,180,185,0.15)] shadow-sm transition-colors">
-                <div className="flex items-start gap-3 min-w-0">
-                  <div className="mt-0.5 flex-shrink-0 p-2 bg-surface-container-low rounded-lg text-[#677177]">
+              <div key={l.id} className="p-4 sm:p-5 rounded-2xl flex items-center justify-between gap-4 bg-surface-container-lowest hover:-translate-y-0.5 shadow-[0_8px_30px_rgba(42,52,57,0.04)] transition-all">
+                <div className="flex items-start gap-4 min-w-0">
+                  <div className="mt-0.5 flex-shrink-0 p-2.5 bg-surface-container-low rounded-xl text-[#677177]">
                     <DynamicIcon iconName={l.kategori.icon} className="w-5 h-5 flex-shrink-0" strokeWidth={1.5} />
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-on-surface truncate">{l.judul}</p>
-                    <p className="text-xs text-[#677177] mt-0.5">
-                      {l.user.name} · {l.kategori.nama}
+                  <div className="min-w-0 flex flex-col justify-center">
+                    <p className="text-sm font-bold text-on-surface truncate">{l.judul}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-widest text-[#677177] mt-1">
+                      {l.user.name} • {l.kategori.nama}
                     </p>
                   </div>
                 </div>
-                <span className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold ${st.class}`}>
+                <span className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${st.class}`}>
                   {st.label}
                 </span>
               </div>
