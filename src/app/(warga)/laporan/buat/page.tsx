@@ -6,6 +6,8 @@ import dynamic from 'next/dynamic';
 import { Camera, X, Loader2, ArrowLeft, Send } from 'lucide-react';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import Spinner from '@/components/ui/Spinner';
+import Toast from '@/components/ui/Toast';
+import { useToast } from '@/hooks/useToast';
 import type { KategoriItem } from '@/types/laporan';
 
 const LocationPicker = dynamic(() => import('@/components/map/LocationPicker'), {
@@ -31,7 +33,7 @@ export default function BuatLaporanPage() {
   const [fotoPreviews, setFotoPreviews] = useState<string[]>([]);
   const [kategoriList, setKategoriList] = useState<KategoriItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { toasts, removeToast, success, error: toastError } = useToast();
 
   useEffect(() => {
     fetch('/api/kategori').then((r) => r.json()).then(setKategoriList);
@@ -57,12 +59,10 @@ export default function BuatLaporanPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-
-    if (!lokasi) return setError('Pilih lokasi pada peta terlebih dahulu.');
-    if (!kategoriId) return setError('Pilih kategori laporan.');
-    if (!judul.trim()) return setError('Judul laporan tidak boleh kosong.');
-    if (!deskripsi.trim()) return setError('Deskripsi laporan tidak boleh kosong.');
+    if (!lokasi) return toastError('Pilih lokasi pada peta terlebih dahulu.');
+    if (!kategoriId) return toastError('Pilih kategori laporan.');
+    if (!judul.trim()) return toastError('Judul laporan tidak boleh kosong.');
+    if (!deskripsi.trim()) return toastError('Deskripsi laporan tidak boleh kosong.');
 
     setSubmitting(true);
     try {
@@ -96,9 +96,10 @@ export default function BuatLaporanPage() {
       }
 
       const data = await res.json();
+      success('Laporan berhasil dikirim!');
       router.push(`/laporan/${data.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
+      toastError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
     } finally {
       setSubmitting(false);
     }
@@ -106,6 +107,9 @@ export default function BuatLaporanPage() {
 
   return (
     <div className="pt-28 pb-20 px-4 max-w-2xl mx-auto">
+      {toasts.map((t) => (
+        <Toast key={t.id} message={t.message} type={t.type} onClose={() => removeToast(t.id)} />
+      ))}
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <button
@@ -243,11 +247,6 @@ export default function BuatLaporanPage() {
             className="hidden"
           />
         </section>
-
-        {/* Error */}
-        {error && (
-          <p className="text-sm text-error">{error}</p>
-        )}
 
         {/* Submit */}
         <button
