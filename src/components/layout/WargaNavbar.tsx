@@ -10,6 +10,7 @@ import {
   LogOut,
   User,
   ChevronDown,
+  Settings,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import NotificationBell from '@/components/NotificationBell';
@@ -126,9 +127,17 @@ export default function WargaNavbar() {
                 </p>
               </div>
               <div className="p-1.5">
+                <Link
+                  href="/profil"
+                  onClick={() => setIsUserMenuOpen(false)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-low hover:text-on-surface transition-colors"
+                >
+                  <Settings className="w-4 h-4" strokeWidth={1.5} />
+                  Pengaturan Profil
+                </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: '/login' })}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-error hover:bg-error/10 hover:text-error transition-colors"
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-error hover:bg-error/10 hover:text-error transition-colors mt-1"
                 >
                   <LogOut className="w-4 h-4" strokeWidth={1.5} />
                   Keluar

@@ -153,7 +153,7 @@ Ringkasan prinsip utama:
 |-----|------|--------|
 | PBI-01 | Visualisasi Peta Interaktif | ✅ Selesai |
 | PBI-02 | Filter & Search Peta | ✅ Selesai |
-| PBI-03 | Manajemen Profil | 🔲 Belum |
+| PBI-03 | Manajemen Profil | ✅ Selesai |
 | PBI-04 | Notifikasi Real-time | 🟡 Sebagian (infrastruktur SSE + push aktif, UI bell admin & warga selesai, trigger hapus notif selesai) |
 | PBI-05 | Location Picker | 🔲 Belum |
 | PBI-06 | Komentar Laporan | 🔲 Belum |
@@ -174,6 +174,35 @@ Ringkasan prinsip utama:
 | PBI-21 | PWA Support | ✅ Selesai (konfigurasi next.config) |
 | PBI-22 | Update Status Laporan | ✅ Selesai (aksi cepat peta admin + notifikasi otomatis ke warga) |
 | PBI-23 | Notifikasi Otomatis | 🔲 Belum |
+
+---
+
+## 🎉 Recent Updates (May 2026)
+
+### PBI-03: Manajemen Profil - Complete ✅
+
+**Features Implemented:**
+- ✅ **Update Nama & Password** - User dapat mengubah nama dan password dengan validasi lengkap
+- ✅ **Validasi Nama Unik** - Sistem mencegah penggunaan nama yang sudah dipakai user lain
+- ✅ **Toast Notification System** - Global notification system untuk feedback real-time
+- ✅ **Session Update Real-time** - Nama di navbar/sidebar terupdate tanpa refresh halaman
+- ✅ **No Logout After Password Change** - User tetap login setelah ubah password
+- ✅ **Multiple Entry Points (Admin)** - Akses profil via Settings icon, Avatar, atau Account Name
+- ✅ **Responsive Full-Screen Layout** - Layout optimal di semua device (mobile, tablet, desktop)
+- ✅ **Password Visibility Toggle** - Eye icon persistent, tidak hilang saat focus change
+- ✅ **Back Button Navigation** - Quick navigation kembali ke dashboard/beranda
+- ✅ **Horizontal Scroll Prevention** - Strict vertical-only scrolling di mobile
+
+**Technical Highlights:**
+- Reusable Toast component (`src/components/ui/Toast.tsx`)
+- Custom hook `useToast` untuk easy notification management
+- Global overflow-x prevention di CSS dan layout
+- Responsive typography dan spacing
+- WCAG AAA compliant button contrast (7.5:1)
+
+**Routes:**
+- Admin: `/dashboard/profil`
+- Warga: `/profil`
 
 ---
 

@@ -119,6 +119,37 @@ import { DynamicIcon } from '@/components/ui/DynamicIcon';
 <DynamicIcon iconName={item.kategori.icon} className="w-5 h-5" strokeWidth={1.5} />
 ```
 
+### `src/components/ui/Toast.tsx` — Toast Notification (NEW)
+**WAJIB DIGUNAKAN** untuk semua notifikasi user feedback. Jangan buat inline error/success messages.
+```tsx
+import Toast from '@/components/ui/Toast';
+import { useToast } from '@/hooks/useToast';
+
+const { success, error, info, warning, toasts, removeToast } = useToast();
+
+// Show notifications
+success('Profil berhasil diperbarui');
+error('Nama sudah digunakan oleh pengguna lain');
+
+// Render toasts
+{toasts.map((toast) => (
+  <Toast
+    key={toast.id}
+    message={toast.message}
+    type={toast.type}
+    onClose={() => removeToast(toast.id)}
+  />
+))}
+```
+
+**Aturan Toast:**
+- ✅ Gunakan untuk semua feedback (success, error, info, warning)
+- ✅ Auto-dismiss setelah 3 detik (configurable)
+- ✅ Manual close dengan tombol X
+- ✅ Multiple toasts supported
+- ❌ Jangan buat inline `<div className="bg-error/10">` untuk error messages
+- ❌ Jangan buat custom notification components
+
 ---
 
 ## 6. Hooks Custom (Gunakan Ini, Jangan Buat Ulang)
@@ -266,6 +297,120 @@ KategoriItem            // Data kategori (id, nama, icon, warna)
 
 ## 9. Pola & Konvensi Kode
 
+### Password Visibility Toggle (CRITICAL FIX)
+**Bug yang HARUS dihindari:** Eye icon hilang saat user pindah focus ke field lain.
+
+✅ **Benar (Pattern yang WAJIB diikuti):**
+```tsx
+const [showPassword, setShowPassword] = useState(false);
+
+<div className="relative w-full">
+  <input
+    type={showPassword ? 'text' : 'password'}
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    className="w-full px-4 py-3.5 pr-12 ..."
+  />
+  <button
+    type="button"  // WAJIB: Prevent form submission
+    onClick={() => setShowPassword(!showPassword)}
+    className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 p-1"
+    tabIndex={-1}  // WAJIB: Prevent focus interference
+  >
+    {showPassword ? <EyeOff /> : <Eye />}
+  </button>
+</div>
+```
+
+**Key Points:**
+1. State terpisah untuk setiap password field (`showCurrentPassword`, `showNewPassword`, `showConfirmPassword`)
+2. Button `type="button"` untuk prevent form submission
+3. Button `tabIndex={-1}` untuk prevent focus interference
+4. Button positioned absolutely, outside input focus logic
+5. Responsive positioning: `right-3 sm:right-4`
+6. Padding `p-1` untuk larger touch target
+
+❌ **Salah (Jangan lakukan ini):**
+```tsx
+// ❌ Menggunakan onBlur/onFocus pada input
+<input onBlur={() => setShowIcon(false)} />
+
+// ❌ Conditional rendering icon berdasarkan focus
+{isFocused && <Eye />}
+
+// ❌ Tidak ada type="button"
+<button onClick={...}>  // Will submit form!
+
+// ❌ Tidak ada tabIndex={-1}
+<button onClick={...}>  // Will interfere with tab navigation
+```
+
+### Responsive Layout (CRITICAL PATTERN)
+**Horizontal scroll HARUS dicegah di semua halaman.**
+
+✅ **Benar:**
+```tsx
+// Global prevention (sudah ada di globals.css)
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+// Page container
+<div className="w-full min-h-screen overflow-x-hidden">
+  <div className="max-w-4xl mx-auto w-full">
+    {/* Content */}
+  </div>
+</div>
+
+// Form elements
+<div className="w-full">
+  <input className="w-full px-4 py-3.5 ..." />
+</div>
+
+// Responsive header
+<div className="flex items-center gap-3 sm:gap-4">
+  <button className="shrink-0">...</button>
+  <div className="min-w-0">
+    <h1 className="truncate">...</h1>
+  </div>
+</div>
+```
+
+❌ **Salah:**
+```tsx
+// ❌ Fixed width yang bisa overflow
+<div className="w-[500px]">
+
+// ❌ Tidak ada overflow-x prevention
+<div className="min-h-screen">
+
+// ❌ Tidak ada truncate pada text panjang
+<h1>{veryLongTitle}</h1>
+
+// ❌ Tidak ada shrink-0 pada button
+<button>...</button>  // Bisa menyusut dan hilang
+```
+
+### Button Styling (DESIGN COMPLIANCE)
+**Primary button HARUS menggunakan text putih untuk contrast.**
+
+✅ **Benar:**
+```tsx
+<button className="bg-primary text-white ...">
+  Simpan Perubahan
+</button>
+```
+
+❌ **Salah:**
+```tsx
+// ❌ text-on-primary tidak cukup explicit
+<button className="bg-primary text-on-primary ...">
+
+// ❌ Contrast rendah
+<button className="bg-primary text-gray-600 ...">
+```
+
 ### Debounce Input
 ✅ **Benar:**
 ```tsx
@@ -314,18 +459,55 @@ const isActive = href === '/dashboard'
 
 ## 10. Checklist Sebelum Menambahkan Fitur Baru
 
-- [ ] Apakah ada komponen reusable yang bisa dipakai? (Spinner, StatusBadge, DynamicIcon)
-- [ ] Apakah ada hook yang bisa dipakai? (useDebounce, useLaporanMap, useGeolocation)
+- [ ] Apakah ada komponen reusable yang bisa dipakai? (Spinner, StatusBadge, DynamicIcon, **Toast**)
+- [ ] Apakah ada hook yang bisa dipakai? (useDebounce, useLaporanMap, useGeolocation, **useToast**)
 - [ ] Apakah komponen sudah responsif untuk mobile (360px) dan desktop (1440px)?
+- [ ] **Apakah sudah ada `overflow-x: hidden` untuk prevent horizontal scroll?**
+- [ ] **Apakah password visibility toggle menggunakan pattern yang benar? (type="button", tabIndex={-1})**
+- [ ] **Apakah button text menggunakan `text-white` untuk high contrast?**
 - [ ] Apakah ada garis pembatas (border) yang melanggar No-Line Rule?
 - [ ] Apakah ada efek glassmorphism yang terselip?
 - [ ] Jika menambah rute admin baru: apakah perlu perilaku "locked" seperti halaman peta?
 - [ ] Jika menggunakan Leaflet: apakah sudah import dari `lib/map.ts` dan menyertakan `<MapResizer />`?
+- [ ] **Apakah menggunakan Toast untuk user feedback (bukan inline error messages)?**
 - [ ] Sudah jalankan `npx tsc --noEmit` sebelum commit?
 
 ---
 
-## 11. File yang TIDAK Boleh Dimodifikasi Sembarangan
+## 11. Aturan Anti-Redundansi (WAJIB DIPATUHI)
+
+### Jangan Buat Komponen Duplikat
+Sebelum membuat komponen baru, **WAJIB** cek apakah sudah ada di:
+- `src/components/ui/` - UI primitives (Button, Badge, Spinner, Toast, DynamicIcon)
+- `src/components/` - Feature components (NotificationBell, Providers)
+- `src/hooks/` - Custom hooks (useDebounce, useToast, useGeolocation, useLaporanMap, useNotifications)
+
+### Jangan Buat Style Duplikat
+- ✅ Gunakan Tailwind utility classes
+- ✅ Gunakan CSS variables dari `globals.css` (--primary, --surface, dll)
+- ❌ Jangan buat file CSS baru untuk styling individual
+- ❌ Jangan buat inline styles dengan `style={{...}}`
+
+### Jangan Buat Notification System Baru
+- ✅ Gunakan `useToast` hook dan `Toast` component
+- ❌ Jangan buat `<div className="bg-error/10">` untuk error messages
+- ❌ Jangan buat custom alert/notification components
+- ❌ Jangan gunakan `window.alert()` atau `window.confirm()`
+
+### Jangan Buat Overflow Fix Duplikat
+- ✅ Overflow-x prevention sudah ada di `globals.css` dan `layout.tsx`
+- ❌ Jangan tambahkan `overflow-x: hidden` di setiap component
+- ✅ Gunakan `w-full` dan `max-w-*` untuk width control
+- ❌ Jangan gunakan fixed width (`w-[500px]`)
+
+### Jangan Buat Password Toggle Duplikat
+- ✅ Gunakan pattern yang sudah ada (lihat section 9)
+- ❌ Jangan buat custom password toggle logic
+- ❌ Jangan gunakan onBlur/onFocus untuk show/hide icon
+
+---
+
+## 12. File yang TIDAK Boleh Dimodifikasi Sembarangan
 
 | File | Alasan |
 |------|--------|
@@ -334,6 +516,10 @@ const isActive = href === '/dashboard'
 | `src/lib/auth.ts` | Konfigurasi NextAuth + role-based redirect |
 | `src/lib/prisma.ts` | Singleton PrismaClient — modifikasi bisa menyebabkan connection leak |
 | `src/types/laporan.ts` | Tipe shared — perubahan bisa berdampak ke banyak file |
+| `src/app/globals.css` | Global styles + overflow prevention — perubahan bisa break layout |
+| `src/app/layout.tsx` | Root layout + overflow classes — perubahan bisa break semua halaman |
+| `src/components/ui/Toast.tsx` | Global notification system — sudah final, jangan modifikasi |
+| `src/hooks/useToast.ts` | Toast hook — sudah final, jangan modifikasi |
 | `DESIGN.md` | Panduan desain — perubahan harus didiskusikan dengan tim |
 
 ---

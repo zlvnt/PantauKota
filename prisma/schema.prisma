@@ -14,6 +14,7 @@ model User {
   email      String       @unique
   password   String // hashed
   role       Role         @default(WARGA)
+  isActive   Boolean      @default(true) // Untuk fitur nonaktifkan akun
   laporan    Laporan[]
   votes      Vote[]
   notifikasi Notifikasi[]
