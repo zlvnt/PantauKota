@@ -97,19 +97,34 @@ Schema: `prisma/schema.prisma` | Config: `prisma.config.ts`
 
 | PBI | Nama | Status |
 |-----|------|--------|
-| 01 | Visualisasi Peta | ✅ |
-| 02 | Filter & Search Peta | ✅ |
-| 03 | Manajemen Profil | ✅ |
-| 04 | Notifikasi Real-time | 🟡 Infrastruktur SSE aktif |
-| 09 | Detail Laporan | 🟡 Warga selesai |
-| 10 | Vote Laporan | ✅ Unlimited vote, optimistic UI |
-| 11 | Tracking Status | ✅ Timeline 3 tahap |
-| 12 | Prioritas Laporan | ✅ Formula + marker merah |
-| 14 | Kelola Laporan | ✅ TC-12.3: Filter, search, sorting |
-| 17 | Statistik | 🟡 Angka selesai, chart belum |
-| 18 | Tabel Monitoring | 🟡 5 terbaru selesai |
-| 21 | PWA Support | ✅ |
-| 22 | Update Status | ✅ TC-11.3: Completion modal |
+| 01 | Visualisasi Peta Interaktif | ✅ Selesai |
+| 02 | Filter & Search Peta | ✅ Selesai |
+| 03 | Manajemen Profil | ✅ Selesai |
+| 04 | Notifikasi Real-time | ✅ Selesai (SSE + UI bell + hapus notif) |
+| 05 | Location Picker | ✅ Selesai (GPS + click map + reverse geocode) |
+| 06 | Komentar Laporan | ✅ Selesai (CRUD + real-time) |
+| 07 | Form Laporan | 🔲 Belum |
+| 08 | Upload Foto & Geolocation | 🔲 Belum |
+| 09 | Lihat Detail Laporan | ✅ Selesai (warga + admin) |
+| 10 | Upvote/Vote Laporan | ✅ Selesai (unlimited, optimistic UI) |
+| 11 | Tracking Status | ✅ Selesai (timeline 3 tahap) |
+| 12 | Sistem Prioritas Laporan | ✅ Selesai (formula + marker warna) |
+| 13 | Riwayat Laporan | 🔲 Belum |
+| 14 | Kelola Laporan | ✅ Selesai (filter, search, sorting) |
+| 15 | Deteksi Duplikasi | 🔲 Belum |
+| 16 | Kelola User / Admin | 🔲 Belum |
+| 17 | Statistik & Grafik Laporan | 🟡 Statistik angka selesai, chart belum |
+| 18 | Tabel Monitoring Laporan | 🟡 Tabel 5 terbaru selesai |
+| 19 | Kelola Kategori | 🔲 Belum |
+| 20 | Daftar Laporan | 🔲 Belum |
+| 21 | PWA Support | ✅ Selesai (konfigurasi next-pwa) |
+| 22 | Update Status Laporan | ✅ Selesai (completion modal + notifikasi) |
+| 23 | Notifikasi Otomatis | 🔲 Belum |
+
+**Legenda:**
+- ✅ Selesai — Fitur lengkap dan terintegrasi
+- 🟡 Sebagian — Fitur dasar ada, perlu enhancement
+- 🔲 Belum — Belum dikerjakan
 
 ---
 
