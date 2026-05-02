@@ -1,4 +1,41 @@
+<<<<<<< Updated upstream
 // Tipe data untuk peta (subset ringan, hanya field yang dibutuhkan)
+=======
+// ─── Tipe untuk dashboard warga (/api/laporan/saya) ────────────────────────
+export interface LaporanSaya {
+  id: string;
+  judul: string;
+  alamat: string | null;
+  status: 'MENUNGGU' | 'DIPROSES' | 'SELESAI';
+  prioritas: boolean;
+  voteCount: number;
+  createdAt: string;
+  foto: string[];
+  catatanAdmin: string | null;
+  fotoPenyelesaian: string | null;
+  selesaiAt: string | null;
+  kategori: {
+    id: string;
+    nama: string;
+    icon: string | null;
+    warna: string | null;
+  };
+  _count: {
+    komentar: number;
+  };
+  _hasVoted?: boolean; // true jika user sudah vote laporan ini
+}
+
+// ─── Tipe untuk chips filter di peta (/api/kategori) ───────────────────────
+export interface KategoriItem {
+  id: string;
+  nama: string;
+  icon: string | null;
+  warna: string | null;
+}
+
+// ─── Tipe data untuk peta (subset ringan, hanya field yang dibutuhkan) ──────
+>>>>>>> Stashed changes
 export interface LaporanMapItem {
   id: string;
   judul: string;
@@ -6,6 +43,7 @@ export interface LaporanMapItem {
   longitude: number;
   alamat: string | null;
   status: 'MENUNGGU' | 'DIPROSES' | 'SELESAI';
+  prioritas: boolean;
   voteCount: number;
   createdAt: string;
   foto: string[];
@@ -18,6 +56,7 @@ export interface LaporanMapItem {
   _count: {
     komentar: number;
   };
+  _hasVoted?: boolean; // true jika user sudah vote laporan ini
 }
 
 // Tipe admin — sama dengan LaporanMapItem tapi include nama pelapor

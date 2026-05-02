@@ -232,4 +232,73 @@ src/
 
 ---
 
+<<<<<<< Updated upstream
 *File ini adalah representasi utama dari progres dan dokumentasi proyek. Asisten AI mana pun dapat menjadikan file ini sebagai pedoman langkah kerja pengembangan.*
+=======
+## 🗄️ Database (Prisma)
+
+6 model inti: `User`, `Laporan`, `Kategori`, `Vote`, `Notifikasi`, `Komentar`.
+
+Lihat `prisma/schema.prisma` untuk schema lengkap.
+
+> **Catatan Prisma 7:** Konfigurasi koneksi ada di `prisma.config.ts` (bukan di `schema.prisma`). Adapter `@prisma/adapter-pg` digunakan untuk koneksi ke PostgreSQL.
+
+---
+
+## 🎨 Sistem Desain
+
+Dokumen desain lengkap: **`DESIGN.md`** dan **`AI.md`**
+
+Ringkasan prinsip utama:
+- **Editorial Ledger** — tidak ada glassmorphism, semua warna solid
+- **No-Line Rule** — tidak ada garis pembatas (divider 1px), pisahkan elemen dengan whitespace atau perubahan warna background
+- **Floating UI** — komponen navigasi (navbar warga, sidebar admin) melayang dengan `rounded-3xl` dan shadow ambient
+- **Tonal Layering** — menggunakan `surface`, `surface-container-lowest/low/high` untuk hirarki visual
+
+---
+
+## ✅ Status PBI (Product Backlog Item)
+
+| PBI | Nama | Status |
+|-----|------|--------|
+| PBI-01 | Visualisasi Peta Interaktif | ✅ Selesai |
+| PBI-02 | Filter & Search Peta | ✅ Selesai |
+| PBI-03 | Manajemen Profil | 🔲 Belum |
+| PBI-04 | Notifikasi Real-time | 🟡 Sebagian (infrastruktur SSE + push aktif, UI bell admin & warga selesai, trigger hapus notif selesai) |
+| PBI-05 | Location Picker | 🔲 Belum |
+| PBI-06 | Komentar Laporan | 🔲 Belum |
+| PBI-07 | Form Laporan | 🔲 Belum |
+| PBI-08 | Upload Foto & Geolocation | 🔲 Belum |
+| PBI-09 | Lihat Detail Laporan | 🔲 Belum |
+| PBI-10 | Upvote/Vote Laporan | ✅ Selesai |
+| PBI-11 | Tracking Status | 🔲 Belum |
+| PBI-12 | Sistem Prioritas Laporan | 🟡 Sebagian (marker darurat di peta admin) |
+| PBI-13 | Riwayat Laporan | 🔲 Belum |
+| PBI-14 | Kelola Laporan | 🔲 Belum |
+| PBI-15 | Deteksi Duplikasi | 🔲 Belum |
+| PBI-16 | Kelola User / Admin | 🔲 Belum |
+| PBI-17 | Statistik & Grafik | 🟡 Sebagian (statistik angka di dashboard, belum chart) |
+| PBI-18 | Tabel Monitoring Laporan | 🟡 Sebagian (tabel 5 terbaru di dashboard) |
+| PBI-19 | Kelola Kategori | 🔲 Belum |
+| PBI-20 | Daftar Laporan | 🔲 Belum |
+| PBI-21 | PWA Support | ✅ Selesai (konfigurasi next.config) |
+| PBI-22 | Update Status Laporan | ✅ Selesai (aksi cepat peta admin + notifikasi otomatis ke warga) |
+| PBI-23 | Notifikasi Otomatis | 🔲 Belum |
+
+---
+
+## 🔐 Proteksi Route
+
+| Rute | Akses |
+|------|-------|
+| `/dashboard/*`, `/kelola-*` | Admin only |
+| `/laporan/buat`, `/notifikasi/*`, `/riwayat/*` | Login (semua role) |
+| `/peta` | Login (warga + admin) |
+| `/login`, `/register` | Publik |
+
+Lihat `src/middleware.ts` untuk implementasi `withAuth`.
+
+---
+
+*Untuk pemahaman arsitektur yang lebih dalam, baca `AI.md`.*
+>>>>>>> Stashed changes

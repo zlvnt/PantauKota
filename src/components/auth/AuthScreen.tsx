@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 interface AuthScreenProps {
@@ -46,9 +46,8 @@ export default function AuthScreen({ defaultIsLogin = true }: AuthScreenProps) {
     }
 
     // Redirect berdasarkan role — NextAuth session sudah berisi role
-    // Kita fetch session untuk cek role
-    const sessionRes = await fetch('/api/auth/session');
-    const session = await sessionRes.json();
+    // Kita panggil getSession untuk memuat session baru setelah login
+    const session = await getSession();
 
     if (session?.user?.role === 'ADMIN') {
       router.push('/dashboard');

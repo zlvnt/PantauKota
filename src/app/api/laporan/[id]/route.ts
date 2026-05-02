@@ -4,10 +4,49 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
-// PATCH /api/laporan/[id] — Admin update status laporan (aksi cepat dari peta)
+// GET /api/laporan/[id] — Ambil detail satu laporan (PBI-11 Status Tracking)
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+
+    const laporan = await prisma.laporan.findUnique({
+      where: { id: params.id },
+      include: {
+        kategori: { select: { id: true, nama: true, icon: true, warna: true } },
+        user: { select: { id: true, name: true } },
+        _count: { select: { komentar: true } },
+        votes: {
+          where: { userId: userId ?? '' }, // always include field; empty string = no match when unauthenticated
+          select: { id: true },
+        },
+      },
+    });
+
+    if (!laporan) {
+      return NextResponse.json({ error: 'Laporan tidak ditemukan' }, { status: 404 });
+    }
+
+    const { votes, ...rest } = laporan;
+    return NextResponse.json({
+      ...rest,
+      _hasVoted: userId ? votes.length > 0 : false,
+    });
+  } catch (error) {
+    console.error('[API /laporan/[id] GET]', error);
+    return NextResponse.json({ error: 'Gagal mengambil data laporan' }, { status: 500 });
+  }
+}
+
+// PATCH /api/laporan/[id] — Admin update status / prioritas laporan
 const UpdateSchema = z.object({
-  status: z.enum(['MENUNGGU', 'DIPROSES', 'SELESAI']),
+  status: z.enum(['MENUNGGU', 'DIPROSES', 'SELESAI']).optional(),
+  prioritas: z.boolean().optional(),
   catatanAdmin: z.string().optional(),
+  fotoPenyelesaian: z.string().optional(),
 });
 
 export async function PATCH(
@@ -34,13 +73,15 @@ export async function PATCH(
       );
     }
 
-    const { status, catatanAdmin } = result.data;
+    const { status, prioritas, catatanAdmin, fotoPenyelesaian } = result.data;
 
     const updated = await prisma.laporan.update({
       where: { id: params.id },
       data: {
-        status,
+        ...(status !== undefined ? { status } : {}),
+        ...(prioritas !== undefined ? { prioritas } : {}),
         ...(catatanAdmin !== undefined ? { catatanAdmin } : {}),
+<<<<<<< Updated upstream
         // Set selesaiAt saat status berubah ke SELESAI
         ...(status === 'SELESAI' ? { selesaiAt: new Date() } : {}),
         // Reset selesaiAt jika status dikembalikan
@@ -50,6 +91,30 @@ export async function PATCH(
     });
 
     return NextResponse.json(updated);
+=======
+        ...(fotoPenyelesaian !== undefined ? { fotoPenyelesaian } : {}),
+        ...(status === 'SELESAI' ? { selesaiAt: new Date() } : {}),
+        ...(status && status !== 'SELESAI' ? { selesaiAt: null } : {}),
+      },
+    });
+
+    // Kirim notifikasi hanya jika status berubah
+    if (status !== undefined) {
+      await kirimNotifikasi({
+        userId: updated.userId,
+        judul: `Status laporan diperbarui`,
+        pesan: `Laporan "${updated.judul}" kini berstatus: ${STATUS_LABEL[updated.status]}.`,
+        laporanId: updated.id,
+      });
+    }
+
+    return NextResponse.json({
+      id: updated.id,
+      status: updated.status,
+      prioritas: (updated as any).prioritas,
+      selesaiAt: updated.selesaiAt,
+    });
+>>>>>>> Stashed changes
   } catch (error) {
     console.error('[API /laporan/[id] PATCH]', error);
     return NextResponse.json(

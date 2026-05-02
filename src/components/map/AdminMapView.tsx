@@ -238,7 +238,7 @@ function AdminMarker({
 
             {/* Link ke detail */}
             <Link
-              href={`/laporan/${item.id}`}
+              href={`/kelola-laporan/${item.id}`}
               className="flex items-center justify-center gap-1.5 w-full py-1.5 border border-[#426464] text-[#426464] hover:bg-[#426464] hover:text-white text-xs font-medium rounded-md transition-colors"
             >
               <ExternalLink className="w-3 h-3" strokeWidth={2} />

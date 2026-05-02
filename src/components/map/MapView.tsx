@@ -10,11 +10,16 @@ import {
 } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapPin, ThumbsUp, MessageCircle, ArrowRight, Image as ImageIcon } from 'lucide-react';
+import { MapPin, MessageCircle, ArrowRight, Image as ImageIcon } from 'lucide-react';
 import type { LaporanMapItem } from '@/types/laporan';
 import { STATUS_CONFIG } from '@/types/laporan';
 import Link from 'next/link';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
+<<<<<<< Updated upstream
+=======
+import VoteButton from '@/components/ui/VoteButton';
+import { initLeafletIcons, OSM_TILE_URL, OSM_ATTRIBUTION, MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM } from '@/lib/map';
+>>>>>>> Stashed changes
 
 // ─── Fix Leaflet default icon ─────────────────────────────────────────────────
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
@@ -145,10 +150,12 @@ function LaporanMarker({
 
             {/* Statistik */}
             <div className="flex items-center gap-3 text-xs text-[#677177]">
-              <span className="flex items-center gap-1">
-                <ThumbsUp className="w-3 h-3" strokeWidth={1.5} />
-                {item.voteCount} suara
-              </span>
+              <VoteButton
+                laporanId={item.id}
+                initialVoteCount={item.voteCount}
+                initialVoted={item._hasVoted}
+                size="sm"
+              />
               <span className="flex items-center gap-1">
                 <MessageCircle className="w-3 h-3" strokeWidth={1.5} />
                 {item._count.komentar} komentar
