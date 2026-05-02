@@ -1,6 +1,6 @@
 # PantauKota — Aplikasi Lapor Lingkungan
 
-**Update:** 02 Mei 2026 | PBI-03, 10, 11, 12, 14, 22 ✅
+**Update:** 02 Mei 2026 | PBI-03, 07, 08, 10, 11, 12, 14, 22 ✅
 
 ---
 
@@ -137,8 +137,8 @@ Schema: `prisma/schema.prisma` | Config: `prisma.config.ts`
 | 04 | Notifikasi Real-time | ✅ Selesai (SSE + UI bell + hapus notif) |
 | 05 | Location Picker | ✅ Selesai (GPS + click map + reverse geocode) |
 | 06 | Komentar Laporan | ✅ Selesai (CRUD + real-time) |
-| 07 | Form Laporan | 🔲 Belum |
-| 08 | Upload Foto & Geolocation | 🔲 Belum |
+| 07 | Form Laporan | ✅ Selesai (kategori, judul, deskripsi, lokasi, foto) |
+| 08 | Upload Foto & Geolocation | ✅ Selesai (Cloudinary, GPS, reverse geocode) |
 | 09 | Lihat Detail Laporan | ✅ Selesai (warga + admin) |
 | 10 | Upvote/Vote Laporan | ✅ Selesai (unlimited, optimistic UI) |
 | 11 | Tracking Status | ✅ Selesai (timeline 3 tahap) |
@@ -188,6 +188,23 @@ Schema: `prisma/schema.prisma` | Config: `prisma.config.ts`
 - Kategori text `text-white` saat aktif
 - Toast untuk semua feedback
 - Responsive, no horizontal scroll
+
+---
+
+### PBI-07 & PBI-08 ✅
+
+**Form Laporan (PBI-07):**
+- Route: `/laporan/buat`
+- Pilih kategori (grid icon), judul, deskripsi
+- Integrasi LocationPicker (GPS + klik peta + reverse geocode)
+- Upload hingga 3 foto dengan preview
+- Toast untuk validasi dan error
+- Redirect ke detail laporan setelah berhasil
+
+**Upload Foto & Geolocation (PBI-08):**
+- Upload via `POST /api/upload` → Cloudinary
+- Geolocation via browser GPS atau klik peta
+- Reverse geocode otomatis ke nama alamat
 
 ---
 
