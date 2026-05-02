@@ -1,7 +1,7 @@
 # PantauKota — Aplikasi Lapor Lingkungan
 
-**Status:** PBI-02 Filter & Search Peta ✅ | Notifikasi Admin & Real-Time Delete ✅  
-**Terakhir Diperbarui:** April 2026
+**Status:** PBI-03 Manajemen Profil ✅  
+**Terakhir Diperbarui:** 02 Mei 2026
 
 ---
 
