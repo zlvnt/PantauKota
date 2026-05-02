@@ -128,3 +128,36 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// POST /api/laporan — Buat laporan baru
+export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Tidak terautentikasi.' }, { status: 401 });
+  }
+
+  try {
+    const { judul, deskripsi, kategoriId, foto, latitude, longitude, alamat } = await req.json();
+
+    if (!judul?.trim() || !deskripsi?.trim() || !kategoriId || latitude == null || longitude == null) {
+      return NextResponse.json({ error: 'Data tidak lengkap.' }, { status: 400 });
+    }
+
+    const laporan = await prisma.laporan.create({
+      data: {
+        userId: session.user.id,
+        judul: judul.trim(),
+        deskripsi: deskripsi.trim(),
+        kategoriId,
+        foto: foto ?? [],
+        latitude,
+        longitude,
+        alamat: alamat ?? null,
+      },
+    });
+
+    return NextResponse.json({ id: laporan.id }, { status: 201 });
+  } catch (error) {
+    console.error('[API /laporan POST]', error);
+    return NextResponse.json({ error: 'Gagal membuat laporan.' }, { status: 500 });
+  }
+}
