@@ -61,35 +61,44 @@ export async function GET(req: NextRequest) {
 
     const laporan = await prisma.laporan.findMany({
       where: {
-        // Filter status (jika ada)
-        ...(status ? { status: status as 'MENUNGGU' | 'DIPROSES' | 'SELESAI' } : {}),
-        
-        // Filter kategori (jika ada)
-        ...(kategoriId ? { kategoriId } : {}),
-        
-        // Filter search (jika ada)
-        ...(search
-          ? {
-              OR: [
-                { judul: { contains: search, mode: 'insensitive' } },
-                { deskripsi: { contains: search, mode: 'insensitive' } },
-                { alamat: { contains: search, mode: 'insensitive' } },
-              ],
-            }
-          : {}),
-        
-        // ✨ AUTO-HIDE: Exclude laporan SELESAI > 24 jam dari peta
-        // Logic: Tampilkan jika (BELUM SELESAI) ATAU (SELESAI tapi < 24 jam)
-        OR: [
-          // Tampilkan semua laporan yang belum selesai
-          { status: { not: 'SELESAI' } },
+        AND: [
+          // Filter status (jika ada)
+          ...(status ? [{ status: status as 'MENUNGGU' | 'DIPROSES' | 'SELESAI' }] : []),
           
-          // Tampilkan laporan SELESAI yang masih < 24 jam
-          { 
-            status: 'SELESAI',
-            selesaiAt: { 
-              gte: twentyFourHoursAgo 
-            }
+          // Filter kategori (jika ada)
+          ...(kategoriId ? [{ kategoriId }] : []),
+          
+          // Filter search (jika ada)
+          ...(search
+            ? [{
+                OR: adminView ? [
+                  { judul: { contains: search, mode: 'insensitive' as const } },
+                  { deskripsi: { contains: search, mode: 'insensitive' as const } },
+                  { alamat: { contains: search, mode: 'insensitive' as const } },
+                  { user: { name: { contains: search, mode: 'insensitive' as const } } },
+                ] : [
+                  { judul: { contains: search, mode: 'insensitive' as const } },
+                  { deskripsi: { contains: search, mode: 'insensitive' as const } },
+                  { alamat: { contains: search, mode: 'insensitive' as const } },
+                ],
+              }]
+            : []),
+          
+          // ✨ AUTO-HIDE: Exclude laporan SELESAI > 24 jam dari peta
+          // Logic: Tampilkan jika (BELUM SELESAI) ATAU (SELESAI tapi < 24 jam)
+          {
+            OR: [
+              // Tampilkan semua laporan yang belum selesai
+              { status: { not: 'SELESAI' } },
+              
+              // Tampilkan laporan SELESAI yang masih < 24 jam
+              { 
+                status: 'SELESAI',
+                selesaiAt: { 
+                  gte: twentyFourHoursAgo 
+                }
+              }
+            ]
           }
         ]
       },

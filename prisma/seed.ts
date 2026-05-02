@@ -76,18 +76,7 @@ async function main() {
     },
   });
 
-  const warga3 = await prisma.user.upsert({
-    where: { email: 'andi@warga.id' },
-    update: { isActive: true },
-    create: {
-      name: 'Andi Wijaya',
-      email: 'andi@warga.id',
-      password: passwordHash,
-      role: Role.WARGA,
-      isActive: true,
-    },
-  });
-  console.log('✅ 1 Admin + 3 Warga dibuat');
+  console.log('✅ 1 Admin + 2 Warga dibuat');
 
   // ─────────────────────────────────────────
   // 3. LAPORAN (tersebar di area Jakarta/Bandung)
@@ -125,23 +114,6 @@ async function main() {
       ],
     },
     {
-      judul: 'Lampu PJU padam di sepanjang Jl. Pasteur',
-      deskripsi: 'Lampu penerangan jalan umum di sepanjang Jl. Pasteur sudah padam sejak 2 minggu. Jalan sangat gelap dan rawan kejahatan saat malam hari.',
-      kategoriId: kategoriList[2].id,
-      userId: warga3.id,
-      latitude: -6.9037,
-      longitude: 107.5877,
-      alamat: 'Jl. Dr. Djunjunan (Pasteur), Kota Bandung',
-      status: Status.SELESAI,
-      voteCount: 18,
-      foto: [
-        'https://images.unsplash.com/photo-1565793893533-d36e9ca9e8b1?w=800',
-      ],
-      catatanAdmin: 'Perbaikan lampu PJU telah dilaksanakan oleh Dinas PU Kota Bandung pada tanggal 20 April 2026.',
-      fotoPenyelesaian: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800',
-      selesaiAt: new Date('2026-04-20'),
-    },
-    {
       judul: 'Selokan tersumbat menyebabkan banjir di Cihampelas',
       deskripsi: 'Saluran air di depan pusat perbelanjaan Cihampelas Walk tersumbat sampah dan tanah. Setiap hujan deras air meluap ke jalan dan mengganggu lalu lintas.',
       kategoriId: kategoriList[3].id,
@@ -169,23 +141,6 @@ async function main() {
       foto: [
         'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=800',
       ],
-    },
-    {
-      judul: 'Pohon besar tumbang menutup Jl. RE Martadinata',
-      deskripsi: 'Pohon trembesi besar tumbang akibat angin kencang. Menutup setengah badan jalan RE Martadinata dan mengganggu arus lalu lintas menuju pusat kota.',
-      kategoriId: kategoriList[5].id,
-      userId: warga3.id,
-      latitude: -6.9065,
-      longitude: 107.6138,
-      alamat: 'Jl. RE Martadinata, Kota Bandung',
-      status: Status.SELESAI,
-      voteCount: 56,
-      foto: [
-        'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=800',
-        'https://images.unsplash.com/photo-1631811405378-0a2ecefe95d2?w=800',
-      ],
-      catatanAdmin: 'Pohon telah dipotong dan dibersihkan oleh tim Dinas Pertamanan Kota Bandung.',
-      selesaiAt: new Date('2026-04-25'),
     },
     {
       judul: 'Aspal jalan mengelupas di Jl. Soekarno-Hatta pasca hujan',
@@ -221,6 +176,11 @@ async function main() {
   await prisma.vote.deleteMany();
   await prisma.komentar.deleteMany();
   await prisma.laporan.deleteMany();
+  
+  // Hapus user Andi jika ada
+  await prisma.user.deleteMany({
+    where: { email: 'andi@warga.id' }
+  });
 
   const laporanList = await Promise.all(
     laporanData.map((l) =>
@@ -234,11 +194,9 @@ async function main() {
   // ─────────────────────────────────────────
   const voteData = [
     { userId: warga1.id, laporanId: laporanList[1].id },
-    { userId: warga1.id, laporanId: laporanList[4].id },
+    { userId: warga1.id, laporanId: laporanList[3].id },
     { userId: warga2.id, laporanId: laporanList[0].id },
-    { userId: warga2.id, laporanId: laporanList[3].id },
-    { userId: warga3.id, laporanId: laporanList[0].id },
-    { userId: warga3.id, laporanId: laporanList[1].id },
+    { userId: warga2.id, laporanId: laporanList[2].id },
     { userId: admin.id,  laporanId: laporanList[0].id },
   ];
 
@@ -259,6 +217,7 @@ async function main() {
   console.log('Akun untuk testing:');
   console.log('  Admin  → admin@pantaukota.id / password123');
   console.log('  Warga  → budi@warga.id       / password123');
+  console.log('  Warga  → siti@warga.id       / password123');
   console.log('─────────────────────────────────────');
 }
 
