@@ -26,14 +26,22 @@ export default async function RiwayatPage() {
       judul: true,
       alamat: true,
       status: true,
+      prioritas: true,
       voteCount: true,
       createdAt: true,
       foto: true,
+      catatanAdmin: true,
+      fotoPenyelesaian: true,
+      selesaiAt: true,
       kategori: {
         select: { id: true, nama: true, icon: true, warna: true },
       },
       _count: {
         select: { komentar: true },
+      },
+      votes: {
+        where: { userId: session.user.id },
+        select: { id: true },
       },
     },
     orderBy: { createdAt: 'desc' },
@@ -43,7 +51,10 @@ export default async function RiwayatPage() {
   const laporan: LaporanSaya[] = rawLaporan.map((l) => ({
     ...l,
     createdAt: l.createdAt.toISOString(),
-  }));
+    selesaiAt: l.selesaiAt ? l.selesaiAt.toISOString() : null,
+    _hasVoted: (l.votes?.length ?? 0) > 0,
+    votes: undefined, // Remove votes from final object
+  })) as LaporanSaya[];
 
   return (
     <DashboardClient

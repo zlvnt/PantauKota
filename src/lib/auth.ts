@@ -20,6 +20,11 @@ export const authOptions: NextAuthOptions = {
 
         if (!user) return null;
 
+        // Cek apakah user aktif
+        if (!user.isActive) {
+          throw new Error('Akun Anda telah dinonaktifkan. Silakan hubungi administrator.');
+        }
+
         const valid = await bcrypt.compare(credentials.password, user.password);
         if (!valid) return null;
 
@@ -28,17 +33,25 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.name = user.name;
       }
+      
+      // Update token saat session.update() dipanggil dari client
+      if (trigger === 'update' && session?.user?.name) {
+        token.name = session.user.name;
+      }
+      
       return token;
     },
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id;
         session.user.role = token.role;
+        session.user.name = token.name as string;
       }
       return session;
     },

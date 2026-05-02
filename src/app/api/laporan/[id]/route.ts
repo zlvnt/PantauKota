@@ -50,10 +50,12 @@ export async function GET(
   }
 }
 
-// PATCH /api/laporan/[id] — Admin update status laporan (aksi cepat dari peta)
+// PATCH /api/laporan/[id] — Admin update status atau prioritas laporan
 const UpdateSchema = z.object({
-  status: z.enum(['MENUNGGU', 'DIPROSES', 'SELESAI']),
+  status: z.enum(['MENUNGGU', 'DIPROSES', 'SELESAI']).optional(),
+  prioritas: z.boolean().optional(), // PBI-12: Toggle prioritas manual
   catatanAdmin: z.string().optional(),
+  fotoPenyelesaian: z.string().nullable().optional(), // TC-11.3: Foto bukti penyelesaian (opsional, bisa null)
 });
 
 const STATUS_LABEL: Record<string, string> = {
@@ -86,34 +88,44 @@ export async function PATCH(
       );
     }
 
-    const { status, catatanAdmin } = result.data;
+    const { status, prioritas, catatanAdmin, fotoPenyelesaian } = result.data;
 
     const updated = await prisma.laporan.update({
       where: { id: params.id },
       data: {
-        status,
+        ...(status !== undefined ? { status } : {}),
+        ...(prioritas !== undefined ? { prioritas } : {}), // PBI-12
         ...(catatanAdmin !== undefined ? { catatanAdmin } : {}),
+        ...(fotoPenyelesaian !== undefined ? { fotoPenyelesaian } : {}), // TC-11.3
         ...(status === 'SELESAI' ? { selesaiAt: new Date() } : {}),
-        ...(status !== 'SELESAI' ? { selesaiAt: null } : {}),
+        ...(status !== undefined && status !== 'SELESAI' ? { selesaiAt: null } : {}),
       },
       select: {
         id: true,
         judul: true,
         status: true,
+        prioritas: true,
         selesaiAt: true,
         userId: true,       // untuk tahu ke siapa notifikasi dikirim
       },
     });
 
-    // Kirim notifikasi real-time ke pemilik laporan
-    await kirimNotifikasi({
-      userId: updated.userId,
-      judul: `Status laporan diperbarui`,
-      pesan: `Laporan "${updated.judul}" kini berstatus: ${STATUS_LABEL[updated.status]}.`,
-      laporanId: updated.id,
-    });
+    // Kirim notifikasi real-time ke pemilik laporan (hanya jika status berubah)
+    if (status !== undefined) {
+      await kirimNotifikasi({
+        userId: updated.userId,
+        judul: `Status laporan diperbarui`,
+        pesan: `Laporan "${updated.judul}" kini berstatus: ${STATUS_LABEL[updated.status]}.`,
+        laporanId: updated.id,
+      });
+    }
 
-    return NextResponse.json({ id: updated.id, status: updated.status, selesaiAt: updated.selesaiAt });
+    return NextResponse.json({
+      id: updated.id,
+      status: updated.status,
+      prioritas: updated.prioritas,
+      selesaiAt: updated.selesaiAt,
+    });
   } catch (error) {
     console.error('[API /laporan/[id] PATCH]', error);
     return NextResponse.json(

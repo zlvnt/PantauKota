@@ -11,7 +11,7 @@ export default async function AdminLayout({
   const session = await getServerSession(authOptions);
 
   if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/peta');
+  if (session.user.role !== 'ADMIN') redirect('/profil'); // Redirect warga ke profil warga
 
   return (
     <div className="flex min-h-screen bg-surface overflow-x-hidden">

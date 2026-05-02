@@ -23,40 +23,32 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import type { LaporanAdminMapItem } from '@/types/laporan';
-import { STATUS_CONFIG } from '@/types/laporan';
+import { getMarkerColor } from '@/types/laporan';
 import Link from 'next/link';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import { initLeafletIcons, OSM_TILE_URL, OSM_ATTRIBUTION, MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM } from '@/lib/map';
+import CompletionModal from '@/components/admin/CompletionModal';
 
 // Inisialisasi icon Leaflet (mencegah broken image di Next.js)
 initLeafletIcons();
 
-// ─── Marker dengan ukuran & warna berdasarkan prioritas ──────────────────────
-function createAdminMarkerIcon(
-  status: LaporanAdminMapItem['status'],
-  voteCount: number,
-  warna?: string | null
-) {
-  const color = warna ?? STATUS_CONFIG[status].color;
-  const isUrgent = voteCount >= 30 && status === 'MENUNGGU';
-  const size = isUrgent ? 40 : voteCount >= 15 ? 36 : 32;
-  const height = isUrgent ? 52 : voteCount >= 15 ? 46 : 42;
+// ─── Marker berwarna berdasarkan prioritas & status ───────────────────────────
+// Prioritas (manual flag atau skor ≥30) → Merah
+// Tidak prioritas → Warna sesuai status (Amber/Blue/Green)
+function createAdminMarkerIcon(item: LaporanAdminMapItem) {
+  const color = getMarkerColor(item.status, item.prioritas, item.voteCount, item.createdAt);
+  const size = 32;
+  const height = 42;
 
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 42" width="${size}" height="${height}">
       <path d="M16 0C7.163 0 0 7.163 0 16c0 9.941 14.282 24.614 15.29 25.643a1 1 0 0 0 1.42 0C17.718 40.614 32 25.941 32 16 32 7.163 24.837 0 16 0z"
         fill="${color}" stroke="white" stroke-width="1.5"/>
-      ${isUrgent ? `<circle cx="16" cy="16" r="9" fill="white" opacity="0.2"/>` : ''}
       <circle cx="16" cy="16" r="6" fill="white" opacity="0.9"/>
     </svg>`;
 
   return L.divIcon({
-    html: isUrgent
-      ? `<div class="relative" style="animation: pulse 1.5s infinite;">
-           ${svg}
-           <div style="position:absolute;top:-4px;right:-4px;background:#e74c3c;color:white;border-radius:9999px;font-size:9px;font-weight:bold;padding:1px 4px;border:1.5px solid white">${voteCount}</div>
-         </div>`
-      : svg,
+    html: svg,
     className: '',
     iconSize: [size, height],
     iconAnchor: [size / 2, height],
@@ -68,16 +60,27 @@ function createAdminMarkerIcon(
 function QuickStatusButtons({
   id,
   currentStatus,
+  judul,
   onStatusUpdate,
+  onCompletionModalOpen,
 }: {
   id: string;
   currentStatus: LaporanAdminMapItem['status'];
+  judul: string;
   onStatusUpdate: (id: string, newStatus: LaporanAdminMapItem['status']) => void;
+  onCompletionModalOpen: (id: string, judul: string) => void;
 }) {
   const [loading, setLoading] = useState<string | null>(null);
 
   const updateStatus = async (newStatus: LaporanAdminMapItem['status']) => {
     if (newStatus === currentStatus) return;
+
+    // If changing to SELESAI, open completion modal instead
+    if (newStatus === 'SELESAI') {
+      onCompletionModalOpen(id, judul);
+      return;
+    }
+
     setLoading(newStatus);
     try {
       const res = await fetch(`/api/laporan/${id}`, {
@@ -124,11 +127,13 @@ function AdminMarker({
   isSelected,
   onMarkerClick,
   onStatusUpdate,
+  onCompletionModalOpen,
 }: {
   item: LaporanAdminMapItem;
   isSelected: boolean;
   onMarkerClick?: (id: string) => void;
   onStatusUpdate: (id: string, newStatus: LaporanAdminMapItem['status']) => void;
+  onCompletionModalOpen: (id: string, judul: string) => void;
 }) {
   const map = useMap();
   const markerRef = useRef<L.Marker>(null);
@@ -148,7 +153,7 @@ function AdminMarker({
     <Marker
       ref={markerRef}
       position={[item.latitude, item.longitude]}
-      icon={createAdminMarkerIcon(item.status, item.voteCount, item.kategori.warna)}
+      icon={createAdminMarkerIcon(item)}
       eventHandlers={{
         click: () => {
           onMarkerClick?.(item.id);
@@ -228,13 +233,15 @@ function AdminMarker({
               <QuickStatusButtons
                 id={item.id}
                 currentStatus={item.status}
+                judul={item.judul}
                 onStatusUpdate={onStatusUpdate}
+                onCompletionModalOpen={onCompletionModalOpen}
               />
             </div>
 
             {/* Link ke detail */}
             <Link
-              href={`/laporan/${item.id}`}
+              href={`/dashboard/laporan/${item.id}`}
               className="flex items-center justify-center gap-1.5 w-full py-1.5 border border-[#426464] text-[#426464] hover:bg-[#426464] hover:text-white text-xs font-medium rounded-md transition-colors"
             >
               <ExternalLink className="w-3 h-3" strokeWidth={2} />
@@ -269,25 +276,66 @@ interface AdminMapViewProps {
 }
 
 export default function AdminMapView({ laporan, selectedId, onMarkerClick, onStatusUpdate }: AdminMapViewProps) {
-  return (
-    <MapContainer
-      center={MAP_DEFAULT_CENTER}
-      zoom={MAP_DEFAULT_ZOOM}
-      className="h-full w-full z-0"
-      scrollWheelZoom
-    >
-      <MapResizer />
-      <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
+  const [completionModal, setCompletionModal] = useState<{ id: string; judul: string } | null>(null);
 
-      {laporan.map((item) => (
-        <AdminMarker
-          key={item.id}
-          item={item}
-          isSelected={selectedId === item.id}
-          onMarkerClick={onMarkerClick}
-          onStatusUpdate={onStatusUpdate ?? (() => {})}
+  const handleCompletionSubmit = async (data: { catatanAdmin: string; fotoPenyelesaian: string | null }) => {
+    if (!completionModal) return;
+
+    try {
+      const res = await fetch(`/api/laporan/${completionModal.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'SELESAI',
+          catatanAdmin: data.catatanAdmin,
+          fotoPenyelesaian: data.fotoPenyelesaian, // bisa null
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Gagal mengubah status laporan');
+      }
+
+      onStatusUpdate?.(completionModal.id, 'SELESAI');
+      setCompletionModal(null);
+    } catch (error) {
+      console.error('Error completing report:', error);
+      throw error; // Re-throw untuk ditangkap oleh modal
+    }
+  };
+
+  return (
+    <>
+      <MapContainer
+        center={MAP_DEFAULT_CENTER}
+        zoom={MAP_DEFAULT_ZOOM}
+        className="h-full w-full z-0"
+        scrollWheelZoom
+      >
+        <MapResizer />
+        <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
+
+        {laporan.map((item) => (
+          <AdminMarker
+            key={item.id}
+            item={item}
+            isSelected={selectedId === item.id}
+            onMarkerClick={onMarkerClick}
+            onStatusUpdate={onStatusUpdate ?? (() => {})}
+            onCompletionModalOpen={(id, judul) => setCompletionModal({ id, judul })}
+          />
+        ))}
+      </MapContainer>
+
+      {completionModal && (
+        <CompletionModal
+          isOpen={!!completionModal}
+          onClose={() => setCompletionModal(null)}
+          onSubmit={handleCompletionSubmit}
+          laporanJudul={completionModal.judul}
         />
-      ))}
-    </MapContainer>
+      )}
+    </>
   );
 }

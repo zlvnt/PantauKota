@@ -1,96 +1,192 @@
 # Spesifikasi Sistem Desain: Civic Clarity
 
-## 1. Gambaran Umum & Visi Utama (Creative North Star)
-**Visi Utama: "The Editorial Ledger" (Jurnal Editorial)**
-Sistem desain ini bergerak melampaui "dashboard generik" dengan memperlakukan data lingkungan layaknya jurnal arsitektur kelas atas yang prestisius. Kita menolak estetika "widget" yang penuh sesak dan beralih ke filosofi **The Editorial Ledger**—sebuah pendekatan yang memprioritaskan ruang kosong yang disengaja, otoritas tipografi, dan pelapisan tonal (warna).
+## 1. Visi: "The Editorial Ledger"
 
-Meski fondasi yang diinginkan pengguna adalah "Minimalis", eksekusi kita adalah **Utilitas yang Canggih (Sophisticated Utility)**. Kita mendobrak tampilan "template" standar melalui ritme penggunaan ruang kosong (negative space) dan pendekatan arsitektur "Tanpa Garis" (No-Line). Hal ini memastikan bahwa 'PantauKota' tidak terasa seperti sekadar database, melainkan sebuah pusat komando yang terkurasi untuk kemajuan tata kota.
+Jurnal arsitektur prestisius, bukan dashboard generik. **Sophisticated Utility** — ruang kosong disengaja, otoritas tipografi, pelapisan tonal.
 
 ---
 
 ## 2. Warna: Arsitektur Tonal
-Palet warna berakar pada warna netral yang memberikan nuansa ruang (atmospheric), menggunakan warna hijau pudar (muted green) dan hijau kebiruan (teal) sebagai aksen presisi bedah, bukan sekadar dekorasi.
 
-### Hierarki Permukaan (Surface) & Sarang (Nesting)
-Kita tidak menggunakan garis pembatas (border) untuk menentukan struktur. Kedalaman dicapai melalui **Pelapisan Tonal (Tonal Layering)**.
-- **Lapisan Dasar:** `surface` (#f7f9fb) – Sebagai kanvas utama.
-- **Lapisan Sektoral:** `surface_container_low` (#f0f4f7) – Digunakan untuk area *sidebar* besar atau pengelompokan.
-- **Lapisan Aksi:** `surface_container_lowest` (#ffffff) – Digunakan untuk kartu interaktif utama guna memberikan efek "timbul alami".
-- **Lapisan Fokus:** `surface_container_high` (#e1e9ee) – Dikhususkan untuk bilah utilitas yang menjorok ke dalam (recessed) atau status aktif.
+### Hierarki Permukaan
+- **surface** (#f7f9fb) — Kanvas utama
+- **surface_container_low** (#f0f4f7) — Sidebar, pengelompokan
+- **surface_container_lowest** (#ffffff) — Kartu interaktif (timbul)
+- **surface_container_high** (#e1e9ee) — Bilah utilitas, status aktif
 
-### Aturan "Tanpa Garis" (The "No-Line" Rule)
-**Dilarang menggunakan border solid 1px untuk membuat sekat bagian.** Batas-batas harus didefinisikan murni melalui perubahan warna latar belakang. Sebuah daftar laporan harus diletakkan di atas `surface_container_lowest` dengan latar belakang `surface_container_low`.
+### Aksen
+- **primary** (#426464) — Hijau kebiruan gelap
+- **primary_dim** (#6B9A9A) — Dalam proses
+- **tertiary** (#006d4a) — Hijau tua (SELESAI)
+- **error** (#B3261E) — Merah
+- **on-surface** (#2A3439) — Teks utama
+
+### Aturan "Tanpa Garis" (No-Line Rule)
+**❌ Dilarang border solid 1px untuk sekat.** Batas didefinisikan murni melalui perubahan warna latar belakang.
 
 ---
 
-## 3. Tipografi: Otoritas Huruf Sans
-Kita menggunakan strategi dua jenis font untuk menyeimbangkan karakter dengan keterbacaan data yang padat.
+## 3. Tipografi
 
 | Kategori | Font | Peran |
-| :--- | :--- | :--- |
-| **Display/Headline (Judul Utama)** | **Manrope** | Tebal, geometris, dan berwibawa. Digunakan untuk judul halaman dan metrik tingkat atas. |
-| **Body/Title/Label (Isi/Judul/Label)** | **Inter** | Sangat mudah dibaca, netral, dan fungsional. Digunakan untuk semua entri data, deskripsi laporan, dan navigasi. |
+|----------|------|-------|
+| **Display/Headline** | **Manrope** | Tebal, geometris, judul halaman & metrik |
+| **Body/Title/Label** | **Inter** | Mudah dibaca, data, deskripsi, navigasi |
 
-**Aturan Skala:** 
-- Gunakan `display-md` untuk angka "Total Laporan" guna memberikan kesan skala pada data lingkungan.
-- Gunakan `label-sm` dengan huruf kapital semua (all-caps) dan spasi antar huruf (letter spacing) `0.05em` untuk metadata (misalnya, "TANGGAL LAPORAN") untuk meniru gaya keterangan editorial.
-
----
-
-## 4. Elevasi & Kedalaman: Pelapisan Tonal
-Bayangan tradisional digantikan oleh **Kedalaman Ambien (Ambient Depth)**.
-
-- **Prinsip Pelapisan:** Alih-alih menggunakan efek *drop shadow*, sebuah kartu (`surface_container_lowest`) diletakkan di dalam suatu bagian (`surface_container_low`). Pergeseran kecerahan sebesar 2% sudah cukup bagi mata manusia untuk merasakan hierarki tanpa menambah kebisingan visual.
-- **Garis Bayangan Halus ("Ghost Border"):** Jika sebuah wadah (container) membutuhkan batasan terhadap latar belakang yang identik, gunakan garis (stroke) `1px` dengan warna `outline_variant` (#a9b4b9) pada **opasitas 15%**. Ini menciptakan "kesan" adanya batas, bukan sebuah garis tegas.
-- **Bayangan Ambien (Ambient Shadows):** Hanya digunakan untuk komponen yang melayang di atas konten lain (seperti dropdown, kapsul navigasi, atau modal). 
-    - `box-shadow: 0 8px 30px rgba(42, 52, 57, 0.12);` (Nilai opasitas 12% memberikan efek mengambang yang jelas namun tetap natural).
-
-### Elemen Melayang & Navigasi (Floating UI)
-Sistem ini menolak penggunaan *navbar* statis (edge-to-edge) demi memberikan kesan ruang yang luas, terutama di halaman Peta dan Dashboard.
-- **Kapsul Melayang (Floating Capsules):** Elemen kontrol utama seperti kotak pencarian, menu navigasi utama, dan profil *user* harus dibungkus dalam bentuk kapsul melayang yang memiliki sudut bulat penuh (`rounded-full`).
-- **Pemisahan Kapsul:** Alih-alih menggabungkan semuanya dalam satu bilah, pisahkan fungsi ke dalam kapsul mandiri (misal: Kapsul Kiri untuk Logo+Navigasi, Kapsul Kanan untuk Profil+Notifikasi). Ini memberi ruang "bernapas" di antara elemen.
-- **LARANGAN KERAS GLASSMORPHISM:** Untuk memastikan keterbacaan (readability) yang mutlak bebas hambatan, **dilarang menggunakan efek transparan atau *backdrop-blur*** pada elemen yang melayang. Semua komponen *floating* (kapsul, tombol *filter*, *dropdown*, modal) HARUS menggunakan latar belakang solid: `bg-surface-container-lowest`. Tidak boleh ada teks latar belakang yang menembus komponen UI.
+**Skala:**
+- Display: `display-md` untuk angka besar
+- Label: `label-sm` uppercase, `letter-spacing: 0.05em` untuk metadata
+- Responsive: `text-2xl sm:text-3xl` (heading), `text-sm sm:text-base` (body)
+- **WAJIB:** `truncate` pada text panjang untuk prevent overflow
 
 ---
 
-## 5. Komponen: Elemen Dasar Industrial
+## 4. Elevasi & Kedalaman
 
-### Tombol (Buttons)
-- **Primer (Utama):** Latar belakang `primary` (#426464) dengan teks `on_primary`. Jangan gunakan sudut membulat melebihi ukuran `md` (0.375rem) untuk mempertahankan tampilan yang rapi dan profesional.
-- **Sekunder:** Latar belakang `surface_container_highest`. Tanpa garis batas (border).
-- **Tersier:** Latar belakang transparan, teks `primary`. Gunakan untuk aksi dengan penekanan rendah seperti "Batal".
+### Pelapisan Tonal
+Alih-alih drop shadow, kartu (`surface_container_lowest`) diletakkan di dalam bagian (`surface_container_low`). Pergeseran kecerahan 2% cukup untuk hierarki.
 
-### Kolom Input (Input Fields)
-- **Gaya:** Bersahaja (Understated). Gunakan `surface_container_low` sebagai latar belakang dengan "Ghost Border" 1px. 
-- **Saat Fokus:** Bertransisi menjadi border `primary` 1px. Dilarang menggunakan efek bercahaya ("glow").
+### Ghost Border
+Jika container butuh batasan: `1px` stroke `outline_variant` (#a9b4b9) pada **opasitas 15%**.
 
-### Kartu & Daftar (Cards & Lists)
-- **Aturan Pemisah (Divider):** **Dilarang keras menggunakan garis horizontal 1px.** 
-- Untuk memisahkan item-item laporan, gunakan ruang kosong vertikal sebesar `8px` atau perubahan latar belakang samar antara `surface_container_lowest` dan `surface` saat disentuh (hover).
+### Bayangan Ambien
+Hanya untuk floating elements (dropdown, modal, kapsul navigasi):
+```css
+box-shadow: 0 8px 30px rgba(42, 52, 57, 0.12);
+```
 
-### Indikator Kemajuan (Progress Indicators)
-- Gunakan `tertiary` (#006d4a) untuk "Selesai".
-- Gunakan `primary_dim` (#365858) untuk "Dalam Proses".
-- Gunakan `error` (#9f403d) untuk "Mendesak".
-
----
-
-## 6. Panduan Praktis (Do's and Don'ts)
-
-### Lakukan (Do)
-- **Gunakan Spasi Berlebih:** Berikan ruang agar data dapat "bernapas". Tingkatkan tinggi baris (line-height) pada teks laporan menjadi `1.6` untuk keterbacaan yang lebih baik.
-- **Gunakan Ikon Outlined:** Hanya gunakan ikon dengan ketebalan garis 1.5pt. Hindari ikon blok solid (filled) kecuali ikon tersebut mewakili status navigasi yang sedang "aktif".
-- **Hierarki Tonal:** Selalu periksa apakah perubahan warna latar belakang bisa menggantikan fungsi garis pembatas (border).
-
-### Jangan Lakukan (Don'ts)
-- **Jangan Gunakan Bayangan Pekat:** Hindari bayangan apa pun yang terlihat "abu-abu". Bayangan harus terasa seperti cahaya ambien di sekitar elemen.
-- **Jangan Gunakan Gradien:** Jaga agar semua permukaan tetap datar (flat). "Jiwa" dari desain ini berasal dari palet warnanya, bukan dari efek visual yang berlebihan.
-- **Jangan Gunakan Garis Pemisah (Divider Line):** Hindari tampilan layaknya tabel "Excel". Gunakan pengelompokan (grouping) dan padding untuk memisahkan titik-titik data.
+### Floating UI
+- **Kapsul Melayang:** Navbar, sidebar, search box → `rounded-full` atau `rounded-3xl`
+- **Pemisahan:** Pisahkan fungsi ke kapsul mandiri (Logo+Nav | Profil+Notif)
+- **❌ LARANGAN GLASSMORPHISM:** Semua floating HARUS `bg-surface-container-lowest` solid. No `backdrop-blur`, no transparency.
 
 ---
 
-## 7. Bahasa & Nada Penyampaian (Language & Tone)
-Sistem ini menggunakan **Bahasa Indonesia Baku** untuk menjaga otoritas profesionalisme tata kota.
-- **Label Tombol:** "Simpan Perubahan" (bukan "Save").
-- **State Kosong (Empty States):** "Belum ada laporan masuk" (bukan "Tidak ada data").
-- **Pesan Kesalahan (Error Messages):** "Terjadi kendala pada sistem" (bukan "Error").
+## 5. Komponen
+
+### Tombol
+- **Primer:** `bg-primary text-white` (contrast 7:1, WCAG AAA)
+- **Sekunder:** `bg-surface_container_highest`, no border
+- **Tersier:** Transparan, `text-primary`
+- **Responsive:** `w-full sm:w-auto`
+
+### Input
+- **Style:** `bg-surface_container_low` + ghost border 1px
+- **Focus:** Border `primary` 1px, no glow
+- **Responsive:** `w-full`, `text-sm sm:text-base`
+
+### Password Toggle
+**CRITICAL PATTERN:**
+```tsx
+<button
+  type="button"  // Prevent form submit
+  onClick={() => setShowPassword(!showPassword)}
+  tabIndex={-1}  // Prevent focus interference
+  className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 p-1"
+>
+  {showPassword ? <EyeOff /> : <Eye />}
+</button>
+```
+
+### Kartu & Daftar
+**❌ Dilarang garis horizontal 1px.** Pisahkan item dengan ruang vertikal 8px atau perubahan background saat hover.
+
+### Progress Indicators
+- **Selesai:** `tertiary` (#006d4a)
+- **Dalam Proses:** `primary_dim` (#365858)
+- **Mendesak:** `error` (#9f403d)
+
+### Map Marker Colors (CRITICAL)
+1. **SELESAI** → Hijau (#006d4a) — selalu, terlepas prioritas
+2. **Prioritas (belum selesai)** → Merah (#dc2626) jika:
+   - Flag manual = true, ATAU
+   - Skor ≥ 50 (formula: `voteCount × 2 + hari`)
+3. **Non-Prioritas** → MENUNGGU=Amber (#f59e0b), DIPROSES=Blue (#3b82f6)
+
+**Implementasi:** Gunakan `getMarkerColor()` dari `src/types/laporan.ts`
+
+### Category Filter Chips
+- **Active:** `bg-primary text-white` (contrast 7:1)
+- **Inactive:** `bg-surface-container-low text-[#677177]`
+
+### Toast Notifications
+- **Position:** Fixed top center (`top-6 left-1/2 -translate-x-1/2`)
+- **Background:** Solid `surface-container-lowest`
+- **Border:** Subtle, warna sesuai type
+- **Animation:** Fade in/out + slide
+- **Auto-dismiss:** 3s, z-index 9999
+
+### Completion Modal
+- **Trigger:** Admin klik "Selesai"
+- **Background:** Solid `surface-container-lowest`, ambient shadow
+- **Border Radius:** `rounded-3xl`
+- **Input:** Catatan (textarea, min 4 rows), Foto (upload area, 2 tombol)
+- **Validation:** Catatan wajib, foto opsional (max 5MB)
+- **Buttons:** Batal (`bg-surface-container-highest`), Selesaikan (`bg-primary text-white`)
+- **Feedback:** Toast (bukan inline error)
+
+---
+
+## 6. Responsive Design (CRITICAL)
+
+### Horizontal Overflow Prevention (WAJIB)
+```css
+/* globals.css */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+```
+
+```tsx
+// Page container
+<div className="w-full overflow-x-hidden">
+  <div className="max-w-4xl mx-auto">
+    <input className="w-full px-4 py-3.5" />
+    <h1 className="truncate">Long Title</h1>
+  </div>
+</div>
+```
+
+### Breakpoints
+- Mobile: < 640px (sm)
+- Tablet: 640-1024px (sm-lg)
+- Desktop: > 1024px (lg+)
+
+### Patterns
+- **Typography:** `text-2xl sm:text-3xl`, `text-sm sm:text-base`
+- **Spacing:** `p-4 sm:p-6 lg:p-8`, `gap-3 sm:gap-4`
+- **Layout:** `flex-col sm:flex-row`, `w-full sm:w-auto`
+- **Touch Targets:** Minimum 44x44px
+
+---
+
+## 7. Do's and Don'ts
+
+### ✅ Lakukan
+- Spasi berlebih, `line-height: 1.6`
+- Ikon outlined 1.5pt (filled hanya untuk aktif)
+- Hierarki tonal (cek apakah bisa ganti border)
+- `overflow-x: hidden`, `w-full`, `truncate`
+- `text-white` pada primary buttons & active chips
+- Touch targets ≥44px
+- `getMarkerColor()` untuk marker
+- Toast untuk feedback
+- File upload max 5MB
+
+### ❌ Jangan
+- Bayangan pekat (abu-abu)
+- Gradien
+- Garis pemisah 1px (divider line)
+- Fixed width (`w-[500px]`)
+- Inline error messages
+- `tabIndex={-1}` lupa pada icon buttons
+
+---
+
+## 8. Bahasa & Nada
+
+**Bahasa Indonesia Baku:**
+- Label: "Simpan Perubahan" (bukan "Save")
+- Empty State: "Belum ada laporan masuk"
+- Error: "Terjadi kendala pada sistem"
