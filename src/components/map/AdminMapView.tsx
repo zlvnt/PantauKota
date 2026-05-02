@@ -23,7 +23,7 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import type { LaporanAdminMapItem } from '@/types/laporan';
-import { STATUS_CONFIG, getMarkerColor } from '@/types/laporan';
+import { getMarkerColor } from '@/types/laporan';
 import Link from 'next/link';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import { initLeafletIcons, OSM_TILE_URL, OSM_ATTRIBUTION, MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM } from '@/lib/map';

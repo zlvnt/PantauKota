@@ -33,22 +33,56 @@ PWA pelaporan masalah perkotaan (sampah, jalan rusak, fasilitas umum) dengan buk
 
 ### Prasyarat
 - Node.js >= 18
-- Connection String Neon.tech
+- Connection String Neon.tech (sudah di-share di `.env`)
 
-### Langkah
+### Langkah Setup untuk Developer Baru
+
 ```bash
+# 1. Clone repository
+git clone <repository-url>
+cd pantaukota
+
+# 2. Install dependencies
 npm install
-# Buat .env dari .env.example
+
+# 3. Copy .env.example ke .env (atau gunakan .env yang sudah ada)
+# File .env sudah berisi DATABASE_URL yang di-share
+
+# 4. Generate Prisma Client
 npx prisma generate
-npm run seed  # Opsional
+
+# 5. Jalankan development server
 npm run dev
 ```
+
+**📝 Catatan Penting:**
+- ❌ **TIDAK perlu** menjalankan `npm run seed` karena database sudah berisi data
+- ❌ **TIDAK perlu** menjalankan migrasi karena database sudah ter-setup
+- ✅ Database PostgreSQL di-host di Neon.tech dan di-share antar developer
+- ✅ Data dummy (user, laporan, kategori) sudah ada di database
 
 ### Akun Testing
 | Role | Email | Password |
 |------|-------|----------|
 | Admin | `admin@pantaukota.id` | `password123` |
 | Warga | `budi@warga.id` | `password123` |
+| Warga | `siti@warga.id` | `password123` |
+
+### Troubleshooting
+
+**Error: Prisma Client tidak ditemukan**
+```bash
+npx prisma generate
+```
+
+**Error: TypeScript tidak mengenali field baru**
+- Restart TypeScript Server di VS Code: `Ctrl+Shift+P` → "TypeScript: Restart TS Server"
+- Atau restart VS Code
+
+**Ingin reset data development**
+```bash
+npm run seed  # Hanya jika ingin reset ke data dummy awal
+```
 
 ---
 
