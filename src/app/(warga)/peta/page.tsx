@@ -304,6 +304,16 @@ export default function PetaPage() {
           <p className="text-[10px] font-bold uppercase tracking-widest text-[#677177] mb-2">
             Status
           </p>
+          
+          {/* Prioritas Darurat - Ditampilkan pertama */}
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: '#dc2626' }} />
+            <span className="text-xs text-on-surface font-semibold">Prioritas Darurat</span>
+          </div>
+          
+          <div className="border-t border-[rgba(169,180,185,0.1)] my-1.5" />
+          
+          {/* Status Normal */}
           {(Object.entries(STATUS_CONFIG) as [keyof typeof STATUS_CONFIG, typeof STATUS_CONFIG[keyof typeof STATUS_CONFIG]][]).map(
             ([key, cfg]) => (
               <div key={key} className="flex items-center gap-2">
@@ -315,6 +325,12 @@ export default function PetaPage() {
               </div>
             )
           )}
+          
+          <div className="border-t border-[rgba(169,180,185,0.1)] mt-2 pt-2">
+            <p className="text-[9px] text-[#8a969c] leading-tight">
+              Prioritas: Skor ≥50
+            </p>
+          </div>
         </div>
       </div>
     </div>
