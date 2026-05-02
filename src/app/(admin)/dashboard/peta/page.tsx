@@ -235,7 +235,7 @@ export default function AdminPetaPage() {
                     onClick={() => setFilterKategoriId('')}
                     className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
                       filterKategoriId === ''
-                        ? 'bg-primary text-on-primary'
+                        ? 'bg-primary text-white'
                         : 'bg-surface-container-low text-[#677177] hover:bg-surface-container-high'
                     }`}
                   >
@@ -247,7 +247,7 @@ export default function AdminPetaPage() {
                       onClick={() => setFilterKategoriId(filterKategoriId === kat.id ? '' : kat.id)}
                       className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
                         filterKategoriId === kat.id
-                          ? 'bg-primary text-on-primary'
+                          ? 'bg-primary text-white'
                           : 'bg-surface-container-low text-[#677177] hover:bg-surface-container-high'
                       }`}
                     >
@@ -376,20 +376,27 @@ export default function AdminPetaPage() {
           <p className="text-[10px] font-bold uppercase tracking-widest text-[#677177] mb-2">
             Status Laporan
           </p>
+          
+          {/* Prioritas Darurat - Ditampilkan pertama */}
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: '#dc2626' }} />
+            <span className="text-xs text-on-surface font-semibold">Prioritas Darurat</span>
+          </div>
+          
+          <div className="border-t border-[rgba(169,180,185,0.1)] my-1.5" />
+          
+          {/* Status Normal */}
           {(Object.entries(STATUS_CONFIG) as [keyof typeof STATUS_CONFIG, typeof STATUS_CONFIG[keyof typeof STATUS_CONFIG]][]).map(([key, cfg]) => (
             <div key={key} className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: cfg.color }} />
               <span className="text-xs text-on-surface">{cfg.label}</span>
             </div>
           ))}
-          <div className="border-t border-[rgba(169,180,185,0.15)] pt-1.5 mt-1.5 space-y-1">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[#677177]">Prioritas</p>
-            <div className="flex items-center gap-2 text-xs text-on-surface">
-              <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center">
-                <AlertTriangle className="w-3 h-3 text-red-500" strokeWidth={2} />
-              </div>
-              Darurat (30+ suara)
-            </div>
+          
+          <div className="border-t border-[rgba(169,180,185,0.1)] mt-2 pt-2">
+            <p className="text-[9px] text-[#8a969c] leading-tight">
+              Prioritas: Skor ≥50 atau flag manual
+            </p>
           </div>
         </div>
       </div>

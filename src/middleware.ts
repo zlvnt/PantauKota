@@ -29,5 +29,6 @@ export const config = {
     '/laporan/buat',
     '/notifikasi/:path*',
     '/beranda/:path*',
+    '/profil/:path*',
   ],
 };

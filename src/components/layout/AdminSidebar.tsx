@@ -13,6 +13,7 @@ import {
   UserCircle2,
   ChevronLeft,
   ChevronRight,
+  Settings,
 } from 'lucide-react';
 
 const navLinks = [
@@ -104,15 +105,26 @@ export default function AdminSidebar({ adminName, isOpen = true, onToggle, isLoc
         <div className="bg-surface-container-low/50 mt-auto flex flex-col shrink-0">
           
           {/* User Profile */}
-          <div className={`flex items-center px-4 py-4 ${isOpen ? 'gap-3' : 'justify-center'}`}>
-            <div className="w-10 h-10 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center shrink-0 border border-[rgba(169,180,185,0.2)]">
-              <UserCircle2 className="w-5 h-5 text-primary" strokeWidth={1.5} />
+          <Link
+            href="/dashboard/profil"
+            className={`py-4 px-4 flex ${isOpen ? 'flex-row items-center justify-between' : 'flex-col items-center justify-center gap-2'} hover:bg-surface-container-low/50 transition-colors rounded-xl group`}
+          >
+            <div className={`flex items-center ${isOpen ? 'gap-3' : 'justify-center'}`}>
+              <div className="w-10 h-10 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center shrink-0 border border-[rgba(169,180,185,0.2)] group-hover:border-primary/30 transition-colors">
+                <UserCircle2 className="w-5 h-5 text-primary" strokeWidth={1.5} />
+              </div>
+              <div className={`min-w-0 overflow-hidden transition-all duration-300 whitespace-nowrap ${isOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+                <p className="text-sm font-bold text-on-surface truncate group-hover:text-primary transition-colors">{adminName}</p>
+                <p className="text-[10px] font-bold text-[#677177] uppercase tracking-wider mt-0.5">Administrator</p>
+              </div>
             </div>
-            <div className={`min-w-0 overflow-hidden transition-all duration-300 whitespace-nowrap ${isOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
-              <p className="text-sm font-bold text-on-surface truncate">{adminName}</p>
-              <p className="text-[10px] font-bold text-[#677177] uppercase tracking-wider mt-0.5">Administrator</p>
-            </div>
-          </div>
+            
+            {isOpen && (
+              <div className="p-2 rounded-lg text-[#677177] group-hover:text-primary group-hover:bg-primary/10 transition-colors">
+                <Settings className="w-4 h-4" strokeWidth={1.5} />
+              </div>
+            )}
+          </Link>
 
           <div className="px-4 pb-4">
             {/* Logout Button */}

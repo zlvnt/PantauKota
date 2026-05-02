@@ -17,27 +17,47 @@ export async function GET() {
       );
     }
 
+    const userId = session.user.id;
+
     const laporan = await prisma.laporan.findMany({
-      where: { userId: session.user.id },
+      where: { userId },
       select: {
         id: true,
         judul: true,
         alamat: true,
         status: true,
+        prioritas: true, // PBI-12
         voteCount: true,
         createdAt: true,
         foto: true,
+        catatanAdmin: true,
+        fotoPenyelesaian: true,
+        selesaiAt: true,
         kategori: {
           select: { id: true, nama: true, icon: true, warna: true },
         },
         _count: {
           select: { komentar: true },
         },
+        // PBI-10: Include votes untuk cek apakah user sudah vote
+        votes: {
+          where: { userId },
+          select: { id: true },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json(laporan);
+    // Transform data: tambahkan _hasVoted field (PBI-10)
+    const laporanWithVoteStatus = laporan.map((item) => {
+      const { votes, ...rest } = item as any;
+      return {
+        ...rest,
+        _hasVoted: (votes?.length ?? 0) > 0,
+      };
+    });
+
+    return NextResponse.json(laporanWithVoteStatus);
   } catch (error) {
     console.error('[API /laporan/saya GET]', error);
     return NextResponse.json(
