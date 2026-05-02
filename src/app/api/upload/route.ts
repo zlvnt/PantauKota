@@ -3,21 +3,21 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { v2 as cloudinary } from 'cloudinary';
 
-// Konfigurasi Cloudinary (pastikan .env sudah diisi)
+// Konfigurasi Cloudinary (pastikan .env sudah diisi dengan benar)
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
-  api_key: process.env.CLOUDINARY_API_KEY!,
-  api_secret: process.env.CLOUDINARY_API_SECRET!,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 export async function POST(req: NextRequest) {
-  // Auth check — hanya user yang login boleh upload
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   try {
+    // Auth check — hanya user yang login boleh upload
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized: Silakan login terlebih dahulu' }, { status: 401 });
+    }
+
     const formData = await req.formData();
     const files = formData.getAll('files') as File[];
 
@@ -48,28 +48,45 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Upload semua foto ke Cloudinary secara paralel
+    // Upload semua foto ke Cloudinary menggunakan stream (Lebih stabil & hemat memori)
     const uploadPromises = files.map(async (file) => {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
-      const base64 = buffer.toString('base64');
-      const dataUri = `data:${file.type};base64,${base64}`;
 
-      const result = await cloudinary.uploader.upload(dataUri, {
-        folder: 'pantaukota/laporan',
-        resource_type: 'image',
-        // Transformasi: resize max 1200px, quality auto
-        transformation: [{ width: 1200, height: 1200, crop: 'limit', quality: 'auto' }],
+      return new Promise<string>((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'pantaukota/laporan',
+            resource_type: 'image',
+            // Transformasi: resize max 1200px, quality auto
+            transformation: [{ width: 1200, height: 1200, crop: 'limit', quality: 'auto' }],
+          },
+          (error, result) => {
+            if (error) {
+              console.error('[Cloudinary Upload Error]:', error);
+              reject(error);
+            } else {
+              resolve(result!.secure_url);
+            }
+          }
+        );
+
+        // Eksekusi stream
+        uploadStream.end(buffer);
       });
-
-      return result.secure_url;
     });
 
     const urls = await Promise.all(uploadPromises);
 
     return NextResponse.json({ urls }, { status: 200 });
-  } catch (error) {
-    console.error('[API /upload POST]', error);
-    return NextResponse.json({ error: 'Gagal mengupload foto' }, { status: 500 });
+
+  } catch (error: any) {
+    // Menangkap error aslinya biar kelihatan di terminal VS Code
+    console.error('[API /upload POST] Error fatal:', error);
+    
+    return NextResponse.json(
+      { error: error?.message || 'Gagal mengupload foto ke server' }, 
+      { status: 500 }
+    );
   }
 }

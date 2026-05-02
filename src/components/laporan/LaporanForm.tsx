@@ -110,12 +110,25 @@ export default function LaporanForm() {
     },
   });
 
-  // Fetch kategori dari API
+  // Fetch kategori dari API (Sudah Diperbaiki)
   useEffect(() => {
     fetch('/api/kategori')
       .then((r) => r.json())
-      .then((data) => setKategoriList(data))
-      .catch(() => console.error('Gagal fetch kategori'));
+      .then((data) => {
+        // Handle berbagai macam format respons API
+        if (Array.isArray(data)) {
+          setKategoriList(data);
+        } else if (data && Array.isArray(data.data)) {
+          setKategoriList(data.data);
+        } else {
+          console.error('Format data kategori tidak sesuai:', data);
+          setKategoriList([]); // Set default array kosong jika format aneh
+        }
+      })
+      .catch((err) => {
+        console.error('Gagal fetch kategori:', err);
+        setKategoriList([]); // Fallback array kosong jika error network
+      });
   }, []);
 
   const onSubmit = async (values: LaporanFormValues) => {
@@ -158,7 +171,7 @@ export default function LaporanForm() {
         />
       </FieldWrapper>
 
-      {/* Kategori */}
+      {/* Kategori (Sudah Diperbaiki) */}
       <FieldWrapper label="Kategori" error={errors.kategoriId?.message} required>
         <select
           {...register('kategoriId')}
@@ -170,7 +183,7 @@ export default function LaporanForm() {
           )}
         >
           <option value="">-- Pilih kategori --</option>
-          {kategoriList.map((k) => (
+          {Array.isArray(kategoriList) && kategoriList.map((k) => (
             <option key={k.id} value={k.id}>
               {k.icon ? `${k.icon} ` : ''}{k.nama}
             </option>
