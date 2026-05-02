@@ -93,4 +93,16 @@ Traditional shadows are replaced by **Ambient Depth**.
 The system uses **Bahasa Indonesia Baku** to maintain professional civic authority.
 - **Button Labels:** "Simpan Perubahan" instead of "Save."
 - **Empty States:** "Belum ada laporan masuk" instead of "Tidak ada data."
-- **Error Messages:** "Terjadi kendala pada sistem" instead of "Error."
+## 8. Specific UI Behaviors
+
+### Priority System (PBI-12)
+- **Visual Flagging**: Laporan prioritas (darurat) ditandai dengan badge "🔥 Prioritas Darurat" (red-100 bg, red-700 text).
+- **Admin Management**: Di halaman Kelola Laporan, laporan yang diprioritaskan memiliki border-left tebal berwarna merah (`border-l-4 border-red-500`) dan tombol toggle prioritas (Flag icon) yang berubah menjadi merah jika aktif.
+- **Score Calculation**: Skor prioritas dihitung secara dinamis via rumus `(voteCount * 2) + hari_berlalu`.
+
+### Status Tracking Timeline (PBI-11)
+- **Timeline Nodes**: Node diwarnai sesuai status: 
+  - `MENUNGGU`: Amber (`bg-amber-100`, `text-amber-600`) dengan ikon jam.
+  - `DIPROSES`: Biru (`bg-blue-100`, `text-blue-600`) dengan animasi spinner (loading).
+  - `SELESAI`: Hijau (`bg-green-100`, `text-green-700`) dengan ikon centang.
+- **Admin Feedback**: Saat status selesai, catatan admin dan foto penyelesaian ditampilkan dalam blok hijau khusus (`bg-green-50` dengan border `border-green-100`).

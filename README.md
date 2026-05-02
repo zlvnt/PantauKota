@@ -232,9 +232,6 @@ src/
 
 ---
 
-<<<<<<< Updated upstream
-*File ini adalah representasi utama dari progres dan dokumentasi proyek. Asisten AI mana pun dapat menjadikan file ini sebagai pedoman langkah kerja pengembangan.*
-=======
 ## 🗄️ Database (Prisma)
 
 6 model inti: `User`, `Laporan`, `Kategori`, `Vote`, `Notifikasi`, `Komentar`.
@@ -247,7 +244,7 @@ Lihat `prisma/schema.prisma` untuk schema lengkap.
 
 ## 🎨 Sistem Desain
 
-Dokumen desain lengkap: **`DESIGN.md`** dan **`AI.md`**
+Dokumen desain lengkap: **`DESIGN.md`**
 
 Ringkasan prinsip utama:
 - **Editorial Ledger** — tidak ada glassmorphism, semua warna solid
@@ -266,15 +263,15 @@ Ringkasan prinsip utama:
 | PBI-03 | Manajemen Profil | 🔲 Belum |
 | PBI-04 | Notifikasi Real-time | 🟡 Sebagian (infrastruktur SSE + push aktif, UI bell admin & warga selesai, trigger hapus notif selesai) |
 | PBI-05 | Location Picker | 🔲 Belum |
-| PBI-06 | Komentar Laporan | 🔲 Belum |
+| PBI-06 | Komentar Laporan | ✅ Selesai |
 | PBI-07 | Form Laporan | 🔲 Belum |
 | PBI-08 | Upload Foto & Geolocation | 🔲 Belum |
-| PBI-09 | Lihat Detail Laporan | 🔲 Belum |
+| PBI-09 | Lihat Detail Laporan | ✅ Selesai |
 | PBI-10 | Upvote/Vote Laporan | ✅ Selesai |
-| PBI-11 | Tracking Status | 🔲 Belum |
-| PBI-12 | Sistem Prioritas Laporan | 🟡 Sebagian (marker darurat di peta admin) |
+| PBI-11 | Tracking Status | ✅ Selesai |
+| PBI-12 | Sistem Prioritas Laporan | ✅ Selesai |
 | PBI-13 | Riwayat Laporan | 🔲 Belum |
-| PBI-14 | Kelola Laporan | 🔲 Belum |
+| PBI-14 | Kelola Laporan | ✅ Selesai |
 | PBI-15 | Deteksi Duplikasi | 🔲 Belum |
 | PBI-16 | Kelola User / Admin | 🔲 Belum |
 | PBI-17 | Statistik & Grafik | 🟡 Sebagian (statistik angka di dashboard, belum chart) |
@@ -297,8 +294,3 @@ Ringkasan prinsip utama:
 | `/login`, `/register` | Publik |
 
 Lihat `src/middleware.ts` untuk implementasi `withAuth`.
-
----
-
-*Untuk pemahaman arsitektur yang lebih dalam, baca `AI.md`.*
->>>>>>> Stashed changes
