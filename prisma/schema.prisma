@@ -6,20 +6,86 @@ datasource db {
   provider = "postgresql"
 }
 
-
-// User - untuk warga dan admin
 model User {
   id         String       @id @default(cuid())
   name       String
   email      String       @unique
-  password   String // hashed
+  password   String
   role       Role         @default(WARGA)
-  laporan    Laporan[]
-  votes      Vote[]
-  notifikasi Notifikasi[]
-  komentar   Komentar[]
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
+  isActive   Boolean      @default(true)
+  komentar   Komentar[]
+  laporan    Laporan[]
+  notifikasi Notifikasi[]
+  votes      Vote[]
+}
+
+model Laporan {
+  id               String     @id @default(cuid())
+  userId           String
+  judul            String
+  deskripsi        String
+  kategoriId       String
+  foto             String[]
+  latitude         Float
+  longitude        Float
+  alamat           String?
+  status           Status     @default(MENUNGGU)
+  voteCount        Int        @default(0)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  selesaiAt        DateTime?
+  catatanAdmin     String?
+  fotoPenyelesaian String?
+  prioritas        Boolean    @default(false)
+  komentar         Komentar[]
+  kategori         Kategori   @relation(fields: [kategoriId], references: [id])
+  user             User       @relation(fields: [userId], references: [id])
+  votes            Vote[]
+}
+
+model Kategori {
+  id        String    @id @default(cuid())
+  nama      String    @unique
+  icon      String?
+  warna     String?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  laporan   Laporan[]
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  userId    String
+  laporanId String
+  createdAt DateTime @default(now())
+  laporan   Laporan  @relation(fields: [laporanId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, laporanId])
+}
+
+model Komentar {
+  id        String   @id @default(cuid())
+  userId    String
+  laporanId String
+  isi       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  laporan   Laporan  @relation(fields: [laporanId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Notifikasi {
+  id        String   @id @default(cuid())
+  userId    String
+  judul     String
+  pesan     String
+  laporanId String?
+  dibaca    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 enum Role {
@@ -27,79 +93,8 @@ enum Role {
   ADMIN
 }
 
-// Laporan masalah
-model Laporan {
-  id               String    @id @default(cuid())
-  userId           String
-  user             User      @relation(fields: [userId], references: [id])
-  judul            String
-  deskripsi        String
-  kategoriId       String
-  kategori         Kategori  @relation(fields: [kategoriId], references: [id])
-  foto             String[] // URLs dari Cloudinary
-  latitude         Float
-  longitude        Float
-  alamat           String? // Geocoded address
-  status           Status    @default(MENUNGGU)
-  votes            Vote[]
-  voteCount        Int       @default(0)
-  komentar         Komentar[]
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  selesaiAt        DateTime?
-  catatanAdmin     String? // Tanggapan admin saat menyelesaikan masalah
-  fotoPenyelesaian String? // URL Bukti penyelesaian dari admin
-}
-
 enum Status {
   MENUNGGU
   DIPROSES
   SELESAI
-}
-
-// Kategori laporan (fleksibel, bisa ditambah admin)
-model Kategori {
-  id        String    @id @default(cuid())
-  nama      String    @unique
-  icon      String? // emoji atau icon name
-  warna     String? // hex color untuk marker di map
-  isActive  Boolean   @default(true) // Untuk fitur soft-delete
-  laporan   Laporan[]
-  createdAt DateTime  @default(now())
-}
-
-// Vote/Upvote
-model Vote {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  laporanId String
-  laporan   Laporan  @relation(fields: [laporanId], references: [id])
-  createdAt DateTime @default(now())
-
-  @@unique([userId, laporanId]) // satu user cuma bisa vote 1x per laporan
-}
-
-// Komentar laporan
-model Komentar {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  laporanId String
-  laporan   Laporan  @relation(fields: [laporanId], references: [id])
-  isi       String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// Notifikasi
-model Notifikasi {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  judul     String
-  pesan     String
-  laporanId String? // link ke laporan terkait
-  dibaca    Boolean  @default(false)
-  createdAt DateTime @default(now())
 }

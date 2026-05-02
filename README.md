@@ -1,235 +1,192 @@
-# PantauKota (Aplikasi Lapor Lingkungan) - Project Context & Status
-**Status Terakhir Diperbarui:** PBI-01 Visualisasi Peta Interaktif + Database Cloud + Auth Backend + Admin Dashboard
+# PantauKota — Aplikasi Lapor Lingkungan
 
-## 📌 Deskripsi Proyek
-Aplikasi web berbasis **Progressive Web App (PWA)** untuk pelaporan masalah perkotaan (sampah, jalan rusak, fasilitas umum) oleh warga. Laporan ini disertai bukti **foto dan lokasi GPS**, yang ditinjau melalui **peta interaktif**. 
-
-Sistem ini memiliki dua aktor utama:
-1. **Warga**: Melaporkan masalah, melihat progres laporan, dan melakukan sinkronisasi dengan masyarakat luas (peta dan status). Warga dibatasi membuat **maksimal 3 laporan per hari** untuk mencegah spam.
-2. **Admin (Pemerintah)**: Meninjau laporan, mengubah status penyelesaian, meninjau analitik, dan dapat memberikan **catatan serta bukti foto** setelah masalah terselesaikan.
-
-## 🛠️ Tech Stack Utama
-- **Frontend**: Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS.
-- **Backend / API**: Next.js API Routes, NextAuth.js v4.
-- **Database**: PostgreSQL (Cloud: Neon.tech, v16 Singapore Region) dengan Prisma ORM (Prisma 7 + `@prisma/adapter-pg`).
-- **Peta & Lokasi**: Leaflet.js, React-Leaflet, Geolocation API.
-- **Media Storage**: Cloudinary (Upload foto).
-- **UI Components**: `shadcn/ui`, `lucide-react`.
-- **PWA & Form**: `next-pwa`, `react-hook-form`, `zod`.
-- **Real-Time Notification**: Server-Sent Events (SSE).
+**Update:** 02 Mei 2026 | PBI-03, 10, 11, 12, 14, 22 ✅
 
 ---
 
-## 📂 Struktur Database Utama (Prisma)
-Aplikasi ini memiliki 6 model inti:
-1. **User**: Mengelola data partisipan (`WARGA` atau `ADMIN`).
-2. **Laporan**: Terdapat _field_ penting seperti `status` (MENUNGGU, DIPROSES, SELESAI), bukti `foto` awal, titik lokasi, serta `catatanAdmin` dan `fotoPenyelesaian` bila masalah sudah dibereskan.
-3. **Kategori**: Fleksibel dan dirancang dengan _soft-delete_ (`isActive` boolean) agar tidak merusak relasi pelaporan lama jika ada kategori yang dinonaktifkan Admin.
-4. **Vote**: Mencegah 1 warga mem-vote 1 laporan lebih dari sekali (`@@unique([userId, laporanId])`).
-5. **Notifikasi**: Dicatat dalam database dan nantinya ditransfer real-time via SSE.
-6. **Komentar**: Komentar warga dan admin pada laporan. Bisa dihapus oleh pemilik atau admin.
+## 📌 Deskripsi
 
-*Schema Prisma lengkap terbaru dapat dilihat pada `prisma/schema.prisma`.*
+PWA pelaporan masalah perkotaan (sampah, jalan rusak, fasilitas umum) dengan bukti foto dan GPS.
+
+**Aktor:**
+- **Warga** — Lapor, vote, komentar (maks 3 laporan/hari)
+- **Admin** — Tinjau, ubah status, analitik, catatan & foto penyelesaian
 
 ---
 
-## 🗄️ Database & Environment
+## 🛠️ Tech Stack
 
-### Cloud Database: Neon.tech
-Database PostgreSQL 16 dihosting di **Neon.tech (AWS Asia Pacific - Singapore)** agar seluruh tim dapat menggunakan satu database bersama.
-
-**Setup untuk anggota tim baru:**
-1. Minta _Connection String_ dari ketua tim.
-2. Salin ke file `.env` pada property `DATABASE_URL`.
-3. Jalankan `npx prisma generate` untuk generate Prisma Client.
-4. Jalankan `npm run seed` untuk isi data dummy (opsional).
-
-> **Catatan:** File `.env` sudah dimasukkan ke `.gitignore`. Gunakan file `.env.example` sebagai referensi key yang dibutuhkan.
-
-### Prisma 7 — Konfigurasi Khusus
-Prisma 7 mewajibkan konfigurasi koneksi di `prisma.config.ts` (bukan di `schema.prisma`). Adapter `@prisma/adapter-pg` digunakan untuk koneksi ke PostgreSQL. File penting:
-- `prisma.config.ts` — konfigurasi datasource URL
-- `src/lib/prisma.ts` — singleton PrismaClient dengan adapter `PrismaPg`
-- `tsconfig.seed.json` — konfigurasi TypeScript khusus untuk menjalankan file seed
-
-### Data Seed (Akun Testing)
-Jalankan `npm run seed` untuk mengisi data dummy. Akun yang tersedia:
-- **Admin**: `admin@pantaukota.id` / `password123`
-- **Warga**: `budi@warga.id` / `password123`
-- **Warga**: `siti@warga.id` / `password123`
-- **Warga**: `andi@warga.id` / `password123`
-- 6 Kategori + 8 Laporan tersebar di area Jakarta + 7 Vote
+| Kategori | Teknologi |
+|---------|-----------|
+| Frontend | Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS |
+| Backend | Next.js API Routes, NextAuth.js v4 |
+| Database | PostgreSQL 16 (Neon.tech), Prisma 7 + `@prisma/adapter-pg` |
+| Peta | Leaflet.js + React-Leaflet |
+| Media | Cloudinary |
+| UI | `lucide-react`, sistem desain "Editorial Ledger" |
+| PWA | `next-pwa` |
+| Real-Time | Server-Sent Events (SSE) |
 
 ---
 
-## 🔐 Sistem Autentikasi
+## 🚀 Setup
 
-### Alur Login & Register
-- **Login**: Form `AuthScreen.tsx` → `NextAuth signIn('credentials')` → validasi email/password dari DB → redirect berdasarkan role.
-- **Register**: Form `AuthScreen.tsx` → `POST /api/auth/register` (validasi Zod + cek duplikat email + hash bcrypt) → auto-login setelah berhasil → redirect ke `/peta`.
-- **Error Handling**: Error banner merah di form + loading spinner + disable input saat proses.
-- **Session**: Dikelola via `<SessionProvider>` di `src/components/Providers.tsx` yang dibungkus di root layout.
+### Prasyarat
+- Node.js >= 18
+- Connection String Neon.tech
 
-### Proteksi Route (Middleware)
-File `src/middleware.ts` menggunakan `withAuth` dari NextAuth:
-- Halaman `/dashboard/*`, `/kelola-*` → hanya ADMIN
-- Halaman `/laporan/buat`, `/notifikasi/*`, `/riwayat/*` → harus login (semua role)
-- Halaman `/peta` → harus login, Admin boleh mengakses
+### Langkah
+```bash
+npm install
+# Buat .env dari .env.example
+npx prisma generate
+npm run seed  # Opsional
+npm run dev
+```
 
-### Redirect Berdasarkan Role
-| Role | Setelah Login | Akses /dashboard | Akses /peta |
-|------|--------------|------------------|-------------|
-| WARGA | → `/peta` | ❌ Redirect | ✅ |
-| ADMIN | → `/dashboard` | ✅ | ✅ |
-
----
-
-## 🗺️ PBI-01: Visualisasi Peta Interaktif (SELESAI)
-
-### Arsitektur Komponen Peta
-Terdapat **dua versi peta** yang terpisah untuk dua aktor berbeda:
-
-#### Peta Warga (`/peta`)
-- **Komponen**: `src/components/map/MapView.tsx`
-- **Halaman**: `src/app/(warga)/peta/page.tsx`
-- **Fitur**: Panel daftar laporan (kiri), marker berwarna per status, popup ringkasan (judul, status, vote, komentar), legenda status, tombol "Laporkan Masalah", dynamic import (no SSR)
-- **Privasi**: Nama pelapor TIDAK ditampilkan
-
-#### Peta Admin (`/dashboard/peta`)
-- **Komponen**: `src/components/map/AdminMapView.tsx`
-- **Halaman**: `src/app/(admin)/dashboard/peta/page.tsx`
-- **Fitur Eksklusif Admin**:
-  - Info pelapor + tanggal di popup dan kartu
-  - **Aksi Cepat Ubah Status** langsung dari popup (Menunggu / Diproses / Selesai) via `PATCH /api/laporan/[id]`
-  - **Indikator Darurat**: Banner peringatan jika ada laporan dengan ≥30 suara + status MENUNGGU
-  - **Marker Prioritas**: Ukuran marker lebih besar berdasarkan jumlah vote, marker darurat memiliki pulse animation + badge angka
-  - **Filter Status**: Klik stat card (Menunggu/Diproses/Selesai) untuk filter langsung di peta
-  - Kartu laporan dengan highlight merah untuk laporan darurat
-
-### Shared Infrastructure
-| File | Fungsi |
-|------|--------|
-| `src/types/laporan.ts` | Tipe data `LaporanMapItem`, `LaporanAdminMapItem`, `LaporanDetail`, `STATUS_CONFIG` |
-| `src/hooks/useLaporanMap.ts` | Hook fetching data laporan dengan support filter & adminView |
-| `src/app/api/laporan/route.ts` | `GET /api/laporan` — query params: `status`, `kategoriId`, `search`, `adminView` |
-| `src/app/api/laporan/[id]/route.ts` | `PATCH /api/laporan/[id]` — admin update status (auth guard) |
+### Akun Testing
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | `admin@pantaukota.id` | `password123` |
+| Warga | `budi@warga.id` | `password123` |
 
 ---
 
-## 🧭 Layout & Navigasi Global
-
-### Navbar Warga (`WargaNavbar.tsx`)
-- Logo PantauKota + navigasi: Peta Laporan, Riwayat Saya
-- Komponen NotificationBell (dari tim)
-- User dropdown: nama user, tombol Keluar
-- Layout: `src/app/(warga)/layout.tsx` (server-side auth guard + Navbar)
-
-### Sidebar Admin (`AdminSidebar.tsx`)
-- Logo + badge "Admin Panel"
-- Navigasi: Dashboard, Peta Laporan, Kelola Laporan, Kelola Kategori
-- Info nama admin + tombol Keluar
-- Layout: `src/app/(admin)/layout.tsx` (server-side auth guard, admin-only)
-
-### Admin Dashboard (`/dashboard`)
-- 6 stat card (Total Laporan, Menunggu, Diproses, Selesai, Total Warga, Tingkat Penyelesaian %)
-- Tabel 5 laporan terbaru (data langsung dari DB via server component)
-
----
-
-## 📅 Progress Proyek Saat Ini
-
-### ✅ SELESAI (DONE)
-- [x] Diskusi dan desain arsitektur / _tech stack_.
-- [x] Perancangan Model Database (Prisma Schema).
-- [x] Inisialisasi Project (Next.js 14 dengan App Router, TS, Tailwind).
-- [x] Instalasi seluruh _dependencies_ utama (termasuk: `shadcn`, `lucide-react`, `@prisma/adapter-pg`, `tsx`).
-- [x] Pembuatan Kerangka Struktur Folder (`/app/(warga)`, `/app/(admin)`, `/components`, `/api`, dll).
-- [x] Setup `next.config.mjs` untuk PWA dan Next Image (Cloudinary & Unsplash hosts).
-- [x] Penyesuaian _feedback_ admin (`catatanAdmin` & `fotoPenyelesaian`) serta fitur _soft-delete_ Kategori.
-- [x] Membersihkan file-file lama dari _root_ folder.
-- [x] **Setup Sistem Desain "Civic Clarity":** Palet warna kustom, tipografi ganda (Manrope & Inter), Tonal Layering.
-- [x] **Antarmuka Auth (UI):** Pembuatan `AuthScreen` dengan hero section + glassmorphism (Login & Register).
-- [x] **Database Cloud (Neon.tech):** PostgreSQL 16 terkoneksi, migrasi `init` berhasil dijalankan.
-- [x] **Database Seeding:** File `prisma/seed.ts` dengan data realistis (users, kategori, laporan, vote).
-- [x] **Logika Auth Backend:** API register (`POST /api/auth/register` + Zod), NextAuth `signIn`, SessionProvider, redirect berbasis role.
-- [x] **Proteksi Route:** `middleware.ts` dengan `withAuth`, server-side guard di kedua layout.
-- [x] **Navbar Warga:** Navigasi responsif, NotificationBell, user dropdown + logout.
-- [x] **Sidebar Admin:** Navigasi admin, info user, logout.
-- [x] **Dashboard Admin:** 6 stat card + tabel laporan terbaru (server component query langsung ke DB).
-- [x] **PBI-01 Peta Warga:** MapView + panel daftar laporan + marker berwarna + popup + legenda + tombol lapor.
-- [x] **PBI-01 Peta Admin:** AdminMapView + marker prioritas + aksi cepat status + filter + indikator darurat.
-- [x] **API Laporan:** `GET /api/laporan` (filter, search, adminView) + `PATCH /api/laporan/[id]` (update status, admin-only).
-- [x] **Tipe Data Shared:** `LaporanMapItem`, `LaporanAdminMapItem`, `STATUS_CONFIG` di `src/types/laporan.ts`.
-
-### ✅ STATUS PBI (PRODUCT BACKLOG ITEM)
-- [x] **PBI-01** Visualisasi Peta Interaktif
-- [ ] **PBI-02** Filter & Search Peta
-- [ ] **PBI-03** Manajemen Profil
-- [ ] **PBI-04** Notifikasi Real-time
-- [ ] **PBI-05** Location Picker
-- [ ] **PBI-06** Komentar Laporan
-- [ ] **PBI-07** Form Laporan
-- [ ] **PBI-08** Upload Foto & Geolocation
-- [ ] **PBI-09** Lihat Detail Laporan
-- [ ] **PBI-10** Upvote/Vote Laporan
-- [ ] **PBI-11** Tracking Status
-- [ ] **PBI-12** Sistem Prioritas Laporan *(Sebagian selesai: Marker Darurat di Peta Admin)*
-- [ ] **PBI-13** Riwayat Laporan
-- [ ] **PBI-14** Kelola Laporan
-- [ ] **PBI-15** Deteksi Duplikasi
-- [ ] **PBI-16** Kelola User / Admin
-- [x] **PBI-17** Statistik & Grafik Laporan *(Selesai di Dashboard Admin (Butuh Penyesuain Lagi))*
-- [x] **PBI-18** Tabel Monitoring Laporan *(Selesai di Dashboard Admin (Butuh Penyesuain Lagi))*
-- [ ] **PBI-19** Kelola kategori
-- [ ] **PBI-20** Daftar Laporan
-- [x] **PBI-21** PWA Support *(Selesai di konfigurasi Next.js)*
-- [x] **PBI-22** Update Status Laporan *(Selesai via Aksi Cepat Peta Admin)*
-- [ ] **PBI-23** Notifikasi Otomatis
-
----
-
-## 📁 Struktur File Penting
+## 📂 Struktur Folder
 
 ```
 src/
 ├── app/
-│   ├── (auth)/login/page.tsx          # Halaman login
-│   ├── (auth)/register/page.tsx       # Halaman register
-│   ├── (warga)/
-│   │   ├── layout.tsx                 # ← Navbar + auth guard
-│   │   ├── peta/page.tsx              # ← PBI-01 Peta Warga
-│   │   └── riwayat/, notifikasi/      # Placeholder
-│   ├── (admin)/
-│   │   ├── layout.tsx                 # ← Sidebar + admin guard
-│   │   └── dashboard/
-│   │       ├── page.tsx               # ← Dashboard statistik
-│   │       └── peta/page.tsx          # ← PBI-01 Peta Admin
-│   └── api/
-│       ├── auth/[...nextauth]/        # NextAuth handler
-│       ├── auth/register/route.ts     # API register
-│       └── laporan/
-│           ├── route.ts               # GET laporan (filter, search, adminView)
-│           └── [id]/route.ts          # PATCH status (admin-only)
+│   ├── (auth)/login, register
+│   ├── (warga)/beranda, peta, laporan, notifikasi
+│   ├── (admin)/dashboard, kelola-laporan, kelola-kategori
+│   └── api/laporan, kategori, notifikasi, vote, upload
 ├── components/
-│   ├── auth/AuthScreen.tsx            # Form login/register + NextAuth
-│   ├── layout/WargaNavbar.tsx         # Navbar warga
-│   ├── layout/AdminSidebar.tsx        # Sidebar admin
-│   ├── map/MapView.tsx                # Peta warga (Leaflet)
-│   ├── map/AdminMapView.tsx           # Peta admin (aksi cepat)
-│   ├── map/LocationPicker.tsx         # Picker lokasi (dari tim)
-│   ├── Providers.tsx                  # SessionProvider wrapper
-│   └── NotificationBell.tsx           # Notifikasi (dari tim)
-├── hooks/
-│   ├── useLaporanMap.ts               # Hook fetch data peta
-│   ├── useGeolocation.ts              # Hook GPS (dari tim)
-│   └── useNotifications.ts            # Hook notifikasi (dari tim)
-├── lib/
-│   ├── auth.ts                        # NextAuth config (credentials)
-│   └── prisma.ts                      # PrismaClient singleton + PrismaPg adapter
-└── types/
-    └── laporan.ts                     # Shared types + STATUS_CONFIG
+│   ├── ui/Badge, Spinner, DynamicIcon, Toast, VoteButton
+│   ├── laporan/StatusTimeline, PrioritasScore
+│   ├── admin/CompletionModal
+│   ├── map/MapView, AdminMapView, LocationPicker
+│   └── layout/WargaNavbar, AdminSidebar
+├── hooks/useDebounce, useLaporanMap, useVote, useToast, useNotifications
+├── lib/auth, map, prisma, notifications
+└── types/laporan
 ```
 
 ---
 
-*File ini adalah representasi utama dari progres dan dokumentasi proyek. Asisten AI mana pun dapat menjadikan file ini sebagai pedoman langkah kerja pengembangan.*
+## 🗄️ Database
+
+6 model: `User`, `Laporan`, `Kategori`, `Vote`, `Notifikasi`, `Komentar`  
+Schema: `prisma/schema.prisma` | Config: `prisma.config.ts`
+
+---
+
+## 🎨 Sistem Desain
+
+**Dokumen:** `DESIGN.md`, `AI.md`
+
+**Prinsip:**
+- **Editorial Ledger** — No glassmorphism, warna solid
+- **No-Line Rule** — Pemisah pakai whitespace/tonal, bukan border 1px
+- **Floating UI** — `rounded-3xl`, shadow ambient
+- **Tonal Layering** — `surface-container-lowest/low/high`
+
+---
+
+## ✅ Status PBI
+
+| PBI | Nama | Status |
+|-----|------|--------|
+| 01 | Visualisasi Peta | ✅ |
+| 02 | Filter & Search Peta | ✅ |
+| 03 | Manajemen Profil | ✅ |
+| 04 | Notifikasi Real-time | 🟡 Infrastruktur SSE aktif |
+| 09 | Detail Laporan | 🟡 Warga selesai |
+| 10 | Vote Laporan | ✅ Unlimited vote, optimistic UI |
+| 11 | Tracking Status | ✅ Timeline 3 tahap |
+| 12 | Prioritas Laporan | ✅ Formula + marker merah |
+| 14 | Kelola Laporan | ✅ TC-12.3: Filter, search, sorting |
+| 17 | Statistik | 🟡 Angka selesai, chart belum |
+| 18 | Tabel Monitoring | 🟡 5 terbaru selesai |
+| 21 | PWA Support | ✅ |
+| 22 | Update Status | ✅ TC-11.3: Completion modal |
+
+---
+
+## 🎉 Recent Updates (Mei 2026)
+
+### TC-11.3 & TC-12.3 ✅
+
+**Completion Modal (TC-11.3):**
+- Modal saat admin klik "Selesai"
+- Input: Catatan (wajib), Foto (opsional, max 5MB)
+- Toast notifications, loading states
+- API: `PATCH /api/laporan/[id]`
+
+**Kelola Laporan (TC-12.3):**
+- Route: `/kelola-laporan`
+- Search (debounced 400ms), filter kategori & status
+- Statistik: total, menunggu, diproses, selesai, urgent
+- Sorting: prioritas dulu, lalu terbaru
+- Link detail: `/dashboard/laporan/[id]`
+
+**Priority Marker Enhancement:**
+- SELESAI → Hijau (selalu)
+- Prioritas (belum selesai) → Merah jika flag=true ATAU skor≥50
+- Non-Prioritas → Amber/Blue sesuai status
+
+**UI/UX:**
+- Kategori text `text-white` saat aktif
+- Toast untuk semua feedback
+- Responsive, no horizontal scroll
+
+---
+
+### PBI-10, 11, 12 ✅
+
+**Vote (PBI-10):**
+- Unlimited vote, optimistic UI
+- Rollback auto jika gagal
+- Animasi bounce, toast error
+- Icon filled/outlined
+
+**Tracking Status (PBI-11):**
+- Timeline 3 tahap: MENUNGGU → DIPROSES → SELESAI
+- Icon dinamis (Clock, Loader2, CheckCircle)
+- Tanggal + jam, catatan admin, foto penyelesaian
+
+**Prioritas (PBI-12):**
+- Formula: `score = (voteCount × 2) + hari`
+- Badge skor dengan warna dinamis
+- Flag manual admin
+- Sorting otomatis
+
+---
+
+### PBI-03: Manajemen Profil ✅
+
+- Update nama & password
+- Validasi nama unik
+- Toast notifications
+- Session update real-time
+- No logout after password change
+- Responsive full-screen layout
+- Password visibility toggle persistent
+- Back button navigation
+
+---
+
+## 🔐 Proteksi Route
+
+| Rute | Akses |
+|------|-------|
+| `/dashboard/*`, `/kelola-*` | Admin only |
+| `/laporan/buat`, `/notifikasi/*` | Login |
+| `/peta` | Login |
+| `/login`, `/register` | Publik |
+
+Implementasi: `src/middleware.ts`
+
+---
+
+*Detail arsitektur: `AI.md`*

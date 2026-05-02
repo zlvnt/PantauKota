@@ -42,45 +42,49 @@ async function main() {
 
   const admin = await prisma.user.upsert({
     where: { email: 'admin@pantaukota.id' },
-    update: {},
+    update: { isActive: true },
     create: {
       name: 'Admin PantauKota',
       email: 'admin@pantaukota.id',
       password: passwordHash,
       role: Role.ADMIN,
+      isActive: true,
     },
   });
 
   const warga1 = await prisma.user.upsert({
     where: { email: 'budi@warga.id' },
-    update: {},
+    update: { isActive: true },
     create: {
       name: 'Budi Santoso',
       email: 'budi@warga.id',
       password: passwordHash,
       role: Role.WARGA,
+      isActive: true,
     },
   });
 
   const warga2 = await prisma.user.upsert({
     where: { email: 'siti@warga.id' },
-    update: {},
+    update: { isActive: true },
     create: {
       name: 'Siti Rahayu',
       email: 'siti@warga.id',
       password: passwordHash,
       role: Role.WARGA,
+      isActive: true,
     },
   });
 
   const warga3 = await prisma.user.upsert({
     where: { email: 'andi@warga.id' },
-    update: {},
+    update: { isActive: true },
     create: {
       name: 'Andi Wijaya',
       email: 'andi@warga.id',
       password: passwordHash,
       role: Role.WARGA,
+      isActive: true,
     },
   });
   console.log('✅ 1 Admin + 3 Warga dibuat');

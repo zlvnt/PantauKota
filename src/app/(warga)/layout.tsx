@@ -21,8 +21,8 @@ export default async function WargaLayout({
   return (
     <div className="min-h-screen bg-surface">
       <WargaNavbar />
-      {/* Konten halaman dimulai setelah navbar (pt-16 = h-16) */}
-      <main className="pt-16">
+      {/* Konten halaman */}
+      <main className="flex-1 flex flex-col">
         {children}
       </main>
     </div>

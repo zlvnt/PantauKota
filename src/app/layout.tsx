@@ -27,8 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className={cn("font-sans", inter.variable, manrope.variable)}>
-      <body className={`${inter.variable} ${manrope.variable} antialiased text-on-surface bg-surface`}>
+    <html lang="id" className={cn("font-sans overflow-x-hidden", inter.variable, manrope.variable)}>
+      <body className={`${inter.variable} ${manrope.variable} antialiased text-on-surface bg-surface overflow-x-hidden`}>
         <Providers>{children}</Providers>
       </body>
     </html>

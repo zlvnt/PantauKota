@@ -28,6 +28,7 @@ export const config = {
     '/kelola-laporan/:path*',
     '/laporan/buat',
     '/notifikasi/:path*',
-    '/riwayat/:path*',
+    '/beranda/:path*',
+    '/profil/:path*',
   ],
 };
