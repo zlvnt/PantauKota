@@ -21,6 +21,7 @@ import {
   Loader,
   ExternalLink,
   Image as ImageIcon,
+  LocateFixed,
 } from 'lucide-react';
 import type { LaporanAdminMapItem } from '@/types/laporan';
 import { getMarkerColor } from '@/types/laporan';
@@ -258,13 +259,47 @@ function AdminMarker({
 function MapResizer() {
   const map = useMap();
   useEffect(() => {
+    const container = map.getContainer();
     const observer = new ResizeObserver(() => {
-      map.invalidateSize();
+      if (container && container.isConnected && container.clientWidth > 0 && container.clientHeight > 0) {
+        map.invalidateSize(false);
+      }
     });
-    observer.observe(map.getContainer());
+    observer.observe(container);
     return () => observer.disconnect();
   }, [map]);
   return null;
+}
+
+// ─── Sub-komponen: Tombol untuk kembali ke titik laporan ────────────────────
+function RecenterButton({ laporan }: { laporan: LaporanAdminMapItem[] }) {
+  const map = useMap();
+
+  const handleRecenter = () => {
+    if (laporan.length === 1) {
+      map.flyTo([laporan[0].latitude, laporan[0].longitude], 16, { duration: 0.8 });
+    } else if (laporan.length > 1) {
+      const bounds = L.latLngBounds(laporan.map(l => [l.latitude, l.longitude]));
+      map.flyToBounds(bounds, { padding: [50, 50], duration: 0.8 });
+    } else {
+      map.flyTo(MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM, { duration: 0.8 });
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleRecenter();
+      }}
+      className="absolute bottom-6 right-6 z-[1000] flex items-center justify-center bg-primary text-white p-3 rounded-full shadow-[0_4px_12px_rgba(42,52,57,0.3)] hover:bg-primary-dim transition-transform hover:scale-105 active:scale-95"
+      title="Kembali ke Titik Peta"
+    >
+      <LocateFixed className="w-5 h-5" strokeWidth={2} />
+    </button>
+  );
 }
 
 // ─── Props & Komponen Utama ───────────────────────────────────────────────────
@@ -314,6 +349,7 @@ export default function AdminMapView({ laporan, selectedId, onMarkerClick, onSta
         scrollWheelZoom
       >
         <MapResizer />
+        <RecenterButton laporan={laporan} />
         <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
 
         {laporan.map((item) => (

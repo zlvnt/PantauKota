@@ -1,19 +1,20 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import {
-  Search,
   MapPin,
   ThumbsUp,
   MessageSquare,
   Plus,
   FileSearch,
-  X,
+  ArrowRight,
 } from 'lucide-react';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import { STATUS_CONFIG } from '@/types/laporan';
 import type { LaporanSaya } from '@/types/laporan';
+
+const LIMIT = 3;
 
 // ─── Format tanggal relatif ────────────────────────────────────────────────
 function formatTanggal(isoString: string): string {
@@ -96,9 +97,7 @@ interface DashboardClientProps {
 }
 
 export default function DashboardClient({ laporan, userName }: DashboardClientProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-
-  // Hitung statistik dari data asli (tidak terpengaruh filter search)
+  // Hitung statistik dari seluruh data
   const stats = useMemo(() => ({
     total: laporan.length,
     menunggu: laporan.filter((l) => l.status === 'MENUNGGU').length,
@@ -106,25 +105,15 @@ export default function DashboardClient({ laporan, userName }: DashboardClientPr
     selesai: laporan.filter((l) => l.status === 'SELESAI').length,
   }), [laporan]);
 
-  // Filter client-side berdasarkan judul, alamat, atau nama kategori
-  const filtered = useMemo(() => {
-    if (!searchTerm.trim()) return laporan;
-    const q = searchTerm.toLowerCase();
-    return laporan.filter(
-      (l) =>
-        l.judul.toLowerCase().includes(q) ||
-        l.kategori.nama.toLowerCase().includes(q) ||
-        (l.alamat ?? '').toLowerCase().includes(q)
-    );
-  }, [laporan, searchTerm]);
-
-  const isSearchActive = searchTerm.trim().length > 0;
+  // Tampilkan hanya 3 laporan terbaru di dashboard
+  const preview = useMemo(() => laporan.slice(0, LIMIT), [laporan]);
+  const hasMore = laporan.length > LIMIT;
 
   return (
     <div className="min-h-screen bg-surface overflow-x-hidden pb-20 sm:pb-8 pt-24">
       {/* ── Hero Strip ──────────────────────────────────────────────────── */}
       <div className="bg-surface-container-low border-b border-[rgba(169,180,185,0.12)]">
-        <div className="max-w-3xl mx-auto px-6 py-10">
+        <div className="max-w-6xl mx-auto px-6 py-10">
           <p className="text-xs font-bold uppercase tracking-widest text-[#677177] mb-1">
             Dashboard Saya
           </p>
@@ -137,7 +126,7 @@ export default function DashboardClient({ laporan, userName }: DashboardClientPr
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
 
         {/* ── Stat Cards ──────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -177,47 +166,23 @@ export default function DashboardClient({ laporan, userName }: DashboardClientPr
 
         {/* ── Section Daftar Laporan ────────────────────────────────────── */}
         <div>
-          {/* Header section + Search Bar */}
+          {/* Header section */}
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display font-semibold text-on-surface text-base">
-              Laporan Saya
+              Laporan Terbaru Saya
             </h2>
             {laporan.length > 0 && (
-              <span className="text-xs text-[#8a969c]">
-                {isSearchActive
-                  ? `${filtered.length} dari ${laporan.length} laporan`
-                  : `${laporan.length} laporan`}
-              </span>
+              <Link
+                href="/laporan-saya"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-dim transition-colors"
+              >
+                Lihat Semua
+                <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.5} />
+              </Link>
             )}
           </div>
 
-          {/* Search Bar (hanya tampil jika ada laporan) */}
-          {laporan.length > 0 && (
-            <div className="relative mb-4">
-              <Search
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a9b4b9]"
-                strokeWidth={1.5}
-              />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Cari laporanmu, contoh: jalan, banjir..."
-                className="w-full pl-10 pr-10 py-2.5 bg-surface-container-lowest border border-[rgba(169,180,185,0.2)] rounded-xl text-sm text-on-surface placeholder:text-[#a9b4b9] focus:outline-none focus:border-primary transition-colors"
-              />
-              {isSearchActive && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-md text-[#8a969c] hover:text-on-surface transition-colors"
-                  title="Hapus pencarian"
-                >
-                  <X className="w-4 h-4" strokeWidth={1.5} />
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Daftar laporan */}
+          {/* Daftar laporan (max 3) */}
           <div className="bg-surface-container-low rounded-2xl p-2 space-y-1">
             {/* Empty state: belum punya laporan sama sekali */}
             {laporan.length === 0 && (
@@ -241,29 +206,21 @@ export default function DashboardClient({ laporan, userName }: DashboardClientPr
               </div>
             )}
 
-            {/* Empty state: ada laporan tapi tidak ada yang cocok dengan keyword */}
-            {laporan.length > 0 && filtered.length === 0 && (
-              <div className="flex flex-col items-center gap-2 py-12 text-center">
-                <Search className="w-6 h-6 text-[#a9b4b9]" strokeWidth={1.5} />
-                <p className="text-sm font-semibold text-on-surface">
-                  Laporan tidak ditemukan
-                </p>
-                <p className="text-xs text-[#677177]">
-                  Tidak ada hasil untuk &ldquo;{searchTerm}&rdquo;
-                </p>
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="mt-1 text-xs text-primary hover:text-primary-dim font-medium transition-colors"
-                >
-                  Hapus pencarian
-                </button>
-              </div>
-            )}
-
-            {/* Daftar kartu */}
-            {filtered.map((item) => (
+            {/* Daftar kartu (preview 3) */}
+            {preview.map((item) => (
               <LaporanCard key={item.id} item={item} />
             ))}
+
+            {/* Tombol Lihat Semua jika ada lebih dari 3 */}
+            {hasMore && (
+              <Link
+                href="/laporan-saya"
+                className="flex items-center justify-center gap-2 w-full py-3 mt-1 rounded-xl text-sm font-semibold text-primary hover:bg-primary/5 transition-colors"
+              >
+                Lihat Semua {laporan.length} Laporan
+                <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+              </Link>
+            )}
           </div>
         </div>
 
