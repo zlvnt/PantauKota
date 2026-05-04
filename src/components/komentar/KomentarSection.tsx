@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { Trash2, Send, MessageSquare, Loader2 } from 'lucide-react';
+import Toast from '@/components/ui/Toast';
+import { useToast } from '@/hooks/useToast';
 
 interface Komentar {
   id: string;
@@ -22,7 +24,7 @@ export default function KomentarSection({ laporanId }: KomentarSectionProps) {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const { toasts, removeToast, error: toastError } = useToast();
 
   const fetchKomentar = useCallback(async () => {
     setLoading(true);
@@ -42,7 +44,6 @@ export default function KomentarSection({ laporanId }: KomentarSectionProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isi.trim()) return;
-    setSubmitError(null);
     setSubmitting(true);
     try {
       const res = await fetch('/api/komentar', {
@@ -56,10 +57,10 @@ export default function KomentarSection({ laporanId }: KomentarSectionProps) {
         setKomentar((prev) => [...prev, newKomentar]);
         setIsi('');
       } else {
-        setSubmitError('Gagal mengirim komentar. Coba lagi.');
+        toastError('Gagal mengirim komentar. Coba lagi.');
       }
     } catch {
-      setSubmitError('Terjadi kendala pada sistem.');
+      toastError('Terjadi kendala pada sistem.');
     } finally {
       setSubmitting(false);
     }
@@ -82,6 +83,9 @@ export default function KomentarSection({ laporanId }: KomentarSectionProps) {
 
   return (
     <div className="space-y-6">
+      {toasts.map((t) => (
+        <Toast key={t.id} message={t.message} type={t.type} onClose={() => removeToast(t.id)} />
+      ))}
       <h3 className="font-display font-semibold text-on-surface flex items-center gap-2 text-[11px] uppercase tracking-widest text-muted-foreground">
         <MessageSquare className="w-3.5 h-3.5" strokeWidth={1.5} />
         Komentar ({komentar.length})
@@ -163,9 +167,6 @@ export default function KomentarSection({ laporanId }: KomentarSectionProps) {
               )}
             </button>
           </form>
-          {submitError && (
-            <p className="text-xs text-error">{submitError}</p>
-          )}
         </div>
       ) : (
         <p className="text-sm text-muted-foreground text-center py-2">Masuk untuk berkomentar.</p>

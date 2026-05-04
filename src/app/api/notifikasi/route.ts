@@ -45,3 +45,22 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ success: true });
 }
+
+// DELETE /api/notifikasi?id=xxx - hapus satu notifikasi milik user
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Tidak terautentikasi.' }, { status: 401 });
+  }
+
+  const id = req.nextUrl.searchParams.get('id');
+  if (!id) {
+    return NextResponse.json({ error: 'ID notifikasi diperlukan.' }, { status: 400 });
+  }
+
+  await prisma.notifikasi.deleteMany({
+    where: { id, userId: session.user.id }, // pastikan hanya bisa hapus milik sendiri
+  });
+
+  return NextResponse.json({ success: true });
+}

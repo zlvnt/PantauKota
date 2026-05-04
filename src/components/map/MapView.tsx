@@ -7,26 +7,25 @@ import {
   Marker,
   Popup,
   useMap,
+  ZoomControl,
 } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin, ThumbsUp, MessageCircle, ArrowRight, Image as ImageIcon } from 'lucide-react';
 import type { LaporanMapItem } from '@/types/laporan';
-import { STATUS_CONFIG } from '@/types/laporan';
+import { STATUS_CONFIG, getMarkerColor } from '@/types/laporan';
 import Link from 'next/link';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
+import { initLeafletIcons, OSM_TILE_URL, OSM_ATTRIBUTION, MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM } from '@/lib/map';
 
-// ─── Fix Leaflet default icon ─────────────────────────────────────────────────
-delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
+// Inisialisasi icon Leaflet (mencegah broken image di Next.js)
+initLeafletIcons();
 
-// ─── Marker berwarna berdasarkan status ───────────────────────────────────────
-function createStatusIcon(status: LaporanMapItem['status'], warna?: string | null) {
-  const color = warna ?? STATUS_CONFIG[status].color;
+// ─── Marker berwarna berdasarkan prioritas & status ───────────────────────────
+// Prioritas (manual flag atau skor ≥30) → Merah
+// Tidak prioritas → Warna sesuai status (Amber/Blue/Green)
+function createStatusIcon(item: LaporanMapItem) {
+  const color = getMarkerColor(item.status, item.prioritas, item.voteCount, item.createdAt);
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 42" width="32" height="42">
       <path d="M16 0C7.163 0 0 7.163 0 16c0 9.941 14.282 24.614 15.29 25.643a1 1 0 0 0 1.42 0C17.718 40.614 32 25.941 32 16 32 7.163 24.837 0 16 0z"
@@ -70,7 +69,7 @@ function LaporanMarker({
     <Marker
       ref={markerRef}
       position={[item.latitude, item.longitude]}
-      icon={createStatusIcon(item.status, item.kategori.warna)}
+      icon={createStatusIcon(item)}
       eventHandlers={{
         click: () => {
           onMarkerClick?.(item.id);
@@ -158,16 +157,30 @@ function LaporanMarker({
             {/* Tombol lihat detail */}
             <Link
               href={`/laporan/${item.id}`}
-              className="flex items-center justify-center gap-1.5 w-full py-2 bg-[#426464] hover:bg-[#365858] text-white text-xs font-medium rounded-md transition-colors"
+              className="flex items-center justify-center gap-1.5 w-full py-2 bg-primary hover:bg-primary-dim text-sm font-semibold rounded-md transition-colors shadow-sm"
+              style={{ color: '#ffffff' }}
             >
               Lihat Detail
-              <ArrowRight className="w-3 h-3" strokeWidth={2} />
+              <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.5} style={{ color: '#ffffff' }} />
             </Link>
           </div>
         </div>
       </Popup>
     </Marker>
   );
+}
+
+// ─── Sub-komponen: Memperbarui ukuran peta jika kontainer berubah ───
+function MapResizer() {
+  const map = useMap();
+  useEffect(() => {
+    const observer = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    observer.observe(map.getContainer());
+    return () => observer.disconnect();
+  }, [map]);
+  return null;
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -181,15 +194,16 @@ interface MapViewProps {
 export default function MapView({ laporan, selectedId, onMarkerClick }: MapViewProps) {
   return (
     <MapContainer
-      center={[-6.9175, 107.6191]}
-      zoom={13}
+      center={MAP_DEFAULT_CENTER}
+      zoom={MAP_DEFAULT_ZOOM}
       className="h-full w-full z-0"
       scrollWheelZoom
+      zoomControl={false}
     >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <MapResizer />
+      <ZoomControl position="bottomleft" />
+
+      <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
 
       {laporan.map((item) => (
         <LaporanMarker

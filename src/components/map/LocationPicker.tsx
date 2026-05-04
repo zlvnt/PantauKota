@@ -2,17 +2,12 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
 import { MapPin, LocateFixed, Loader2 } from 'lucide-react';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import { initLeafletIcons, OSM_TILE_URL, OSM_ATTRIBUTION } from '@/lib/map';
 
-// Fix leaflet default marker icon
-delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
+// Inisialisasi icon Leaflet (mencegah broken image di Next.js)
+initLeafletIcons();
 
 interface LocationPickerProps {
   value: { latitude: number; longitude: number } | null;
@@ -97,10 +92,7 @@ export default function LocationPicker({ value, onChange }: LocationPickerProps)
           className="h-full w-full z-0"
           scrollWheelZoom
         >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
           <MapClickHandler onChange={handleMapClick} />
           {value && (
             <>
@@ -115,7 +107,7 @@ export default function LocationPicker({ value, onChange }: LocationPickerProps)
           type="button"
           onClick={handleGpsClick}
           disabled={loading}
-          className="absolute bottom-3 right-3 z-[1000] flex items-center gap-1.5 bg-surface-container-lowest/80 backdrop-blur-xl text-on-surface px-3 py-2 rounded-[0.375rem] shadow-ambient text-sm font-semibold hover:bg-surface-container-lowest disabled:opacity-50 transition-colors"
+          className="absolute bottom-3 right-3 z-[1000] flex items-center gap-1.5 bg-surface-container-lowest text-on-surface px-3 py-2 rounded-[0.375rem] shadow-ambient text-sm font-semibold hover:bg-surface-container-low disabled:opacity-50 transition-colors"
         >
           {loading ? (
             <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.5} />
