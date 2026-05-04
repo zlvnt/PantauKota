@@ -1,8 +1,3 @@
-<<<<<<< Updated upstream
-export default function Component() {
-  return (
-    <div>page (src/app/(warga)/laporan/buat/page.tsx)</div>
-=======
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -316,6 +311,5 @@ export default function BuatLaporanPage() {
         onCapture={handleCameraCapture}
       />
     </div>
->>>>>>> Stashed changes
   );
 }

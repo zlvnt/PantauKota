@@ -3,19 +3,18 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { STATUS_CONFIG } from '@/types/laporan';
-import { Calendar, MapPin, User, ArrowLeft } from 'lucide-react';
+import { Calendar, MapPin, User, ImageIcon, ArrowLeft } from 'lucide-react';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import VoteButton from '@/components/ui/VoteButton';
 import KomentarSection from '@/components/komentar/KomentarSection';
 import StatusTimeline from '@/components/laporan/StatusTimeline';
-import DeleteLaporanButton from '@/components/laporan/DeleteLaporanButton';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 
 const MapView = dynamic(() => import('@/components/map/MapView'), {
   ssr: false,
   loading: () => (
-    <div className="h-48 w-full bg-surface-container-low rounded-xl animate-pulse" />
+    <div className="h-48 w-full bg-surface-container-low rounded-[0.375rem] animate-pulse" />
   ),
 });
 
@@ -57,63 +56,57 @@ export default async function DetailLaporanPage({ params }: Props) {
 
   const hasVoted = userId ? (laporan.votes?.length ?? 0) > 0 : false;
   const statusConfig = STATUS_CONFIG[laporan.status as keyof typeof STATUS_CONFIG];
-  const isOwner = userId === laporan.user.id;
 
   return (
     <div className="w-full min-h-screen overflow-x-hidden">
-      <div className="max-w-6xl mx-auto pb-20 pt-24 sm:pt-28 px-4 sm:px-6">
+      <div className="max-w-3xl mx-auto pb-20 pt-24 sm:pt-28 px-4 sm:px-6 space-y-8">
+        {/* Back Button */}
+        <Link
+          href="/beranda"
+          className="inline-flex items-center gap-2 p-2.5 rounded-xl bg-surface-container-lowest hover:bg-surface-container-low transition-colors shadow-[0_2px_8px_rgba(42,52,57,0.08)]"
+        >
+          <ArrowLeft className="w-5 h-5" strokeWidth={2} />
+        </Link>
 
-        {/* ── HEADER (Full Width) ─────────────────────────────────────── */}
-        <div className="mb-8 space-y-6">
-          {/* Back + Hapus */}
-          <div className="flex items-center justify-between">
-            <Link
-              href="/beranda"
-              className="inline-flex items-center gap-2 p-2.5 rounded-xl bg-surface-container-lowest hover:bg-surface-container-low transition-colors shadow-ambient"
+        {/* 1. Header & Status */}
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <span
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${statusConfig.bgClass}`}
             >
-              <ArrowLeft className="w-5 h-5" strokeWidth={2} />
-            </Link>
-            <DeleteLaporanButton
-              laporanId={laporan.id}
-              createdAt={laporan.createdAt.toISOString()}
-              status={laporan.status}
-              isOwner={isOwner}
-            />
+              <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dotClass}`} />
+              {statusConfig.label}
+            </span>
+
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-surface-container-low text-on-surface">
+              <DynamicIcon iconName={laporan.kategori.icon} className="w-3.5 h-3.5" />
+              {laporan.kategori.nama}
+            </span>
           </div>
 
-          {/* Title & Meta */}
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${statusConfig.bgClass}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dotClass}`} />
-                {statusConfig.label}
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-surface-container-low text-on-surface">
-                <DynamicIcon iconName={laporan.kategori.icon} className="w-3.5 h-3.5" />
-                {laporan.kategori.nama}
-              </span>
+          <h1 className="text-2xl sm:text-3xl font-bold font-manrope text-on-surface leading-tight">
+            {laporan.judul}
+          </h1>
+
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <User className="w-4 h-4" strokeWidth={1.5} />
+              <span className="font-medium text-on-surface">{laporan.user.name}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-display font-semibold text-on-surface leading-tight max-w-4xl">
-              {laporan.judul}
-            </h1>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1.5">
-                <User className="w-4 h-4" strokeWidth={1.5} />
-                <span className="font-medium text-on-surface">{laporan.user.name}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Calendar className="w-4 h-4" strokeWidth={1.5} />
-                <span>
-                  {new Date(laporan.createdAt).toLocaleDateString('id-ID', {
-                    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-                  })}
-                </span>
-              </div>
+            <div className="flex items-center gap-1.5">
+              <Calendar className="w-4 h-4" strokeWidth={1.5} />
+              <span>
+                {new Date(laporan.createdAt).toLocaleDateString('id-ID', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </span>
             </div>
           </div>
         </div>
 
-<<<<<<< Updated upstream
         {/* 2. Foto Laporan */}
         {laporan.foto && laporan.foto.length > 0 && (
           <div className="relative w-full aspect-video rounded-[0.375rem] overflow-hidden bg-surface-container-low">
@@ -127,103 +120,20 @@ export default async function DetailLaporanPage({ params }: Props) {
               <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
                 <ImageIcon className="w-3.5 h-3.5" />
                 +{laporan.foto.length - 1} Foto
-=======
-        {/* ── MAIN GRID ──────────────────────────────────────────────────
-            Layout desktop (lg): 12 kolom, 2 baris
-              Baris 1 → [Foto+Deskripsi (7)] | [Peta+Timeline (5, rowspan 2)]
-              Baris 2 → [Komentar (7)]        | (kolom kanan lanjut)
-            Layout mobile: satu kolom, urutan DOM = Foto→Deskripsi→Peta→Timeline→Komentar
-        ───────────────────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-
-          {/* KOLOM KIRI atas: Foto + Deskripsi */}
-          <div className="lg:col-span-7 space-y-6">
-            {/* Foto */}
-            {laporan.foto && laporan.foto.length > 0 && (
-              <div className="relative bg-surface-container-lowest rounded-2xl shadow-ambient overflow-hidden h-72 sm:h-80">
-                {laporan.foto.length === 1 ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={laporan.foto[0]} alt={`Foto ${laporan.judul}`} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="flex h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide">
-                    {laporan.foto.map((url, i) => (
-                      <div key={i} className="relative shrink-0 w-full h-full snap-center">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={url} alt={`Foto ${laporan.judul} ${i + 1}`} className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {laporan.foto.length > 1 && (
-                  <span className="absolute bottom-3 right-3 bg-black/60 text-white text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm">
-                    {laporan.foto.length} foto
-                  </span>
-                )}
->>>>>>> Stashed changes
               </div>
             )}
-
-            {/* Deskripsi */}
-            <div className="bg-surface-container-lowest rounded-2xl shadow-ambient p-6 sm:p-8 min-h-[288px] sm:min-h-[320px] flex flex-col">
-              <h3 className="text-[11px] uppercase tracking-widest text-muted-foreground font-bold border-b border-outline-variant/15 pb-3 mb-4">
-                Detail Laporan
-              </h3>
-              <p className="text-on-surface/90 leading-[1.6] whitespace-pre-wrap flex-1">
-                {laporan.deskripsi}
-              </p>
-              {/* Upvote */}
-              <div className="mt-8 pt-5 border-t border-outline-variant/15 flex items-center justify-between">
-                <p className="text-sm text-muted-foreground font-medium">
-                  Dukung laporan ini agar cepat ditindaklanjuti.
-                </p>
-                <VoteButton
-                  laporanId={laporan.id}
-                  initialVoteCount={laporan.voteCount}
-                  initialVoted={hasVoted}
-                  size="md"
-                />
-              </div>
-            </div>
           </div>
+        )}
 
-          {/* KOLOM KANAN: Peta + Timeline — row-span-2 agar mencakup baris komentar */}
-          <div className="lg:col-span-5 lg:row-span-2 space-y-6">
-            <div className="lg:sticky lg:top-24 space-y-6">
-              {/* Lokasi & Peta */}
-              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient space-y-4">
-                <h3 className="text-[11px] uppercase tracking-widest text-muted-foreground font-bold border-b border-outline-variant/15 pb-3">
-                  Lokasi Kejadian
-                </h3>
-                {laporan.alamat && (
-                  <p className="text-sm text-on-surface/90 flex items-start gap-2 bg-surface-container-low p-3 rounded-xl font-medium">
-                    <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" strokeWidth={1.5} />
-                    <span className="leading-relaxed">{laporan.alamat}</span>
-                  </p>
-                )}
-                <div className="h-48 w-full rounded-xl overflow-hidden">
-                  <MapView
-                    laporan={[{
-                      id: laporan.id,
-                      judul: laporan.judul,
-                      latitude: laporan.latitude,
-                      longitude: laporan.longitude,
-                      alamat: laporan.alamat,
-                      status: laporan.status,
-                      prioritas: laporan.prioritas,
-                      voteCount: laporan.voteCount,
-                      createdAt: laporan.createdAt.toISOString(),
-                      foto: laporan.foto,
-                      kategori: laporan.kategori,
-                      _count: { komentar: laporan._count.komentar },
-                    }]}
-                  />
-                </div>
-                <p className="text-[10px] font-mono tracking-wider text-muted-foreground text-right">
-                  {laporan.latitude.toFixed(6)}, {laporan.longitude.toFixed(6)}
-                </p>
-              </div>
+        {/* 3. Deskripsi */}
+        <div className="bg-surface-container-lowest rounded-[0.375rem] p-6 shadow-[0_2px_8px_rgba(42,52,57,0.08)]">
+          <h3 className="text-[11px] uppercase tracking-widest text-muted-foreground font-semibold mb-3">
+            Detail Laporan
+          </h3>
+          <p className="text-on-surface/90 leading-[1.6] whitespace-pre-wrap">
+            {laporan.deskripsi}
+          </p>
 
-<<<<<<< Updated upstream
           {/* Action Bar (Upvote) - PBI-10 */}
           <div className="mt-6 pt-6 border-t border-surface-container-low flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
@@ -235,25 +145,9 @@ export default async function DetailLaporanPage({ params }: Props) {
               initialVoted={hasVoted}
               size="md"
             />
-=======
-              {/* Status Timeline */}
-              <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-ambient space-y-4">
-                <h3 className="text-[11px] uppercase tracking-widest text-muted-foreground font-bold border-b border-outline-variant/15 pb-3">
-                  Status Laporan
-                </h3>
-                <StatusTimeline
-                  status={laporan.status}
-                  createdAt={laporan.createdAt.toISOString()}
-                  selesaiAt={laporan.selesaiAt ? laporan.selesaiAt.toISOString() : null}
-                  catatanAdmin={laporan.catatanAdmin}
-                  fotoPenyelesaian={laporan.fotoPenyelesaian}
-                />
-              </div>
-            </div>
->>>>>>> Stashed changes
           </div>
+        </div>
 
-<<<<<<< Updated upstream
         {/* 4. Lokasi & Peta */}
         <div className="space-y-3">
           <h3 className="text-[11px] uppercase tracking-widest text-muted-foreground font-semibold">
@@ -282,14 +176,12 @@ export default async function DetailLaporanPage({ params }: Props) {
                 _count: { komentar: 0 },
               }]}
             />
-=======
-          {/* KOMENTAR — grid item terpisah → selalu paling bawah di mobile & desktop */}
-          <div className="lg:col-span-7">
-            <KomentarSection laporanId={laporan.id} />
->>>>>>> Stashed changes
           </div>
+          <p className="text-[11px] uppercase tracking-widest text-muted-foreground text-right">
+            {laporan.latitude.toFixed(6)}, {laporan.longitude.toFixed(6)}
+          </p>
+        </div>
 
-<<<<<<< Updated upstream
         {/* 5. Status Tracking Timeline (PBI-11) */}
         <div className="bg-surface-container-lowest rounded-xl p-6 shadow-[0_2px_8px_rgba(42,52,57,0.08)] space-y-4">
           <h3 className="text-[11px] uppercase tracking-widest text-muted-foreground font-semibold">
@@ -307,8 +199,6 @@ export default async function DetailLaporanPage({ params }: Props) {
         {/* 6. Komentar Section */}
         <div className="pt-6 border-t border-outline-variant/20">
           <KomentarSection laporanId={laporan.id} />
-=======
->>>>>>> Stashed changes
         </div>
       </div>
     </div>

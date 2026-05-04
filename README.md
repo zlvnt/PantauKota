@@ -1,10 +1,6 @@
 # PantauKota — Aplikasi Lapor Lingkungan
 
-<<<<<<< Updated upstream
-**Update:** 02 Mei 2026 | PBI-03, 10, 11, 12, 14, 22 ✅
-=======
 **Update:** 04 Mei 2026 | PBI-03, 07, 08, 09, 10, 11, 12, 13, 14, 22 ✅
->>>>>>> Stashed changes
 
 ---
 
