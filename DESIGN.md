@@ -1,5 +1,7 @@
 # Spesifikasi Sistem Desain: Civic Clarity
 
+> **Update:** Mei 2026 — Tambah pola grid dua kolom, ukuran box foto/konten, dan aturan max-width desktop.
+
 ## 1. Visi: "The Editorial Ledger"
 
 Jurnal arsitektur prestisius, bukan dashboard generik. **Sophisticated Utility** — ruang kosong disengaja, otoritas tipografi, pelapisan tonal.
@@ -53,10 +55,11 @@ Jika container butuh batasan: `1px` stroke `outline_variant` (#a9b4b9) pada **op
 Hanya untuk floating elements (dropdown, modal, kapsul navigasi):
 ```css
 box-shadow: 0 8px 30px rgba(42, 52, 57, 0.12);
+/* Tailwind: shadow-ambient (didefinisikan di tailwind.config.ts) */
 ```
 
 ### Floating UI
-- **Kapsul Melayang:** Navbar, sidebar, search box → `rounded-full` atau `rounded-3xl`
+- **Kapsul Melayang:** Navbar, sidebar, search box → `rounded-full` atau `rounded-2xl`/`rounded-3xl`
 - **Pemisahan:** Pisahkan fungsi ke kapsul mandiri (Logo+Nav | Profil+Notif)
 - **❌ LARANGAN GLASSMORPHISM:** Semua floating HARUS `bg-surface-container-lowest` solid. No `backdrop-blur`, no transparency.
 
@@ -125,6 +128,21 @@ box-shadow: 0 8px 30px rgba(42, 52, 57, 0.12);
 - **Buttons:** Batal (`bg-surface-container-highest`), Selesaikan (`bg-primary text-white`)
 - **Feedback:** Toast (bukan inline error)
 
+### Box Foto & Konten — Ukuran Seragam
+Pada halaman detail laporan, box foto harus **sama tinggi** dengan box deskripsi:
+```tsx
+/* Foto: fixed height card */
+<div className="relative bg-surface-container-lowest rounded-2xl shadow-ambient overflow-hidden h-72 sm:h-80">
+  <img className="w-full h-full object-cover" />
+  {/* badge counter foto (jika > 1) */}
+</div>
+
+/* Deskripsi: min-height matching foto */
+<div className="bg-surface-container-lowest rounded-2xl shadow-ambient p-6 sm:p-8 min-h-[288px] sm:min-h-[320px] flex flex-col">
+  <p className="flex-1">...</p>
+</div>
+```
+
 ---
 
 ## 6. Responsive Design (CRITICAL)
@@ -141,12 +159,38 @@ html, body {
 ```tsx
 // Page container
 <div className="w-full overflow-x-hidden">
-  <div className="max-w-4xl mx-auto">
+  <div className="max-w-6xl mx-auto">  {/* warga */}
     <input className="w-full px-4 py-3.5" />
     <h1 className="truncate">Long Title</h1>
   </div>
 </div>
 ```
+
+### Max-Width Standard
+| Context | Class | Lebar |
+|---------|-------|-------|
+| Halaman Warga | `max-w-6xl` | 1152px |
+| Halaman Admin | `max-w-7xl` | 1280px |
+| Halaman Sempit (profil, auth) | `max-w-2xl` | 672px |
+
+### Grid Dua Kolom (Halaman Detail)
+Pola standar untuk halaman detail laporan (warga & admin):
+```tsx
+<div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+  {/* Kiri atas: Foto + Deskripsi */}
+  <div className="lg:col-span-7 space-y-6">...</div>
+
+  {/* Kanan: Peta + Timeline (sticky, mencakup 2 baris) */}
+  <div className="lg:col-span-5 lg:row-span-2">
+    <div className="lg:sticky lg:top-24 space-y-6">...</div>
+  </div>
+
+  {/* Kiri bawah: Komentar (SELALU TERAKHIR — jangan taruh di dalam kolom kiri atas) */}
+  <div className="lg:col-span-7">...</div>
+</div>
+```
+
+> **ATURAN KOMENTAR:** Komentar harus jadi grid item ke-3 yang berdiri sendiri. Di mobile (single column), ini membuatnya tampil setelah Peta & Timeline. Di desktop, tetap di kolom kiri bawah.
 
 ### Breakpoints
 - Mobile: < 640px (sm)
@@ -173,6 +217,9 @@ html, body {
 - `getMarkerColor()` untuk marker
 - Toast untuk feedback
 - File upload max 5MB
+- `rounded-2xl` untuk kartu konten, `rounded-3xl` untuk modal/header
+- Komentar sebagai grid item terpisah (always last on mobile)
+- `shadow-ambient` (bukan `shadow-[0_2px_8px_...]` manual)
 
 ### ❌ Jangan
 - Bayangan pekat (abu-abu)
@@ -181,6 +228,7 @@ html, body {
 - Fixed width (`w-[500px]`)
 - Inline error messages
 - `tabIndex={-1}` lupa pada icon buttons
+- Komentar di dalam kolom kiri atas (akan muncul sebelum Peta di mobile)
 
 ---
 
@@ -190,3 +238,5 @@ html, body {
 - Label: "Simpan Perubahan" (bukan "Save")
 - Empty State: "Belum ada laporan masuk"
 - Error: "Terjadi kendala pada sistem"
+- Tombol navigasi: "Lihat Semua →", "Kembali"
+- Konfirmasi hapus: "Hapus Laporan?" dengan penjelasan syarat

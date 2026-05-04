@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 import { MapPin, LocateFixed, Loader2 } from 'lucide-react';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { initLeafletIcons, OSM_TILE_URL, OSM_ATTRIBUTION } from '@/lib/map';
@@ -23,10 +24,27 @@ function MapClickHandler({ onChange }: { onChange: (lat: number, lng: number) =>
   return null;
 }
 
+function MapResizer() {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    const observer = new ResizeObserver(() => {
+      // Pastikan elemen map masih ada di DOM dan memiliki ukuran valid
+      // sebelum memanggil invalidateSize untuk mencegah error saat unmount
+      if (container && container.isConnected && container.clientWidth > 0 && container.clientHeight > 0) {
+        map.invalidateSize(false);
+      }
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [map]);
+  return null;
+}
+
 function MapRecenter({ lat, lng }: { lat: number; lng: number }) {
   const map = useMapEvents({});
   useEffect(() => {
-    map.setView([lat, lng], map.getZoom());
+    map.setView([lat, lng], map.getZoom(), { animate: false });
   }, [lat, lng, map]);
   return null;
 }
@@ -92,11 +110,22 @@ export default function LocationPicker({ value, onChange }: LocationPickerProps)
           className="h-full w-full z-0"
           scrollWheelZoom
         >
+          <MapResizer />
           <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
           <MapClickHandler onChange={handleMapClick} />
           {value && (
             <>
-              <Marker position={[value.latitude, value.longitude]} />
+              <Marker
+                position={[value.latitude, value.longitude]}
+                draggable={true}
+                eventHandlers={{
+                  dragend: (e) => {
+                    const marker = e.target;
+                    const position = marker.getLatLng();
+                    handleMapClick(position.lat, position.lng);
+                  },
+                }}
+              />
               <MapRecenter lat={value.latitude} lng={value.longitude} />
             </>
           )}
@@ -129,9 +158,9 @@ export default function LocationPicker({ value, onChange }: LocationPickerProps)
           {value.latitude.toFixed(6)}, {value.longitude.toFixed(6)}
         </p>
       )}
-      {!value && !loading && (
-        <p className="text-sm text-muted-foreground">Klik peta atau tekan tombol untuk memilih lokasi.</p>
-      )}
+      <p className="text-sm text-muted-foreground">
+        Klik peta atau seret ikon (marker) untuk menyesuaikan titik lokasi.
+      </p>
     </div>
   );
 }

@@ -53,9 +53,9 @@ export async function GET(
 // PATCH /api/laporan/[id] — Admin update status atau prioritas laporan
 const UpdateSchema = z.object({
   status: z.enum(['MENUNGGU', 'DIPROSES', 'SELESAI']).optional(),
-  prioritas: z.boolean().optional(), // PBI-12: Toggle prioritas manual
+  prioritas: z.boolean().optional(),
   catatanAdmin: z.string().optional(),
-  fotoPenyelesaian: z.string().nullable().optional(), // TC-11.3: Foto bukti penyelesaian (opsional, bisa null)
+  fotoPenyelesaian: z.string().nullable().optional(),
 });
 
 const STATUS_LABEL: Record<string, string> = {
@@ -94,9 +94,9 @@ export async function PATCH(
       where: { id: params.id },
       data: {
         ...(status !== undefined ? { status } : {}),
-        ...(prioritas !== undefined ? { prioritas } : {}), // PBI-12
+        ...(prioritas !== undefined ? { prioritas } : {}),
         ...(catatanAdmin !== undefined ? { catatanAdmin } : {}),
-        ...(fotoPenyelesaian !== undefined ? { fotoPenyelesaian } : {}), // TC-11.3
+        ...(fotoPenyelesaian !== undefined ? { fotoPenyelesaian } : {}),
         ...(status === 'SELESAI' ? { selesaiAt: new Date() } : {}),
         ...(status !== undefined && status !== 'SELESAI' ? { selesaiAt: null } : {}),
       },
@@ -106,11 +106,11 @@ export async function PATCH(
         status: true,
         prioritas: true,
         selesaiAt: true,
-        userId: true,       // untuk tahu ke siapa notifikasi dikirim
+        userId: true,
       },
     });
 
-    // Kirim notifikasi real-time ke pemilik laporan (hanya jika status berubah)
+    // Kirim notifikasi ke pemilik laporan jika status berubah
     if (status !== undefined) {
       await kirimNotifikasi({
         userId: updated.userId,
@@ -135,3 +135,63 @@ export async function PATCH(
   }
 }
 
+// DELETE /api/laporan/[id]
+// Ketentuan: hanya pemilik laporan, dalam 24 jam sejak dibuat, dan status masih MENUNGGU
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Tidak terautentikasi.' }, { status: 401 });
+  }
+
+  try {
+    const laporan = await prisma.laporan.findUnique({
+      where: { id: params.id },
+      select: { id: true, userId: true, status: true, createdAt: true },
+    });
+
+    if (!laporan) {
+      return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 });
+    }
+
+    // Hanya pemilik laporan yang boleh menghapus
+    if (laporan.userId !== session.user.id) {
+      return NextResponse.json(
+        { error: 'Anda tidak memiliki akses untuk menghapus laporan ini.' },
+        { status: 403 }
+      );
+    }
+
+    // Laporan yang sudah diproses tidak dapat dihapus
+    if (laporan.status !== 'MENUNGGU') {
+      return NextResponse.json(
+        { error: 'Laporan tidak dapat dihapus karena sudah diproses oleh admin.' },
+        { status: 403 }
+      );
+    }
+
+    // Cek batas waktu 24 jam sejak diunggah
+    const batasWaktu = new Date(laporan.createdAt.getTime() + 24 * 60 * 60 * 1000);
+    if (new Date() > batasWaktu) {
+      return NextResponse.json(
+        { error: 'Laporan tidak dapat dihapus karena sudah lebih dari 24 jam sejak diunggah.' },
+        { status: 403 }
+      );
+    }
+
+    // Hapus semua relasi lalu hapus laporan dalam satu transaksi
+    await prisma.$transaction([
+      prisma.komentar.deleteMany({ where: { laporanId: params.id } }),
+      prisma.vote.deleteMany({ where: { laporanId: params.id } }),
+      prisma.notifikasi.deleteMany({ where: { laporanId: params.id } }),
+      prisma.laporan.delete({ where: { id: params.id } }),
+    ]);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('[API /laporan/[id] DELETE]', error);
+    return NextResponse.json({ error: 'Gagal menghapus laporan.' }, { status: 500 });
+  }
+}
