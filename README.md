@@ -147,15 +147,9 @@ Schema: `prisma/schema.prisma` | Config: `prisma.config.ts`
 | 04 | Notifikasi Real-time | ✅ Selesai (SSE + UI bell + hapus notif) |
 | 05 | Location Picker | ✅ Selesai (GPS + klik peta + reverse geocode) |
 | 06 | Komentar Laporan | ✅ Selesai (CRUD + real-time) |
-<<<<<<< Updated upstream
-| 07 | Form Laporan | 🔲 Belum |
-| 08 | Upload Foto & Geolocation | 🔲 Belum |
-| 09 | Lihat Detail Laporan | ✅ Selesai (warga + admin) |
-=======
 | 07 | Form Laporan | ✅ Selesai (grid responsif, kamera langsung, drag marker) |
 | 08 | Upload Foto & Geolocation | ✅ Selesai (Cloudinary, GPS, reverse geocode, kamera web) |
 | 09 | Lihat Detail Laporan | ✅ Selesai (warga + admin, grid 2 kolom desktop) |
->>>>>>> Stashed changes
 | 10 | Upvote/Vote Laporan | ✅ Selesai (unlimited, optimistic UI) |
 | 11 | Tracking Status | ✅ Selesai (timeline 3 tahap) |
 | 12 | Sistem Prioritas Laporan | ✅ Selesai (formula + marker warna) |
@@ -232,54 +226,6 @@ Schema: `prisma/schema.prisma` | Config: `prisma.config.ts`
 - Search (debounced 400ms), filter kategori & status
 - Statistik: total, menunggu, diproses, selesai, urgent
 - Sorting: prioritas dulu, lalu terbaru
-<<<<<<< Updated upstream
-- Link detail: `/dashboard/laporan/[id]`
-
-**Priority Marker Enhancement:**
-- SELESAI → Hijau (selalu)
-- Prioritas (belum selesai) → Merah jika flag=true ATAU skor≥50
-- Non-Prioritas → Amber/Blue sesuai status
-
-**UI/UX:**
-- Kategori text `text-white` saat aktif
-- Toast untuk semua feedback
-- Responsive, no horizontal scroll
-
----
-
-### PBI-10, 11, 12 ✅
-
-**Vote (PBI-10):**
-- Unlimited vote, optimistic UI
-- Rollback auto jika gagal
-- Animasi bounce, toast error
-- Icon filled/outlined
-
-**Tracking Status (PBI-11):**
-- Timeline 3 tahap: MENUNGGU → DIPROSES → SELESAI
-- Icon dinamis (Clock, Loader2, CheckCircle)
-- Tanggal + jam, catatan admin, foto penyelesaian
-
-**Prioritas (PBI-12):**
-- Formula: `score = (voteCount × 2) + hari`
-- Badge skor dengan warna dinamis
-- Flag manual admin
-- Sorting otomatis
-
----
-
-### PBI-03: Manajemen Profil ✅
-
-- Update nama & password
-- Validasi nama unik
-- Toast notifications
-- Session update real-time
-- No logout after password change
-- Responsive full-screen layout
-- Password visibility toggle persistent
-- Back button navigation
-=======
->>>>>>> Stashed changes
 
 ---
 

@@ -22,21 +22,10 @@ interface Props {
   params: { id: string };
 }
 
-/**
- * Halaman Detail Laporan Warga
- * 
- * Fitur:
- * - PBI-10: Vote button dengan optimistic UI
- * - PBI-11: Status timeline tracking
- * - Foto laporan dengan gallery indicator
- * - Peta lokasi (static view)
- * - Komentar section
- */
 export default async function DetailLaporanPage({ params }: Props) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
 
-  // Fetch data laporan dengan relasi lengkap
   const laporan = await prisma.laporan.findUnique({
     where: { id: params.id },
     include: {
@@ -44,7 +33,7 @@ export default async function DetailLaporanPage({ params }: Props) {
       user: { select: { id: true, name: true } },
       _count: { select: { komentar: true } },
       votes: {
-        where: { userId: userId ?? '' }, // empty string = no match when unauthenticated
+        where: { userId: userId ?? '' },
         select: { id: true },
       },
     },
@@ -117,7 +106,7 @@ export default async function DetailLaporanPage({ params }: Props) {
               className="w-full h-full object-cover"
             />
             {laporan.foto.length > 1 && (
-              <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
+              <div className="absolute bottom-3 right-3 bg-on-surface/60 text-surface px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
                 <ImageIcon className="w-3.5 h-3.5" />
                 +{laporan.foto.length - 1} Foto
               </div>
@@ -135,7 +124,7 @@ export default async function DetailLaporanPage({ params }: Props) {
           </p>
 
           {/* Action Bar (Upvote) - PBI-10 */}
-          <div className="mt-6 pt-6 border-t border-surface-container-low flex items-center justify-between">
+          <div className="mt-6 pt-4 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               Dukung laporan ini agar cepat ditindaklanjuti.
             </p>
@@ -168,12 +157,12 @@ export default async function DetailLaporanPage({ params }: Props) {
                 longitude: laporan.longitude,
                 alamat: laporan.alamat,
                 status: laporan.status,
-                prioritas: false,
+                prioritas: laporan.prioritas,
                 voteCount: laporan.voteCount,
                 createdAt: laporan.createdAt.toISOString(),
                 foto: laporan.foto,
                 kategori: laporan.kategori,
-                _count: { komentar: 0 },
+                _count: { komentar: laporan._count.komentar },
               }]}
             />
           </div>
@@ -197,11 +186,10 @@ export default async function DetailLaporanPage({ params }: Props) {
         </div>
 
         {/* 6. Komentar Section */}
-        <div className="pt-6 border-t border-outline-variant/20">
+        <div className="pt-2">
           <KomentarSection laporanId={laporan.id} />
         </div>
       </div>
     </div>
   );
 }
-
