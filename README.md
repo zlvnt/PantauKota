@@ -160,7 +160,7 @@ Schema: `prisma/schema.prisma` | Config: `prisma.config.ts`
 | 17 | Statistik & Grafik Laporan | 🟡 Statistik angka selesai, chart belum |
 | 18 | Tabel Monitoring Laporan | 🟡 Tabel 5 terbaru selesai |
 | 19 | Kelola Kategori | 🔲 Belum |
-| 20 | Daftar Laporan | ✅ Selesai |
+| 20 | Hapus Laporan (Warga) | ✅ Selesai (< 24 jam + status MENUNGGU) |
 | 21 | PWA Support | ✅ Selesai (konfigurasi next-pwa) |
 | 22 | Update Status Laporan | ✅ Selesai (completion modal + notifikasi) |
 | 23 | Notifikasi Otomatis | 🔲 Belum |
