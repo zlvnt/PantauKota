@@ -1,5 +1,7 @@
 # 📚 Panduan Maintenance PantauKota
 
+> **Update:** Mei 2026 — Tambah halaman /laporan-saya, hapus laporan, kamera web, grid responsif desktop.
+
 ## 🏗️ Struktur Project
 
 ```
@@ -11,196 +13,252 @@ pantaukota/
 ├── src/
 │   ├── app/               # Next.js App Router
 │   │   ├── (admin)/      # Route group untuk admin
-│   │   ├── (auth)/       # Route group untuk autentikasi
+│   │   │   ├── dashboard/ → Dashboard, detail laporan admin
+│   │   │   ├── kelola-laporan/ → List semua laporan
+│   │   │   ├── kelola-kategori/ → Manajemen kategori
+│   │   │   └── kelola-user/ → Manajemen user
+│   │   ├── (auth)/       # Login, Register
 │   │   ├── (warga)/      # Route group untuk warga
+│   │   │   ├── beranda/  → Dashboard (limit 3 laporan)
+│   │   │   ├── laporan-saya/ → Daftar lengkap laporan warga
+│   │   │   ├── laporan/buat/ → Form buat laporan
+│   │   │   ├── laporan/[id]/ → Detail laporan warga
+│   │   │   ├── peta/     → Peta interaktif
+│   │   │   ├── notifikasi/ → Notifikasi
+│   │   │   └── profil/   → Profil & ubah password
 │   │   └── api/          # API endpoints
 │   ├── components/        # React components
-│   │   ├── admin/        # Komponen khusus admin
-│   │   ├── auth/         # Komponen autentikasi
-│   │   ├── laporan/      # Komponen laporan
-│   │   ├── map/          # Komponen peta
-│   │   └── ui/           # Komponen UI reusable
-│   ├── hooks/            # Custom React hooks
-│   ├── lib/              # Utility functions & configs
-│   └── types/            # TypeScript type definitions
+│   │   ├── admin/        # CompletionModal
+│   │   ├── komentar/     # KomentarSection
+│   │   ├── laporan/      # StatusTimeline, PrioritasScore, DeleteLaporanButton
+│   │   ├── map/          # MapView, AdminMapView, LocationPicker
+│   │   └── ui/           # Badge, Spinner, DynamicIcon, Toast, VoteButton, CameraModal
+│   ├── hooks/            # useDebounce, useLaporanMap, useVote, useToast, useNotifications, useGeolocation
+│   ├── lib/              # auth, map, prisma, notifications
+│   └── types/            # laporan.ts (STATUS_CONFIG, LaporanSaya, getMarkerColor, dll)
 └── public/               # Static assets
 ```
+
+---
 
 ## 🔑 File Penting
 
 ### Database & ORM
-- `prisma/schema.prisma` - Definisi model database
-- `src/lib/prisma.ts` - Konfigurasi Prisma Client dengan adapter PostgreSQL
+- `prisma/schema.prisma` — Definisi model database (6 model: User, Laporan, Kategori, Vote, Notifikasi, Komentar)
+- `src/lib/prisma.ts` — Konfigurasi Prisma Client dengan adapter PostgreSQL
 
 ### Autentikasi
-- `src/lib/auth.ts` - Konfigurasi NextAuth.js
-- `src/app/api/auth/[...nextauth]/route.ts` - NextAuth API handler
-- `src/middleware.ts` - Middleware untuk proteksi route
+- `src/lib/auth.ts` — Konfigurasi NextAuth.js
+- `src/middleware.ts` — Middleware untuk proteksi route
 
 ### API Endpoints
-- `src/app/api/laporan/route.ts` - CRUD laporan (dengan search & filter)
-- `src/app/api/kategori/route.ts` - Manajemen kategori
-- `src/app/api/vote/route.ts` - Sistem voting
-- `src/app/api/komentar/route.ts` - Sistem komentar
+| File | Method | Fungsi |
+|------|--------|--------|
+| `src/app/api/laporan/route.ts` | GET, POST | List & buat laporan |
+| `src/app/api/laporan/[id]/route.ts` | GET, PATCH, DELETE | Detail, update, hapus laporan |
+| `src/app/api/kategori/route.ts` | GET, POST, PATCH, DELETE | Manajemen kategori |
+| `src/app/api/vote/route.ts` | POST | Sistem voting |
+| `src/app/api/komentar/route.ts` | GET, POST, DELETE | Sistem komentar |
+| `src/app/api/upload/route.ts` | POST | Upload foto ke Cloudinary |
+| `src/app/api/notifikasi/sse/route.ts` | GET | SSE real-time |
 
-### Komponen Utama
-- `src/components/map/AdminMapView.tsx` - Peta untuk admin
-- `src/components/map/MapView.tsx` - Peta untuk warga
-- `src/components/admin/CompletionModal.tsx` - Modal penyelesaian laporan
+### Komponen Kritis
+- `src/components/laporan/DeleteLaporanButton.tsx` — Tombol hapus laporan warga (validasi 24 jam + status)
+- `src/components/ui/CameraModal.tsx` — Modal kamera web langsung
+- `src/components/map/LocationPicker.tsx` — Picker lokasi dengan GPS + klik peta + reverse geocode
+- `src/app/(warga)/laporan-saya/LaporanSayaClient.tsx` — Tabel lengkap laporan warga (search, filter, pagination)
+
+---
 
 ## 🛠️ Cara Kerja Fitur Utama
 
 ### 1. Search & Filter Laporan
-**File**: `src/app/api/laporan/route.ts`
+**File:** `src/app/api/laporan/route.ts`
 
-Query menggunakan struktur `AND` array untuk menggabungkan filter:
 ```typescript
 where: {
   AND: [
-    // Filter status
     ...(status ? [{ status }] : []),
-    
-    // Filter kategori
     ...(kategoriId ? [{ kategoriId }] : []),
-    
-    // Search (judul, deskripsi, alamat, nama user untuk admin)
+    ...(userId ? [{ userId }] : []),          // filter by user (laporan-saya)
     ...(search ? [{ OR: [...] }] : []),
-    
-    // Auto-hide laporan SELESAI > 24 jam
-    { OR: [...] }
+    { OR: [/* auto-hide SELESAI > 24 jam */] }
   ]
 }
 ```
 
 ### 2. Auto-Hide Laporan Selesai
-Laporan dengan status SELESAI akan otomatis hilang dari peta setelah 24 jam.
-
-**Logic**: Tampilkan jika (BELUM SELESAI) ATAU (SELESAI tapi < 24 jam)
+Laporan dengan status SELESAI otomatis hilang dari peta setelah 24 jam.  
+**Logic:** Tampilkan jika (BELUM SELESAI) ATAU (SELESAI tapi < 24 jam)
 
 ### 3. Sistem Prioritas
-- **Manual**: Admin bisa set flag `prioritas = true`
-- **Otomatis**: Skor ≥ 50 (formula: `voteCount × 2 + hari_sejak_dibuat`)
-- **Warna Marker**: Merah untuk prioritas, warna status untuk normal
+- **Manual:** Admin set flag `prioritas = true`
+- **Otomatis:** Skor ≥ 50 (formula: `voteCount × 2 + hari_sejak_dibuat`)
+- **Warna Marker:** Gunakan `getMarkerColor()` dari `src/types/laporan.ts`
 
 ### 4. Real-time Notifications
-**File**: `src/app/api/notifikasi/sse/route.ts`
+**File:** `src/app/api/notifikasi/sse/route.ts`  
+Server-Sent Events — tidak perlu WebSocket.  
+Trigger otomatis saat admin ubah status laporan.
 
-Menggunakan Server-Sent Events (SSE) untuk notifikasi real-time.
+### 5. Hapus Laporan (DELETE)
+**File:** `src/app/api/laporan/[id]/route.ts`  
+**Syarat (semua harus terpenuhi):**
+1. User adalah pemilik (`userId === session.user.id`)
+2. Laporan < 24 jam (`createdAt > now - 24h`)
+3. Status = `MENUNGGU`
+
+Gunakan `prisma.$transaction` untuk hapus relasi (komentar, votes, notifikasi) sebelum hapus laporan.
+
+### 6. Dashboard Warga — Limit 3 Laporan
+**File:** `src/app/(warga)/beranda/DashboardClient.tsx`  
+- Tampilkan hanya 3 laporan terbaru (`laporan.slice(0, 3)`)
+- Link "Lihat Semua →" di header section
+- Tombol "Lihat Semua X Laporan" di bawah daftar jika total > 3
+
+### 7. Halaman Laporan Saya
+**Files:** `src/app/(warga)/laporan-saya/page.tsx` (Server Component) + `LaporanSayaClient.tsx` (Client Component)
+- Fetch semua laporan user via `prisma.laporan.findMany({ where: { userId } })`
+- Client: search real-time, filter status pills, pagination (10/halaman), stat strip
+- Tombol hapus ikon `Trash2` muncul otomatis jika laporan masih bisa dihapus
+
+### 8. Kamera Web (CameraModal)
+**File:** `src/components/ui/CameraModal.tsx`  
+- Gunakan `navigator.mediaDevices.getUserMedia({ video: true })`
+- Capture via `<canvas>` → blob → upload ke Cloudinary
+- Di mobile: `facingMode: 'environment'` (kamera belakang)
+- Selalu `stopMediaStream()` saat modal ditutup untuk matikan kamera
+
+---
 
 ## 🔧 Task Maintenance Umum
 
-### Menambah Kategori Baru
-1. Tambahkan di `prisma/seed.ts` (untuk development)
-2. Atau gunakan UI admin di `/kelola-kategori`
+### Mengubah Limit Dashboard
+**File:** `src/app/(warga)/beranda/DashboardClient.tsx`
+```typescript
+const LIMIT = 3; // Ubah nilai ini
+```
 
 ### Mengubah Threshold Prioritas
-**File**: `src/types/laporan.ts` - Function `getMarkerColor()`
+**File:** `src/types/laporan.ts`
 ```typescript
-if (priorityScore >= 50) { // Ubah angka 50 sesuai kebutuhan
+if (priorityScore >= 50) { // Ubah 50 sesuai kebutuhan
   return PRIORITY_COLOR;
 }
 ```
 
-### Mengubah Durasi Auto-Hide
-**File**: `src/app/api/laporan/route.ts`
+### Mengubah Durasi Hapus Laporan
+**File:** `src/app/api/laporan/[id]/route.ts`
+```typescript
+const BATAS_JAM = 24; // Ubah menjadi jam yang diinginkan
+const batasWaktu = new Date(createdAt.getTime() + BATAS_JAM * 60 * 60 * 1000);
+```
+
+### Mengubah Durasi Auto-Hide Peta
+**File:** `src/app/api/laporan/route.ts`
 ```typescript
 const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-// Ubah 24 menjadi durasi jam yang diinginkan
 ```
 
 ### Menambah Field Search
-**File**: `src/app/api/laporan/route.ts`
+**File:** `src/app/api/laporan/route.ts`
 ```typescript
 OR: [
   { judul: { contains: search, mode: 'insensitive' as const } },
   { deskripsi: { contains: search, mode: 'insensitive' as const } },
   { alamat: { contains: search, mode: 'insensitive' as const } },
-  // Tambahkan field baru di sini
+  // Tambah field baru di sini
 ]
 ```
 
-## 🐛 Troubleshooting
+---
 
-### Search Tidak Berfungsi
-- Pastikan struktur query menggunakan `AND` array
-- Cek apakah `mode: 'insensitive' as const` ada di semua field search
-- Verifikasi tidak ada konflik antara multiple `OR` clause
+## 📐 Pola Layout Halaman Detail (STANDAR)
 
-### Peta Tidak Muncul
-- Cek apakah Leaflet CSS ter-import: `import 'leaflet/dist/leaflet.css'`
-- Pastikan `initLeafletIcons()` dipanggil
-- Verifikasi koordinat latitude/longitude valid
+Semua halaman detail laporan (warga & admin) menggunakan **grid 2 kolom** yang sama:
 
-### Error Prisma Client
-- Jalankan `npx prisma generate` untuk regenerate client
-- Pastikan `DATABASE_URL` di `.env` valid
-- Cek apakah adapter PrismaPg ter-install
+```
+DESKTOP (lg):                    MOBILE:
+┌─────────────┬──────────┐      ┌──────────────────┐
+│  Foto       │  Peta    │      │  Foto            │
+│  Deskripsi  │  Timeline│      │  Deskripsi       │
+├─────────────┤  (sticky)│      │  Peta            │
+│  Komentar   │          │      │  Timeline        │
+└─────────────┴──────────┘      │  Komentar ← LAST │
+                                 └──────────────────┘
+```
 
-### Session/Auth Tidak Bekerja
-- Verifikasi `NEXTAUTH_SECRET` di `.env` sudah diisi
-- Cek `NEXTAUTH_URL` sesuai dengan URL aplikasi
-- Pastikan middleware di `src/middleware.ts` aktif
+**Grid Classes:**
+- Kiri atas: `lg:col-span-7`
+- Kanan: `lg:col-span-5 lg:row-span-2`
+- Komentar (grid item ke-3): `lg:col-span-7`
+
+---
 
 ## 📝 Konvensi Kode
 
 ### Naming
-- **Components**: PascalCase (`AdminMapView.tsx`)
-- **Hooks**: camelCase dengan prefix `use` (`useLaporanMap.ts`)
-- **API Routes**: lowercase (`route.ts`)
-- **Types**: PascalCase (`LaporanMapItem`)
+- **Components:** PascalCase (`DeleteLaporanButton.tsx`)
+- **Hooks:** camelCase + prefix `use` (`useDebounce.ts`)
+- **API Routes:** lowercase (`route.ts`)
+- **Types:** PascalCase (`LaporanSaya`)
+- **Page Client:** `[NamaHalaman]Client.tsx` (co-located dengan `page.tsx`)
 
 ### Struktur Component
 ```typescript
 // 1. Imports
 import { ... } from '...';
 
-// 2. Types/Interfaces
+// 2. Types/Interfaces (jika tidak ada di types/laporan.ts)
 interface Props { ... }
 
-// 3. Helper functions (jika ada)
-function helperFunction() { ... }
+// 3. Helper/sub-components kecil (jika digunakan hanya di sini)
+function SubComponent({ ... }) { ... }
 
 // 4. Main component
 export default function Component({ props }: Props) {
   // 4a. State & hooks
-  const [state, setState] = useState();
-  
-  // 4b. Effects
-  useEffect(() => { ... }, []);
-  
-  // 4c. Handlers
-  const handleClick = () => { ... };
-  
-  // 4d. Render
-  return ( ... );
+  // 4b. Derived values (useMemo)
+  // 4c. Effects
+  // 4d. Handlers
+  // 4e. Render
 }
 ```
 
+### Server vs Client Component
+- **Server Component (`page.tsx`):** Fetch data dari DB, tidak ada state/event
+- **Client Component (`*Client.tsx`):** State, event handler, interaktivitas
+- **Pattern:** `page.tsx` (server) fetch data → pass ke `*Client.tsx` (client)
+
 ### Comments
-- Gunakan `//` untuk single-line comments
-- Gunakan `// ───` untuk section dividers
-- Tambahkan JSDoc untuk function yang kompleks
+- `//` untuk komentar pendek
+- `// ──` untuk section divider
+- `// KOLOM KIRI`, `// KOLOM KANAN` untuk grid section
+
+---
 
 ## 🚀 Deployment Checklist
 
-### Development Setup (Developer Baru)
+### Developer Baru
 - [ ] Clone repository
 - [ ] `npm install`
-- [ ] Pastikan `.env` ada (dengan DATABASE_URL yang di-share)
+- [ ] Pastikan `.env` ada (dengan `DATABASE_URL`)
 - [ ] `npx prisma generate`
 - [ ] `npm run dev`
-- [ ] ❌ **JANGAN** jalankan `npm run seed` (data sudah ada di database)
+- [ ] ❌ **JANGAN** jalankan `npm run seed` (data sudah ada)
 - [ ] ❌ **JANGAN** jalankan migrasi (database sudah ter-setup)
+
+### Sebelum Commit
+- [ ] `npx tsc --noEmit` — pastikan tidak ada TypeScript error
+- [ ] Test di mobile viewport (360px) dan desktop (1280px+)
+- [ ] Tidak ada kode duplikat tertumpuk di file
 
 ### Production Deployment
 - [ ] Update `NEXTAUTH_SECRET` dengan nilai random yang kuat
 - [ ] Set `NEXTAUTH_URL` ke URL production
 - [ ] Verifikasi `DATABASE_URL` production
-- [ ] Set Cloudinary credentials jika menggunakan upload gambar
-- [ ] Jalankan `npm run build` untuk test build
-- [ ] Jalankan migrasi database: `npx prisma migrate deploy`
-- [ ] Seed data production (jika perlu): `npm run seed`
+- [ ] Set Cloudinary credentials
+- [ ] `npm run build`
+- [ ] `npx prisma migrate deploy`
 
-## 📞 Kontak
-
-Untuk pertanyaan atau issue, silakan buat issue di repository atau hubungi tim development.
+---

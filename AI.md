@@ -1,6 +1,6 @@
 # AI.md — Panduan AI untuk PantauKota
 
-> **Baca sebelum coding.** Update: Mei 2026 (PBI-10,11,12 + TC-11.3,12.3 selesai)
+> **Baca sebelum coding.** Update: Mei 2026 (Responsivitas Desktop, Dashboard Limit, Halaman /laporan-saya, Hapus Laporan, Kamera Web)
 
 ## 1. Identitas & Prinsip
 
@@ -10,9 +10,9 @@
 ### Prinsip Desain (Detail: `DESIGN.md`)
 - ❌ **No Glassmorphism** — Warna solid, no transparency
 - ❌ **No-Line Rule** — Pemisah pakai whitespace/tonal, bukan border 1px
-- ✅ **Floating UI** — Navbar/sidebar melayang, `rounded-3xl`, shadow ambient
+- ✅ **Floating UI** — Navbar/sidebar melayang, `rounded-2xl`, shadow ambient
 - ✅ **Tonal Layering** — `surface` → `surface-container-lowest/low/high`
-- ✅ **Responsive** — Mobile (360px) to desktop (1440px+)
+- ✅ **Responsive** — Mobile (360px) to desktop (1440px+), `max-w-6xl` untuk halaman warga
 
 **Warna:** `primary` #426464 | `tertiary` #006d4a (SELESAI) | `error` #B3261E
 
@@ -23,10 +23,47 @@
 ### Rute & Guards
 ```
 /app
-├── (auth)/       → Login/Register (publik)
-├── (warga)/      → Guard: login | WargaNavbar (auto-hide di /peta)
-└── (admin)/      → Guard: ADMIN | AdminSidebar (locked di /dashboard/peta)
+├── (auth)/         → Login/Register (publik)
+├── (warga)/        → Guard: login | WargaNavbar
+│   ├── beranda/    → Dashboard warga (limit 3 laporan + link Lihat Semua)
+│   ├── laporan-saya/ → Halaman penuh daftar laporan warga
+│   ├── laporan/buat/ → Form buat laporan (grid 2 kolom desktop)
+│   ├── laporan/[id]/ → Detail laporan warga (grid 2 kolom desktop)
+│   ├── peta/       → Peta warga
+│   ├── notifikasi/ → Notifikasi warga
+│   └── profil/     → Profil warga
+└── (admin)/        → Guard: ADMIN | AdminSidebar
+    ├── dashboard/  → Dashboard admin
+    ├── dashboard/laporan/[id]/ → Detail laporan admin (grid 2 kolom desktop)
+    ├── kelola-laporan/ → List semua laporan
+    ├── kelola-kategori/ → Manajemen kategori
+    └── kelola-user/ → Manajemen user
 ```
+
+### Layout Grid Dua Kolom (POLA STANDAR — halaman detail)
+```tsx
+// Desktop: 2 kolom | Mobile: 1 kolom, urutan DOM = urutan tampil
+<div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+  {/* Kolom kiri atas: konten utama */}
+  <div className="lg:col-span-7 space-y-6">
+    {/* Foto, Deskripsi */}
+  </div>
+
+  {/* Kolom kanan: sidebar sticky, row-span-2 */}
+  <div className="lg:col-span-5 lg:row-span-2">
+    <div className="lg:sticky lg:top-24 space-y-6">
+      {/* Peta, Timeline */}
+    </div>
+  </div>
+
+  {/* Kolom kiri bawah: SELALU TERAKHIR (komentar) */}
+  <div className="lg:col-span-7">
+    {/* Komentar */}
+  </div>
+</div>
+```
+
+> **PENTING:** Komentar **harus** menjadi grid item terpisah di bawah, bukan di dalam `lg:col-span-7` atas. Ini memastikan komentar tampil di bawah di mobile (setelah Peta & Timeline).
 
 ### Leaflet Config
 **File:** `src/lib/map.ts` — `OSM_TILE_URL`, `MAP_DEFAULT_CENTER`, `initLeafletIcons()`  
@@ -47,6 +84,9 @@
 | **StatusTimeline** | `@/components/laporan/StatusTimeline` | 3 tahap tracking |
 | **PrioritasScore** | `@/components/laporan/PrioritasScore` | Badge skor prioritas |
 | **CompletionModal** | `@/components/admin/CompletionModal` | Modal selesaikan laporan |
+| **DeleteLaporanButton** | `@/components/laporan/DeleteLaporanButton` | Hapus laporan (warga, < 24 jam, MENUNGGU) |
+| **CameraModal** | `@/components/ui/CameraModal` | Ambil foto langsung via kamera |
+| **LocationPicker** | `@/components/map/LocationPicker` | Pilih lokasi + GPS + klik peta |
 
 **Toast Rules:** ✅ Semua feedback | ❌ Jangan inline error `<div className="bg-error/10">`
 
@@ -107,21 +147,62 @@ score = (voteCount × 2) + hari_sejak_dibuat
 ```typescript
 STATUS_CONFIG.MENUNGGU/DIPROSES/SELESAI
 PRIORITY_COLOR, getMarkerColor()
-LaporanMapItem, LaporanAdminMapItem, LaporanDetail, KategoriItem
+LaporanMapItem, LaporanAdminMapItem, LaporanDetail, LaporanSaya, KategoriItem
 ```
 
 ### API Routes
 | Method | Endpoint | Fungsi |
 |--------|----------|--------|
-| GET | `/api/laporan` | List (query: status, kategoriId, search, adminView) |
+| GET | `/api/laporan` | List (query: status, kategoriId, search, adminView, userId) |
 | PATCH | `/api/laporan/[id]` | Update status, prioritas, catatanAdmin, fotoPenyelesaian |
+| DELETE | `/api/laporan/[id]` | Hapus laporan (owner, < 24 jam, status MENUNGGU) |
 | POST | `/api/vote` | Toggle vote (unlimited) |
 | POST | `/api/upload` | Upload foto (max 5MB) |
 | GET | `/api/notifikasi/sse` | SSE stream |
 
 ---
 
-## 8. Pola Kode (CRITICAL PATTERNS)
+## 8. Aturan Bisnis Penting
+
+### Hapus Laporan (DELETE /api/laporan/[id])
+Laporan hanya bisa dihapus jika **semua** syarat terpenuhi:
+1. User adalah pemilik laporan (`userId === session.user.id`)
+2. Laporan berusia < 24 jam (`createdAt > now - 24h`)
+3. Status masih **MENUNGGU** (belum diproses admin)
+
+Penghapusan dilakukan via `prisma.$transaction` untuk menghapus relasi (komentar, votes, notifikasi) terlebih dahulu sebelum laporan dihapus.
+
+### Dashboard Warga — Limit Laporan
+Di `/beranda`, daftar laporan dibatasi **3 item terbaru** saja. Ada tombol "Lihat Semua →" menuju `/laporan-saya` di header section, dan tombol "Lihat Semua X Laporan" di bagian bawah daftar jika total > 3.
+
+### Kamera Web (CameraModal)
+Komponen `CameraModal` mengakses `navigator.mediaDevices.getUserMedia()`. Di desktop (Chromium), kamera aktif hanya setelah user grant permission browser. Hindari memanggil getUserMedia di luar interaksi user (klik button).
+
+---
+
+## 9. Pola Kode (CRITICAL PATTERNS)
+
+### Responsive Layout — max-width standard
+```tsx
+// Halaman warga: max-w-6xl (mengisi penuh desktop)
+<div className="max-w-6xl mx-auto px-4 sm:px-6">
+
+// Halaman admin: max-w-7xl (sidebar menyempitkan ruang)
+<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+```
+
+### Box Foto & Konten — Ukuran Seragam
+```tsx
+// Foto card (fixed height agar sama tinggi dengan deskripsi)
+<div className="relative bg-surface-container-lowest rounded-2xl shadow-ambient overflow-hidden h-72 sm:h-80">
+  <img className="w-full h-full object-cover" />
+</div>
+
+// Deskripsi card (min-height sesuai foto)
+<div className="bg-surface-container-lowest rounded-2xl shadow-ambient p-6 sm:p-8 min-h-[288px] sm:min-h-[320px] flex flex-col">
+  <p className="flex-1">...</p>
+</div>
+```
 
 ### Password Visibility Toggle
 ```tsx
@@ -133,26 +214,6 @@ const [showPassword, setShowPassword] = useState(false);
 >
   {showPassword ? <EyeOff /> : <Eye />}
 </button>
-```
-
-### Responsive Layout
-```tsx
-// Prevent horizontal scroll
-<div className="w-full overflow-x-hidden">
-  <div className="max-w-4xl mx-auto">
-    <input className="w-full px-4 py-3.5" />
-    <h1 className="truncate">Long Title</h1>
-  </div>
-</div>
-```
-
-### Button Styling
-```tsx
-// Primary button
-<button className="bg-primary text-white">Save</button>
-
-// Active filter chip
-<button className="bg-primary text-white">Category</button>
 ```
 
 ### Debounce
@@ -174,11 +235,11 @@ initLeafletIcons();
 
 ---
 
-## 9. Checklist Fitur Baru
+## 10. Checklist Fitur Baru
 
-- [ ] Pakai komponen reusable? (Spinner, StatusBadge, Toast, CompletionModal)
+- [ ] Pakai komponen reusable? (Spinner, StatusBadge, Toast, CompletionModal, DeleteLaporanButton)
 - [ ] Pakai hook existing? (useDebounce, useToast, useVote, useLaporanMap)
-- [ ] Responsif mobile-desktop?
+- [ ] Responsif mobile-desktop? (`max-w-6xl`, grid `lg:grid-cols-12`)
 - [ ] `overflow-x: hidden` untuk prevent horizontal scroll?
 - [ ] Password toggle pattern benar? (`type="button"`, `tabIndex={-1}`)
 - [ ] Button text `text-white` untuk high contrast?
@@ -188,11 +249,13 @@ initLeafletIcons();
 - [ ] Toast untuk feedback (bukan inline error)?
 - [ ] Foto upload max 5MB?
 - [ ] Leaflet import dari `lib/map.ts` + `<MapResizer />`?
+- [ ] Komentar sebagai grid item terpisah (selalu paling bawah di mobile)?
+- [ ] Aturan bisnis hapus laporan diterapkan di API (< 24 jam + MENUNGGU + owner)?
 - [ ] `npx tsc --noEmit` sebelum commit?
 
 ---
 
-## 10. Anti-Redundansi
+## 11. Anti-Redundansi
 
 ### Jangan Buat Duplikat
 - ✅ Cek `src/components/ui/`, `src/hooks/` dulu
@@ -200,6 +263,7 @@ initLeafletIcons();
 - ❌ Jangan buat inline error messages (pakai Toast)
 - ❌ Jangan buat password toggle logic sendiri
 - ❌ Jangan buat marker color logic sendiri
+- ❌ Jangan biarkan kode duplikat tertumpuk di file (tulis ulang bersih)
 
 ### File Sensitif (Jangan Modifikasi Sembarangan)
 - `prisma/schema.prisma` — Perlu migrasi
