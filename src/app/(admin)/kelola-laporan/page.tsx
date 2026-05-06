@@ -1,5 +1,5 @@
 'use client';
-
+import CompletionModal from "@/components/admin/CompletionModal";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -42,6 +42,38 @@ export default function KelolaLaporanPage() {
   const [isSortModalOpen, setIsSortModalOpen] = useState(false);
 
   const debouncedSearch = useDebounce(searchQuery, 400);
+  const [selectedLaporan, setSelectedLaporan] = useState<LaporanAdminMapItem | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleComplete = async (data: {
+  catatanAdmin: string;
+  fotoPenyelesaian: string | null;
+}) => {
+  if (!selectedLaporan) return;
+
+  const res = await fetch(`/api/laporan/${selectedLaporan.id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      status: "SELESAI",
+      catatanAdmin: data.catatanAdmin,
+      fotoPenyelesaian: data.fotoPenyelesaian,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Gagal update status");
+  }
+
+  // refresh data tanpa reload full
+  setLaporan((prev) =>
+    prev.map((l) =>
+      l.id === selectedLaporan.id
+        ? { ...l, status: "SELESAI" }
+        : l
+    )
+  );
+};
 
   // Fetch kategori
   useEffect(() => {
@@ -431,26 +463,50 @@ export default function KelolaLaporanPage() {
                       )}
                     </div>
 
-                    {/* Action Button */}
-                    <div className="flex sm:flex-col items-center justify-end gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/dashboard/laporan/${item.id}`);
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dim text-white rounded-xl text-sm font-semibold transition-colors"
-                      >
-                        <Eye className="w-4 h-4" strokeWidth={2} />
-                        <span className="hidden sm:inline">Detail</span>
-                      </button>
-                    </div>
+                   <div className="flex sm:flex-col items-center justify-end gap-2">
+                  {/* Detail */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/dashboard/laporan/${item.id}`);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dim text-white rounded-xl text-sm font-semibold transition-colors"
+                  >
+                    <Eye className="w-4 h-4" strokeWidth={2} />
+                    <span className="hidden sm:inline">Detail</span>
+                  </button>
+
+                  {/* Selesaikan */}
+                  {item.status !== "SELESAI" && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedLaporan(item);
+                        setIsModalOpen(true);
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold transition-colors"
+                    >
+                      <CheckCircle className="w-4 h-4" strokeWidth={2} />
+                      <span className="hidden sm:inline">Selesai</span>
+                    </button>
+                  )}
+                </div>
                   </div>
                 </div>
               </div>
             ))}
-          </div>
+            </div>
         )}
+
+        {/* 🔥 TAMBAHKAN DI SINI */}
+        <CompletionModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleComplete}
+          laporanJudul={selectedLaporan?.judul || ""}
+        />
+
       </div>
     </div>
   );
-}
+} 
