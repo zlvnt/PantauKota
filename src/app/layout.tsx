@@ -21,6 +21,10 @@ export const metadata: Metadata = {
   description: "Aplikasi Lapor Lingkungan / PantauKota",
 };
 
+export const metadata = {
+  manifest: "/manifest.json",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
