@@ -7,9 +7,6 @@ import {
   Filter,
   ArrowUpDown,
   Eye,
-  Clock,
-  Loader,
-  CheckCircle,
   Flame,
   ThumbsUp,
   MessageCircle,
@@ -57,7 +54,7 @@ export default function KelolaLaporanPage() {
     fetch(`/api/laporan?${params}`)
       .then((res) => res.json())
       .then((data) => {
-        setLaporan(data);
+        setLaporan(Array.isArray(data) ? data : data.laporan ?? []);
         setIsLoading(false);
       })
       .catch((err) => {
@@ -163,7 +160,7 @@ export default function KelolaLaporanPage() {
               />
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+                onChange={(e) => setSortBy(e.target.value as 'terbaru' | 'prioritas' | 'vote')}
                 className="w-full pl-10 pr-4 py-3 bg-surface-container-low rounded-xl border border-outline-variant/15 focus:border-primary focus:outline-none text-sm text-on-surface appearance-none cursor-pointer"
               >
                 <option value="terbaru">Terbaru</option>
