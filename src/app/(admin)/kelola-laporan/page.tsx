@@ -57,7 +57,7 @@ export default function KelolaLaporanPage() {
     fetch(`/api/laporan?${params}`)
       .then((res) => res.json())
       .then((data) => {
-        setLaporan(data);
+        setLaporan(Array.isArray(data) ? data : data.laporan ?? []);
         setIsLoading(false);
       })
       .catch((err) => {
