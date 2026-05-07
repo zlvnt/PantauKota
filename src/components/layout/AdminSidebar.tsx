@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings,
+  Users,
 } from 'lucide-react';
 
 const navLinks = [
@@ -21,6 +22,7 @@ const navLinks = [
   { href: '/dashboard/peta',   label: 'Peta Laporan',     icon: Map },
   { href: '/kelola-laporan',   label: 'Kelola Laporan',   icon: FileText },
   { href: '/kelola-kategori',  label: 'Kelola Kategori',  icon: Tag },
+  { href: '/kelola-user',      label: 'Kelola User',      icon: Users },
 ];
 
 interface AdminSidebarProps {
