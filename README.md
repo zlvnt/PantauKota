@@ -1,6 +1,6 @@
 # PantauKota — Aplikasi Lapor Lingkungan
 
-**Update:** 04 Mei 2026 | PBI-03, 07, 08, 09, 10, 11, 12, 13, 14, 22 ✅
+**Update:** 07 Mei 2026 | PBI-03, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 22 ✅
 
 ---
 
@@ -155,8 +155,8 @@ Schema: `prisma/schema.prisma` | Config: `prisma.config.ts`
 | 12 | Sistem Prioritas Laporan | ✅ Selesai (formula + marker warna) |
 | 13 | Riwayat Laporan | ✅ Selesai (halaman /laporan-saya + dashboard limit 3) |
 | 14 | Kelola Laporan | ✅ Selesai (filter, search, sorting) |
-| 15 | Deteksi Duplikasi | 🔲 Belum |
-| 16 | Kelola User / Admin | 🔲 Belum |
+| 15 | Deteksi Duplikasi | ✅ Selesai (cek lokasi & kategori < 50m) |
+| 16 | Kelola User / Admin | ✅ Selesai (API + UI responsive card grid) |
 | 17 | Statistik & Grafik Laporan | 🟡 Statistik angka selesai, chart belum |
 | 18 | Tabel Monitoring Laporan | 🟡 Tabel 5 terbaru selesai |
 | 19 | Kelola Kategori | 🔲 Belum |
@@ -211,6 +211,13 @@ Schema: `prisma/schema.prisma` | Config: `prisma.config.ts`
 - `CameraModal.tsx` — akses kamera langsung di browser
 - Capture via canvas → blob → upload Cloudinary
 - Support desktop (getUserMedia) dan mobile (facingMode: environment)
+
+---
+
+### Kelola User & Deteksi Duplikasi ✅
+
+- **Kelola User (`/kelola-user`):** Menggunakan *responsive card grid* (mencegah horizontal scroll di mobile), integrasi API toggle status aktif/nonaktif dan hapus user.
+- **Deteksi Duplikasi (`/api/laporan/duplikat`):** Mengecek otomatis laporan baru terhadap laporan existing (radius 50m, kategori sama, < 30 hari).
 
 ---
 

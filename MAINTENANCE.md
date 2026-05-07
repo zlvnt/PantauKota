@@ -1,6 +1,6 @@
 # 📚 Panduan Maintenance PantauKota
 
-> **Update:** Mei 2026 — Tambah halaman /laporan-saya, hapus laporan, kamera web, grid responsif desktop.
+> **Update:** Mei 2026 — Tambah halaman /laporan-saya, hapus laporan, kamera web, kelola user, deteksi duplikasi.
 
 ## 🏗️ Struktur Project
 
@@ -128,6 +128,16 @@ Gunakan `prisma.$transaction` untuk hapus relasi (komentar, votes, notifikasi) s
 - Capture via `<canvas>` → blob → upload ke Cloudinary
 - Di mobile: `facingMode: 'environment'` (kamera belakang)
 - Selalu `stopMediaStream()` saat modal ditutup untuk matikan kamera
+
+### 9. Deteksi Duplikasi
+**File:** `src/app/api/laporan/duplikat/route.ts`
+- Menggunakan formula Haversine untuk menghitung jarak antara 2 koordinat (max 50 meter).
+- Mengecek laporan pada kategori yang sama dan dibuat dalam 30 hari terakhir.
+
+### 10. Kelola User API
+**File:** `src/app/api/user/profile/[id]/route.ts`
+- Endpoint untuk PATCH (toggle aktif/nonaktif) dan DELETE user.
+- Terdapat validasi: Admin tidak bisa menonaktifkan atau menghapus akunnya sendiri.
 
 ---
 
