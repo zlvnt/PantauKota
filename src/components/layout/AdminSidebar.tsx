@@ -75,7 +75,7 @@ export default function AdminSidebar({ adminName, isOpen = true, onToggle, isLoc
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto overflow-x-hidden">
+        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {navLinks.map(({ href, label, icon: Icon }) => {
             const isActive = href === '/dashboard' 
               ? pathname === '/dashboard' 

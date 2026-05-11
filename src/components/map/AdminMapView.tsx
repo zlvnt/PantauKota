@@ -199,7 +199,7 @@ function AdminMarker({
             </div>
 
             {/* Data pelapor — hanya di tampilan admin */}
-            <div className="space-y-1 py-2 border-t border-b border-gray-100">
+            <div className="space-y-1 py-2 bg-surface-container-low/50 rounded-lg px-2">
               <div className="text-xs text-[#677177] flex items-center gap-1.5 !m-0">
                 <User className="w-3 h-3 flex-shrink-0" strokeWidth={1.5} />
                 <span className="font-medium text-[#2a3439]">{item.user.name}</span>

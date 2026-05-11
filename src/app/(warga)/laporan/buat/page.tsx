@@ -122,8 +122,9 @@ export default function BuatLaporanPage() {
         <button
           onClick={() => router.back()}
           className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-lowest hover:bg-surface-container-low text-on-surface transition-colors shadow-ambient"
+          title="Kembali"
         >
-          <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
+          <ArrowLeft className="w-5 h-5" strokeWidth={2} />
         </button>
         <div>
           <p className="text-[11px] uppercase tracking-widest text-muted-foreground font-semibold">

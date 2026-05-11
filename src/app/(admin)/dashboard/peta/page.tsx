@@ -185,7 +185,12 @@ export default function AdminPetaPage() {
                 {isLoading ? 'Memuat...' : `${filteredLaporan.length} dari ${stats.total} laporan`}
               </p>
             </div>
-            <button onClick={refetch} className="p-1.5 rounded-lg hover:bg-surface-container-low text-[#677177] hover:text-on-surface transition-colors" title="Refresh">
+            <button 
+              onClick={refetch} 
+              className="p-1.5 rounded-lg hover:bg-surface-container-low text-[#677177] hover:text-on-surface transition-colors" 
+              title="Refresh data laporan"
+              aria-label="Refresh data laporan"
+            >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} strokeWidth={1.5} />
             </button>
           </div>
@@ -204,6 +209,8 @@ export default function AdminPetaPage() {
               <button
                 onClick={() => setSearchQuery('')}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8a969c] hover:text-on-surface"
+                aria-label="Hapus pencarian"
+                title="Hapus pencarian"
               >
                 <X className="w-3.5 h-3.5" strokeWidth={2} />
               </button>
@@ -221,6 +228,8 @@ export default function AdminPetaPage() {
                 <button
                   onClick={() => kategoriScrollRef.current?.scrollBy({ left: -120, behavior: 'smooth' })}
                   className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-surface-container-low hover:bg-surface-container-high text-[#677177] hover:text-on-surface transition-colors"
+                  aria-label="Geser kategori ke kiri"
+                  title="Geser ke kiri"
                 >
                   <ChevronLeftIcon className="w-3.5 h-3.5" strokeWidth={2} />
                 </button>

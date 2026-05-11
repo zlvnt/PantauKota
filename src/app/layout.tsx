@@ -16,9 +16,17 @@ const manrope = Manrope({
   display: "swap",
 });
 
+export const viewport: import("next").Viewport = {
+  themeColor: "#426464",
+};
+
 export const metadata: Metadata = {
   title: "LaporLingkungan - PantauKota",
   description: "Aplikasi Lapor Lingkungan / PantauKota",
+  manifest: "/manifest.json",
+  icons: {
+    apple: "/icons/icon-192x192.png",
+  },
 };
 
 export default function RootLayout({

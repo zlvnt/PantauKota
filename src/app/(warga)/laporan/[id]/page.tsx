@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -26,6 +26,12 @@ interface Props {
 export default async function DetailLaporanPage({ params }: Props) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
+
+  // ── Smart Redirect: Admin → Admin Dashboard ──────────────────────────────
+  // Jika user adalah admin, redirect ke halaman admin detail
+  if (session?.user?.role === 'ADMIN') {
+    redirect(`/dashboard/laporan/${params.id}`);
+  }
 
   const laporan = await prisma.laporan.findUnique({
     where: { id: params.id },
@@ -58,7 +64,8 @@ export default async function DetailLaporanPage({ params }: Props) {
           <div className="flex items-center justify-between">
             <Link
               href="/beranda"
-              className="inline-flex items-center gap-2 p-2.5 rounded-xl bg-surface-container-lowest hover:bg-surface-container-low transition-colors shadow-ambient"
+              className="inline-flex items-center justify-center p-2.5 rounded-full bg-surface-container-lowest hover:bg-surface-container-low transition-colors shadow-ambient"
+              title="Kembali ke Beranda"
             >
               <ArrowLeft className="w-5 h-5" strokeWidth={2} />
             </Link>

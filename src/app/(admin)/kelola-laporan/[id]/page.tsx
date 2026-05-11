@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { STATUS_CONFIG, type LaporanStatus } from "@/types/laporan";
 
 type Laporan = {
   id: string;
   judul: string;
   deskripsi: string;
-  status: string;
+  status: LaporanStatus;
   kategori: { nama: string };
   user: { name: string; email: string };
   foto: string[];
@@ -16,12 +18,6 @@ type Laporan = {
   createdAt: string;
   catatanAdmin: string | null;
   fotoPenyelesaian: string | null;
-};
-
-const statusColor: Record<string, string> = {
-  MENUNGGU: "bg-yellow-100 text-yellow-800",
-  DIPROSES: "bg-blue-100 text-blue-800",
-  SELESAI: "bg-green-100 text-green-800",
 };
 
 export default function DetailLaporanAdminPage() {
@@ -48,7 +44,7 @@ export default function DetailLaporanAdminPage() {
     if (id) fetchDetail();
   }, [id]);
 
-  const updateStatus = async (status: string) => {
+  const updateStatus = async (status: LaporanStatus) => {
     setUpdating(true);
     try {
       await fetch(`/api/laporan/${id}`, {
@@ -57,6 +53,7 @@ export default function DetailLaporanAdminPage() {
         body: JSON.stringify({ status, catatanAdmin: catatan }),
       });
       router.push("/kelola-laporan");
+      router.refresh();
     } catch (err) {
       console.error("Gagal update status:", err);
     } finally {
@@ -64,85 +61,164 @@ export default function DetailLaporanAdminPage() {
     }
   };
 
-  if (loading) return <p className="text-center py-10 text-gray-500">Memuat...</p>;
-  if (!laporan) return <p className="text-center py-10 text-gray-500">Laporan tidak ditemukan.</p>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!laporan) {
+    return (
+      <div className="text-center py-10 text-muted-foreground">
+        Laporan tidak ditemukan.
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-surface p-4 sm:p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Back Button */}
         <button
           onClick={() => router.back()}
-          className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-flex items-center gap-1"
+          className="inline-flex items-center justify-center p-2.5 rounded-full bg-surface-container-lowest hover:bg-surface-container-low transition-colors shadow-ambient mb-6"
+          aria-label="Kembali ke halaman sebelumnya"
+          title="Kembali"
         >
-          ← Kembali
+          <ArrowLeft className="w-5 h-5" strokeWidth={2} />
         </button>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        {/* Main Card */}
+        <div className="bg-surface-container-lowest rounded-2xl shadow-ambient p-6 sm:p-8 space-y-6">
           {/* Header */}
-          <div className="flex items-start justify-between mb-4">
-            <h1 className="text-xl font-bold text-gray-800">{laporan.judul}</h1>
-            <span className={`text-xs px-3 py-1 rounded-full font-medium ${statusColor[laporan.status]}`}>
-              {laporan.status}
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-on-surface flex-1">
+              {laporan.judul}
+            </h1>
+            <span
+              className={`text-xs px-3 py-1.5 rounded-full font-semibold whitespace-nowrap ${
+                STATUS_CONFIG[laporan.status].bgClass
+              }`}
+            >
+              {STATUS_CONFIG[laporan.status].label}
             </span>
           </div>
 
-          {/* Info */}
-          <div className="text-sm text-gray-500 flex flex-wrap gap-3 mb-4">
-            <span>📁 {laporan.kategori?.nama}</span>
-            <span>👤 {laporan.user?.name}</span>
-            <span>📧 {laporan.user?.email}</span>
-            <span>👍 {laporan.voteCount} suara</span>
-            <span>📅 {new Date(laporan.createdAt).toLocaleDateString("id-ID")}</span>
-            {laporan.alamat && <span>📍 {laporan.alamat}</span>}
+          {/* Info Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span className="font-semibold text-on-surface">Kategori:</span>
+              {laporan.kategori?.nama}
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span className="font-semibold text-on-surface">Pelapor:</span>
+              {laporan.user?.name}
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span className="font-semibold text-on-surface">Email:</span>
+              {laporan.user?.email}
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span className="font-semibold text-on-surface">Dukungan:</span>
+              {laporan.voteCount} suara
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span className="font-semibold text-on-surface">Tanggal:</span>
+              {new Date(laporan.createdAt).toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </div>
+            {laporan.alamat && (
+              <div className="flex items-center gap-2 text-muted-foreground sm:col-span-2">
+                <span className="font-semibold text-on-surface">Lokasi:</span>
+                {laporan.alamat}
+              </div>
+            )}
           </div>
 
+          {/* Divider - Tonal Layering */}
+          <div className="h-px bg-surface-container-high" />
+
           {/* Deskripsi */}
-          <p className="text-gray-700 mb-4">{laporan.deskripsi}</p>
+          <div>
+            <h2 className="text-sm font-semibold text-on-surface mb-2">Deskripsi</h2>
+            <p className="text-on-surface/80 leading-relaxed">{laporan.deskripsi}</p>
+          </div>
 
           {/* Foto */}
           {laporan.foto?.length > 0 && (
-            <div className="flex gap-2 flex-wrap mb-4">
-              {laporan.foto.map((url, i) => (
-                <img key={i} src={url} alt="foto" className="w-32 h-32 object-cover rounded-lg" />
-              ))}
+            <div>
+              <h2 className="text-sm font-semibold text-on-surface mb-3">
+                Foto Laporan ({laporan.foto.length})
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {laporan.foto.map((url, i) => (
+                  <img
+                    key={i}
+                    src={url}
+                    alt={`Foto laporan ${i + 1}`}
+                    className="w-full h-32 sm:h-40 object-cover rounded-xl"
+                  />
+                ))}
+              </div>
             </div>
           )}
 
+          {/* Divider */}
+          <div className="h-px bg-surface-container-high" />
+
           {/* Catatan Admin */}
-          <div className="mb-4">
-            <label className="text-sm font-medium text-gray-700 block mb-1">
+          <div>
+            <label
+              htmlFor="catatan-admin"
+              className="block text-sm font-semibold text-on-surface mb-2"
+            >
               Catatan Admin
             </label>
             <textarea
+              id="catatan-admin"
               value={catatan}
               onChange={(e) => setCatatan(e.target.value)}
-              rows={3}
-              className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
-              placeholder="Tulis catatan atau tanggapan..."
+              rows={4}
+              className="w-full bg-surface-container-low rounded-xl p-4 text-sm text-on-surface placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow resize-none"
+              placeholder="Tulis catatan atau tanggapan untuk pelapor..."
             />
           </div>
 
-          {/* Aksi Status */}
-          <div className="flex gap-2 flex-wrap">
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => updateStatus("DIPROSES")}
               disabled={updating || laporan.status === "DIPROSES"}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
+              className="flex-1 px-4 py-3 bg-[#3b82f6] text-white rounded-xl text-sm font-semibold hover:bg-[#3b82f6]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
+              {updating ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : null}
               Tandai Diproses
             </button>
             <button
               onClick={() => updateStatus("SELESAI")}
               disabled={updating || laporan.status === "SELESAI"}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-50"
+              className="flex-1 px-4 py-3 bg-tertiary text-white rounded-xl text-sm font-semibold hover:bg-tertiary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
+              {updating ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : null}
               Tandai Selesai
             </button>
             <button
               onClick={() => updateStatus("MENUNGGU")}
               disabled={updating || laporan.status === "MENUNGGU"}
-              className="px-4 py-2 bg-yellow-500 text-white rounded-lg text-sm hover:bg-yellow-600 disabled:opacity-50"
+              className="flex-1 px-4 py-3 bg-[#f59e0b] text-white rounded-xl text-sm font-semibold hover:bg-[#f59e0b]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
+              {updating ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : null}
               Kembalikan ke Menunggu
             </button>
           </div>
