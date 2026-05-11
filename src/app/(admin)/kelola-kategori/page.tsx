@@ -1,10 +1,3 @@
-<<<<<<< Updated upstream
-export default function Component() {
-  return (
-    <div>page (src/app/(admin)/kelola-kategori/page.tsx)</div>
-  );
-}
-=======
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -549,4 +542,3 @@ export default function KelolaKategoriPage() {
     </div>
   );
 }
->>>>>>> Stashed changes
