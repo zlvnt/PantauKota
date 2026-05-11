@@ -43,6 +43,12 @@ model Laporan {
   kategori         Kategori   @relation(fields: [kategoriId], references: [id])
   user             User       @relation(fields: [userId], references: [id])
   votes            Vote[]
+
+  @@index([status, selesaiAt])
+  @@index([kategoriId, status])
+  @@index([userId, status])
+  @@index([latitude, longitude])
+  @@index([createdAt])
 }
 
 model Kategori {
@@ -86,6 +92,9 @@ model Notifikasi {
   dibaca    Boolean  @default(false)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, dibaca])
+  @@index([createdAt])
 }
 
 enum Role {

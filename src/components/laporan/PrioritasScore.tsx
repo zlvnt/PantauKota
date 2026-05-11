@@ -1,6 +1,8 @@
 'use client';
 
 import { Flame } from 'lucide-react';
+import { calculatePriorityScore } from '@/lib/utils';
+import { PRIORITY_THRESHOLD } from '@/lib/constants';
 
 interface PrioritasScoreProps {
   voteCount: number;
@@ -16,26 +18,28 @@ interface PrioritasScoreProps {
  * Semakin tinggi skor → semakin mendesak laporan ini.
  * 
  * Warna dinamis:
- * - score >= 30 → Merah (urgent)
- * - score >= 15 → Orange (tinggi)
- * - score >= 5 → Amber (sedang)
- * - score < 5 → Abu-abu (rendah)
+ * - score >= threshold (50) → Merah (urgent/prioritas)
+ * - score >= 30 → Orange (tinggi)
+ * - score >= 15 → Amber (sedang)
+ * - score < 15 → Abu-abu (rendah)
  * 
  * Desain Editorial Ledger:
  * - Badge compact dengan icon flame
  * - Tooltip menampilkan detail perhitungan
  */
 export default function PrioritasScore({ voteCount, createdAt, className = '' }: PrioritasScoreProps) {
+  // Gunakan utility function untuk konsistensi perhitungan
+  const score = calculatePriorityScore(voteCount, createdAt);
+  
   const daysSince = Math.floor(
     (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24)
   );
-  const score = voteCount * 2 + daysSince;
 
   // Tentukan intensitas warna berdasarkan skor
   let colorClass = 'bg-surface-container-high text-muted-foreground';
-  if (score >= 30) colorClass = 'bg-red-100 text-red-700';
-  else if (score >= 15) colorClass = 'bg-orange-100 text-orange-700';
-  else if (score >= 5) colorClass = 'bg-amber-100 text-amber-700';
+  if (score >= PRIORITY_THRESHOLD) colorClass = 'bg-red-100 text-red-700';
+  else if (score >= 30) colorClass = 'bg-orange-100 text-orange-700';
+  else if (score >= 15) colorClass = 'bg-amber-100 text-amber-700';
 
   return (
     <div

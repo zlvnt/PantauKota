@@ -174,6 +174,7 @@ export default function PetaPage() {
                 onClick={() => router.push('/beranda')} 
                 className="w-12 h-12 flex-shrink-0 shadow-[0_8px_30px_rgba(42,52,57,0.12)] rounded-full bg-surface-container-lowest border border-[rgba(169,180,185,0.15)] flex items-center justify-center pointer-events-auto text-[#677177] hover:bg-surface-container-low hover:text-on-surface transition-colors"
                 title="Kembali ke Dashboard"
+                aria-label="Kembali ke Dashboard"
               >
                  <ArrowLeft className="w-5 h-5" strokeWidth={2} />
               </button>
@@ -191,11 +192,16 @@ export default function PetaPage() {
                 
                 {/* Search Icon / Clear */}
                 {isSearchActive ? (
-                  <button onClick={clearSearch} className="px-3 text-[#8a969c] hover:text-error transition-colors">
+                  <button 
+                    onClick={clearSearch} 
+                    className="px-3 text-[#8a969c] hover:text-error transition-colors"
+                    aria-label="Hapus pencarian"
+                    title="Hapus pencarian"
+                  >
                     <X className="w-5 h-5" strokeWidth={2} />
                   </button>
                 ) : (
-                  <div className="px-4 text-[#677177]">
+                  <div className="px-4 text-[#677177]" aria-hidden="true">
                     <Search className="w-5 h-5" strokeWidth={2} />
                   </div>
                 )}
@@ -229,6 +235,8 @@ export default function PetaPage() {
                     ? 'border-2 border-primary text-primary'
                     : 'border border-[rgba(169,180,185,0.2)] text-[#677177] hover:bg-surface-container-low hover:text-on-surface'
                 }`}
+                aria-label="Filter berdasarkan kategori"
+                title="Filter berdasarkan kategori"
               >
                 <SlidersHorizontal className="w-4 h-4" strokeWidth={1.5} />
                 {selectedKategoriId !== '' ? activeKategoriName : 'Kategori'}
@@ -256,6 +264,8 @@ export default function PetaPage() {
                 <button
                   onClick={() => setIsKategoriModalOpen(false)}
                   className="p-1.5 rounded-xl text-[#677177] hover:bg-surface-container-low hover:text-on-surface transition-colors"
+                  aria-label="Tutup modal kategori"
+                  title="Tutup"
                 >
                   <X className="w-5 h-5" strokeWidth={2} />
                 </button>

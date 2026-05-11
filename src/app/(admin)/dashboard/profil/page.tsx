@@ -178,7 +178,7 @@ export default function AdminProfilPage() {
           <div className="mb-6 flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => router.push('/dashboard')}
-              className="p-2.5 rounded-xl bg-surface-container-lowest hover:bg-surface-container-low transition-colors shadow-[0_2px_8px_rgba(42,52,57,0.08)] shrink-0"
+              className="p-2.5 rounded-full bg-surface-container-lowest hover:bg-surface-container-low transition-colors shadow-[0_2px_8px_rgba(42,52,57,0.08)] shrink-0"
               title="Kembali ke Dashboard"
             >
               <ArrowLeft className="w-5 h-5 text-on-surface" strokeWidth={2} />

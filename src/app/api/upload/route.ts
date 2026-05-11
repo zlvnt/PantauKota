@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { v2 as cloudinary } from 'cloudinary';
 import type { UploadApiResponse } from 'cloudinary';
+import { validateUploadFile, handleApiError } from '@/lib/api-helpers';
+import { MAX_FILE_SIZE_BYTES, ALLOWED_IMAGE_MIME_TYPES } from '@/lib/constants';
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -11,28 +13,52 @@ cloudinary.config({
 });
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Tidak terautentikasi.' }, { status: 401 });
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Tidak terautentikasi.' }, { status: 401 });
+    }
+
+    const formData = await req.formData();
+    const file = formData.get('file') as File | null;
+
+    if (!file) {
+      return NextResponse.json({ error: 'File tidak ditemukan.' }, { status: 400 });
+    }
+
+    // Validasi file sebelum upload
+    const validation = validateUploadFile(file, MAX_FILE_SIZE_BYTES, ALLOWED_IMAGE_MIME_TYPES);
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { error: validation.errors.join('. ') },
+        { status: 400 }
+      );
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    const result = await new Promise<UploadApiResponse>((resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream(
+          { 
+            folder: 'pantaukota', 
+            resource_type: 'image',
+            // Tambahan security: transformasi untuk optimasi
+            transformation: [
+              { quality: 'auto', fetch_format: 'auto' }
+            ]
+          }, 
+          (error, res) => {
+            if (error || !res) reject(error);
+            else resolve(res);
+          }
+        )
+        .end(buffer);
+    });
+
+    return NextResponse.json({ url: result.secure_url });
+  } catch (error) {
+    return handleApiError(error, 'POST /upload');
   }
-
-  const formData = await req.formData();
-  const file = formData.get('file') as File | null;
-
-  if (!file) {
-    return NextResponse.json({ error: 'File tidak ditemukan.' }, { status: 400 });
-  }
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-
-  const result = await new Promise<UploadApiResponse>((resolve, reject) => {
-    cloudinary.uploader
-      .upload_stream({ folder: 'pantaukota', resource_type: 'image' }, (error, res) => {
-        if (error || !res) reject(error);
-        else resolve(res);
-      })
-      .end(buffer);
-  });
-
-  return NextResponse.json({ url: result.secure_url });
 }
+

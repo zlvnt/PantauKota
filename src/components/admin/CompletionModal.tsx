@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Upload, Camera, Loader, CheckCircle } from 'lucide-react';
 import Spinner from '@/components/ui/Spinner';
 import Toast from '@/components/ui/Toast';
@@ -23,23 +24,61 @@ export default function CompletionModal({
   const [foto, setFoto] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { toasts, removeToast, success, error: showError } = useToast();
 
-  if (!isOpen) return null;
+  // Ensure component is mounted (for portal)
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalHtmlOverflow = document.documentElement.style.overflow;
+      const originalBodyPosition = document.body.style.position;
+      const originalBodyWidth = document.body.style.width;
+      
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      
+      // Block all pointer events on body children except modal
+      const style = document.createElement('style');
+      style.id = 'modal-pointer-block';
+      style.innerHTML = `
+        body > *:not(#modal-root) {
+          pointer-events: none !important;
+        }
+      `;
+      document.head.appendChild(style);
+      
+      return () => {
+        document.body.style.overflow = originalBodyOverflow;
+        document.documentElement.style.overflow = originalHtmlOverflow;
+        document.body.style.position = originalBodyPosition;
+        document.body.style.width = originalBodyWidth;
+        
+        const styleEl = document.getElementById('modal-pointer-block');
+        if (styleEl) styleEl.remove();
+      };
+    }
+  }, [isOpen]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (max 5MB as per DESIGN.md standard)
     if (file.size > 5 * 1024 * 1024) {
       showError('Ukuran file maksimal 5MB');
       return;
     }
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       showError('File harus berupa gambar');
       return;
@@ -70,7 +109,6 @@ export default function CompletionModal({
   };
 
   const handleSubmit = async () => {
-    // Validation - hanya catatan admin yang wajib
     if (!catatanAdmin.trim()) {
       showError('Catatan admin wajib diisi');
       return;
@@ -81,10 +119,9 @@ export default function CompletionModal({
     try {
       await onSubmit({
         catatanAdmin: catatanAdmin.trim(),
-        fotoPenyelesaian: foto, // bisa null (opsional)
+        fotoPenyelesaian: foto,
       });
 
-      // Reset form
       setCatatanAdmin('');
       setFoto(null);
       success('Laporan berhasil diselesaikan');
@@ -105,9 +142,10 @@ export default function CompletionModal({
     onClose();
   };
 
-  return (
+  if (!isOpen || !mounted) return null;
+
+  const modalContent = (
     <>
-      {/* Toast Notifications */}
       {toasts.map((toast) => (
         <Toast
           key={toast.id}
@@ -117,31 +155,41 @@ export default function CompletionModal({
         />
       ))}
 
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40">
-        <div className="bg-surface-container-lowest rounded-3xl shadow-[0_8px_30px_rgba(42,52,57,0.12)] w-full max-w-lg overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-outline-variant/15">
+      <div 
+        id="modal-root"
+        className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        style={{ zIndex: 999999, pointerEvents: 'auto' }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget && !isSubmitting && !isUploading) {
+            handleClose();
+          }
+        }}
+      >
+        <div 
+          className="bg-surface-container-lowest rounded-2xl shadow-[0_8px_30px_rgba(42,52,57,0.12)] w-full max-w-md overflow-hidden"
+          style={{ pointerEvents: 'auto' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between p-5 border-b border-outline-variant/15">
             <div className="min-w-0 flex-1">
-              <h2 className="text-xl font-bold text-on-surface">
+              <h2 className="text-lg font-bold text-on-surface">
                 Selesaikan Laporan
               </h2>
-              <p className="text-sm text-on-surface/60 mt-1 truncate">
+              <p className="text-xs text-on-surface/60 mt-1 truncate">
                 {laporanJudul}
               </p>
             </div>
             <button
               onClick={handleClose}
               disabled={isSubmitting || isUploading}
-              className="shrink-0 p-2 rounded-xl hover:bg-surface-container-low transition-colors disabled:opacity-50"
+              className="shrink-0 p-1.5 rounded-xl hover:bg-surface-container-low transition-colors disabled:opacity-50"
               aria-label="Tutup"
             >
               <X className="w-5 h-5" strokeWidth={2} />
             </button>
           </div>
 
-          {/* Content */}
-          <div className="p-6 space-y-5">
-            {/* Catatan Admin */}
+          <div className="p-5 space-y-4">
             <div className="space-y-2">
               <label className="block text-[11px] font-bold uppercase tracking-widest text-on-surface/60">
                 Catatan Admin *
@@ -156,7 +204,6 @@ export default function CompletionModal({
               />
             </div>
 
-            {/* Foto Bukti Penyelesaian */}
             <div className="space-y-2">
               <label className="block text-[11px] font-bold uppercase tracking-widest text-on-surface/60">
                 Foto Bukti Penyelesaian (Opsional)
@@ -190,7 +237,6 @@ export default function CompletionModal({
                   />
 
                   <div className="grid grid-cols-2 gap-2">
-                    {/* File Manager Upload */}
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading || isSubmitting}
@@ -206,7 +252,6 @@ export default function CompletionModal({
                       </span>
                     </button>
 
-                    {/* Camera Capture */}
                     <button
                       onClick={() => {
                         if (fileInputRef.current) {
@@ -232,19 +277,18 @@ export default function CompletionModal({
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-3 p-6 border-t border-outline-variant/15">
+          <div className="flex items-center justify-end gap-3 p-5 border-t border-outline-variant/15">
             <button
               onClick={handleClose}
               disabled={isSubmitting || isUploading}
-              className="px-6 py-3 bg-surface-container-highest hover:bg-surface-container-high rounded-xl text-sm font-semibold text-on-surface transition-colors disabled:opacity-50"
+              className="px-5 py-2.5 bg-surface-container-highest hover:bg-surface-container-high rounded-xl text-sm font-semibold text-on-surface transition-colors disabled:opacity-50"
             >
               Batal
             </button>
             <button
               onClick={handleSubmit}
               disabled={isSubmitting || isUploading || !catatanAdmin.trim()}
-              className="px-6 py-3 bg-primary hover:bg-primary-dim text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="px-5 py-2.5 bg-primary hover:bg-primary-dim text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {isSubmitting ? (
                 <>
@@ -263,4 +307,6 @@ export default function CompletionModal({
       </div>
     </>
   );
+
+  return createPortal(modalContent, document.body);
 }

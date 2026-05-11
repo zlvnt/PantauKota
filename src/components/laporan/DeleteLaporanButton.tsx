@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Trash2, AlertTriangle, Loader2, X } from 'lucide-react';
+import { canDeleteLaporan, getRemainingDeleteTime } from '@/lib/utils';
 
 interface DeleteLaporanButtonProps {
   laporanId: string;
@@ -22,19 +23,13 @@ export default function DeleteLaporanButton({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Hitung kondisi di sisi klien untuk konsistensi UI
-  const batasWaktu = new Date(new Date(createdAt).getTime() + 24 * 60 * 60 * 1000);
-  const masihDalamBatas = new Date() < batasWaktu;
-  const bisaDihapus = isOwner && status === 'MENUNGGU' && masihDalamBatas;
+  // Gunakan utility function untuk cek kondisi hapus
+  const bisaDihapus = canDeleteLaporan(createdAt, status, isOwner);
 
   if (!bisaDihapus) return null;
 
-  // Hitung sisa waktu untuk ditampilkan
-  const sisaMs = batasWaktu.getTime() - Date.now();
-  const sisaJam = Math.floor(sisaMs / (1000 * 60 * 60));
-  const sisaMenit = Math.floor((sisaMs % (1000 * 60 * 60)) / (1000 * 60));
-  const sisaWaktu =
-    sisaJam > 0 ? `${sisaJam} jam ${sisaMenit} menit` : `${sisaMenit} menit`;
+  // Hitung sisa waktu menggunakan utility function
+  const sisaWaktu = getRemainingDeleteTime(createdAt);
 
   const handleDelete = async () => {
     setLoading(true);
@@ -57,6 +52,7 @@ export default function DeleteLaporanButton({
       <button
         onClick={() => setShowConfirm(true)}
         className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-error bg-error/8 hover:bg-error/15 transition-colors"
+        aria-label="Hapus laporan"
       >
         <Trash2 className="w-4 h-4" strokeWidth={1.5} />
         Hapus Laporan
@@ -77,6 +73,7 @@ export default function DeleteLaporanButton({
               <button
                 onClick={() => { setShowConfirm(false); setError(''); }}
                 className="w-7 h-7 flex items-center justify-center text-muted-foreground hover:text-on-surface hover:bg-surface-container-low rounded-full transition-colors"
+                aria-label="Tutup modal"
               >
                 <X className="w-4 h-4" strokeWidth={2} />
               </button>
@@ -90,7 +87,7 @@ export default function DeleteLaporanButton({
               </p>
 
               {error && (
-                <p className="text-xs text-error bg-error/8 px-3 py-2 rounded-lg">
+                <p className="text-xs text-error bg-error/8 px-3 py-2 rounded-lg" role="alert">
                   {error}
                 </p>
               )}

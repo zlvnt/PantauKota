@@ -10,11 +10,12 @@ import StatusTimeline from '@/components/laporan/StatusTimeline';
 import PrioritasScore from '@/components/laporan/PrioritasScore';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import AdminStatusUpdater from './AdminStatusUpdater';
 
 const AdminMapView = dynamic(() => import('@/components/map/AdminMapView'), {
   ssr: false,
   loading: () => (
-    <div className="h-64 w-full bg-surface-container-low rounded-xl animate-pulse" />
+    <div className="h-full w-full bg-surface-container-low rounded-xl animate-pulse" />
   ),
 });
 
@@ -42,22 +43,42 @@ export default async function AdminDetailLaporanPage({ params }: Props) {
     notFound();
   }
 
+  // Data laporan untuk AdminMapView (dibentuk sesuai tipe LaporanAdminMapItem)
+  const laporanMapData = [{
+    id: laporan.id,
+    judul: laporan.judul,
+    latitude: laporan.latitude,
+    longitude: laporan.longitude,
+    alamat: laporan.alamat,
+    status: laporan.status,
+    prioritas: laporan.prioritas,
+    voteCount: laporan.voteCount,
+    createdAt: laporan.createdAt.toISOString(),
+    foto: laporan.foto,
+    kategori: laporan.kategori,
+    user: { id: laporan.user.id, name: laporan.user.name },
+    _count: { komentar: laporan._count.komentar },
+  }];
+
   return (
     <div className="w-full min-h-screen overflow-x-hidden bg-surface">
-      <div className="max-w-6xl mx-auto pb-20 pt-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto pb-8 lg:pb-20 pt-6 px-4 sm:px-6 lg:px-8">
 
-        {/* ── HEADER (Full Width) ─────────────────────────────────────── */}
-        <div className="mb-6 sm:mb-8 space-y-6">
-          {/* Back Button */}
+        {/* ── HEADER ─────────────────────────────────────────────────── */}
+        <div className="mb-6 sm:mb-8 space-y-4">
+
+          {/* Back Button — dengan label teks */}
           <Link
             href="/kelola-laporan"
-            className="inline-flex items-center gap-2 p-2.5 rounded-xl bg-surface-container-lowest hover:bg-surface-container-low transition-colors shadow-ambient shrink-0"
+            className="inline-flex items-center gap-2 p-2.5 rounded-full bg-surface-container-lowest hover:bg-surface-container-low transition-colors shadow-ambient text-sm font-medium text-on-surface/70"
+            title="Kembali ke Kelola Laporan"
           >
             <ArrowLeft className="w-5 h-5" strokeWidth={2} />
           </Link>
 
-          {/* Header & Status */}
+          {/* Card Header: Judul, Badges, & Meta Info */}
           <div className="bg-surface-container-lowest rounded-2xl shadow-ambient p-6 sm:p-8 space-y-5">
+            {/* Badges: Status, Kategori, Prioritas, Skor */}
             <div className="flex flex-wrap items-center gap-3">
               <StatusBadge status={laporan.status} />
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-surface-container-low text-on-surface">
@@ -76,11 +97,12 @@ export default async function AdminDetailLaporanPage({ params }: Props) {
               />
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-display font-semibold text-on-surface leading-tight max-w-4xl">
+            {/* Judul */}
+            <h1 className="text-2xl sm:text-3xl font-display font-semibold text-on-surface leading-tight">
               {laporan.judul}
             </h1>
 
-            {/* Pelapor Info & Stats */}
+            {/* Meta: Pelapor, Tanggal, Vote, Komentar */}
             <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm text-on-surface/60 pt-4 border-t border-outline-variant/15">
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4" strokeWidth={1.5} />
@@ -106,22 +128,28 @@ export default async function AdminDetailLaporanPage({ params }: Props) {
           </div>
         </div>
 
-        {/* ── MAIN GRID ──────────────────────────────────────────────────
-            Desktop: [Foto+Deskripsi (7)] | [Peta+Timeline (5, row-span-2)]
-                     [Komentar (7)]        |
-            Mobile:  Foto → Deskripsi → Peta → Timeline → Komentar
+        {/* ── MAIN GRID ─────────────────────────────────────────────────
+            Desktop: [Foto+Deskripsi (7)] | [Peta+Status sticky (5, row-span-2)]
+                     [Komentar (7)]       |
+            Mobile:  Foto → Deskripsi → Peta → Status+Aksi → Komentar
         ───────────────────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          {/* KOLOM KIRI atas: Foto + Deskripsi */}
-          <div className="lg:col-span-7 space-y-6">
-            {/* Foto */}
-            {laporan.foto && laporan.foto.length > 0 && (
-              <div className="relative bg-surface-container-lowest rounded-2xl shadow-ambient overflow-hidden h-72 sm:h-80">
-                {laporan.foto.length === 1 ? (
+          {/* ── KOLOM KIRI: Foto + Deskripsi (komentar ada di bawah, setelah kolom kanan) ── */}
+          <div className="lg:col-span-7 flex flex-col gap-6">
+
+            {/* Card: Foto */}
+            <div className="relative bg-surface-container-lowest rounded-2xl shadow-ambient overflow-hidden h-72 sm:h-80 lg:h-[340px]">
+              {laporan.foto && laporan.foto.length > 0 ? (
+                laporan.foto.length === 1 ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={laporan.foto[0]} alt={`Foto ${laporan.judul}`} className="w-full h-full object-cover" />
+                  <img
+                    src={laporan.foto[0]}
+                    alt={`Foto ${laporan.judul}`}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
+                  /* Carousel jika banyak foto */
                   <div className="flex h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide">
                     {laporan.foto.map((url, i) => (
                       <div key={i} className="relative shrink-0 w-full h-full snap-center">
@@ -129,33 +157,41 @@ export default async function AdminDetailLaporanPage({ params }: Props) {
                         <img src={url} alt={`Foto ${laporan.judul} ${i + 1}`} className="w-full h-full object-cover" />
                       </div>
                     ))}
+                    <span className="absolute bottom-3 right-3 bg-black/60 text-white text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm">
+                      {laporan.foto.length} foto
+                    </span>
                   </div>
-                )}
-                {laporan.foto.length > 1 && (
-                  <span className="absolute bottom-3 right-3 bg-black/60 text-white text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm">
-                    {laporan.foto.length} foto
-                  </span>
-                )}
-              </div>
-            )}
+                )
+              ) : (
+                /* Placeholder jika tidak ada foto */
+                <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-surface-container-low">
+                  <div className="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center">
+                    <DynamicIcon iconName={laporan.kategori.icon} className="w-6 h-6 text-on-surface/30" strokeWidth={1.5} />
+                  </div>
+                  <p className="text-sm text-on-surface/40 font-medium">Tidak ada foto laporan</p>
+                </div>
+              )}
+            </div>
 
-            {/* Deskripsi */}
-            <div className="bg-surface-container-lowest rounded-2xl shadow-ambient p-6 sm:p-8 min-h-[288px] sm:min-h-[320px] flex flex-col">
-              <h3 className="text-[11px] uppercase tracking-widest text-on-surface/60 font-bold border-b border-outline-variant/15 pb-3 mb-4">
+            {/* Card: Deskripsi */}
+            <div className="bg-surface-container-lowest rounded-2xl shadow-ambient p-6 sm:p-8 flex flex-col min-h-[200px]">
+              <h3 className="text-[11px] uppercase tracking-widest text-on-surface/60 font-bold pb-3 mb-4 border-b border-outline-variant/15">
                 Detail Laporan
               </h3>
               <p className="text-on-surface/90 leading-[1.6] whitespace-pre-wrap flex-1">
                 {laporan.deskripsi}
               </p>
             </div>
+
           </div>
 
-          {/* KOLOM KANAN: Peta + Timeline — row-span-2 agar mencakup baris komentar */}
-          <div className="lg:col-span-5 lg:row-span-2 space-y-6">
+          {/* ── KOLOM KANAN: Lokasi & Peta + Status & Aksi (sticky, row-span-2) ──────── */}
+          <div className="lg:col-span-5 lg:row-span-2 order-3 lg:order-2">
             <div className="lg:sticky lg:top-8 space-y-6">
-              {/* Lokasi & Peta */}
+
+              {/* Card: Lokasi & Peta */}
               <div className="bg-surface-container-lowest rounded-2xl shadow-ambient p-6 sm:p-8 space-y-4">
-                <h3 className="text-[11px] uppercase tracking-widest text-on-surface/60 font-bold border-b border-outline-variant/15 pb-3">
+                <h3 className="text-[11px] uppercase tracking-widest text-on-surface/60 font-bold pb-3 border-b border-outline-variant/15">
                   Lokasi Kejadian
                 </h3>
                 {laporan.alamat && (
@@ -164,48 +200,41 @@ export default async function AdminDetailLaporanPage({ params }: Props) {
                     <span className="leading-relaxed">{laporan.alamat}</span>
                   </div>
                 )}
-                <div className="h-64 w-full rounded-xl overflow-hidden">
-                  <AdminMapView
-                    laporan={[{
-                      id: laporan.id,
-                      judul: laporan.judul,
-                      latitude: laporan.latitude,
-                      longitude: laporan.longitude,
-                      alamat: laporan.alamat,
-                      status: laporan.status,
-                      prioritas: laporan.prioritas,
-                      voteCount: laporan.voteCount,
-                      createdAt: laporan.createdAt.toISOString(),
-                      foto: laporan.foto,
-                      kategori: laporan.kategori,
-                      user: { id: laporan.user.id, name: laporan.user.name },
-                      _count: { komentar: laporan._count.komentar },
-                    }]}
-                  />
+                <div className="h-52 w-full rounded-xl overflow-hidden">
+                  <AdminMapView laporan={laporanMapData} />
                 </div>
                 <p className="text-[10px] font-mono tracking-wider text-on-surface/60 text-right">
                   {laporan.latitude.toFixed(6)}, {laporan.longitude.toFixed(6)}
                 </p>
               </div>
 
-              {/* Status Timeline */}
-              <div className="bg-surface-container-lowest rounded-2xl shadow-ambient p-6 sm:p-8 space-y-4">
-                <h3 className="text-[11px] uppercase tracking-widest text-on-surface/60 font-bold border-b border-outline-variant/15 pb-3">
+              {/* Card: Status Timeline + Ubah Status */}
+              <div className="bg-surface-container-lowest rounded-2xl shadow-ambient p-6 sm:p-8 space-y-4 min-h-[500px] flex flex-col">
+                <h3 className="text-[11px] uppercase tracking-widest text-on-surface/60 font-bold pb-3 border-b border-outline-variant/15">
                   Status Laporan
                 </h3>
-                <StatusTimeline
-                  status={laporan.status}
-                  createdAt={laporan.createdAt.toISOString()}
-                  selesaiAt={laporan.selesaiAt ? laporan.selesaiAt.toISOString() : null}
-                  catatanAdmin={laporan.catatanAdmin}
-                  fotoPenyelesaian={laporan.fotoPenyelesaian}
+                <div className="flex-1">
+                  <StatusTimeline
+                    status={laporan.status}
+                    createdAt={laporan.createdAt.toISOString()}
+                    selesaiAt={laporan.selesaiAt ? laporan.selesaiAt.toISOString() : null}
+                    catatanAdmin={laporan.catatanAdmin}
+                    fotoPenyelesaian={laporan.fotoPenyelesaian}
+                  />
+                </div>
+                {/* Komponen client untuk ubah status */}
+                <AdminStatusUpdater
+                  laporanId={laporan.id}
+                  initialStatus={laporan.status}
+                  judul={laporan.judul}
                 />
               </div>
+
             </div>
           </div>
 
-          {/* KOMENTAR — grid item terpisah → selalu paling bawah di mobile & desktop */}
-          <div className="lg:col-span-7">
+          {/* ── KOMENTAR — paling bawah di mobile & desktop ────────────── */}
+          <div className="lg:col-span-7 order-4 lg:order-3 mt-0 lg:-mt-40">
             <div className="bg-surface-container-lowest rounded-2xl shadow-ambient p-6 sm:p-8">
               <KomentarSection laporanId={laporan.id} />
             </div>
@@ -216,3 +245,4 @@ export default async function AdminDetailLaporanPage({ params }: Props) {
     </div>
   );
 }
+

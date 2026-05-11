@@ -1,3 +1,6 @@
+import { PRIORITY_THRESHOLD } from '@/lib/constants';
+import { calculatePriorityScore } from '@/lib/utils';
+
 // ─── Tipe untuk dashboard warga (/api/laporan/saya) ────────────────────────
 export interface LaporanSaya {
   id: string;
@@ -99,6 +102,8 @@ export const STATUS_CONFIG = {
   },
 } as const;
 
+export type LaporanStatus = 'MENUNGGU' | 'DIPROSES' | 'SELESAI';
+
 // Warna prioritas untuk marker (merah untuk laporan prioritas tinggi)
 export const PRIORITY_COLOR = '#dc2626'; // red-600
 
@@ -108,19 +113,13 @@ export const PRIORITY_COLOR = '#dc2626'; // red-600
  * Logic:
  * 1. Jika status = SELESAI → HIJAU (selalu, terlepas dari prioritas)
  * 2. Jika prioritas manual (flag) = true → MERAH
- * 3. Jika skor prioritas ≥ 50 → MERAH (threshold dinaikkan agar lebih selektif)
+ * 3. Jika skor prioritas ≥ threshold → MERAH
  * 4. Jika tidak prioritas → warna sesuai status
  * 
  * Formula skor: (voteCount × 2) + jumlah_hari_sejak_dibuat
- * 
- * Contoh:
- * - Status SELESAI → HIJAU (apapun prioritasnya)
- * - 25 vote + 1 hari + status MENUNGGU = 51 → MERAH
- * - 20 vote + 10 hari + status DIPROSES = 50 → MERAH
- * - 15 vote + 5 hari + status MENUNGGU = 35 → Amber (tidak prioritas)
  */
 export function getMarkerColor(
-  status: 'MENUNGGU' | 'DIPROSES' | 'SELESAI',
+  status: LaporanStatus,
   prioritas: boolean,
   voteCount: number,
   createdAt: string
@@ -136,16 +135,14 @@ export function getMarkerColor(
   }
 
   // Hitung skor prioritas otomatis untuk laporan yang belum selesai
-  const daysSinceCreated = Math.floor(
-    (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24)
-  );
-  const priorityScore = voteCount * 2 + daysSinceCreated;
+  const priorityScore = calculatePriorityScore(voteCount, createdAt);
 
-  // Jika skor ≥ 50, gunakan warna merah (prioritas darurat)
-  if (priorityScore >= 50) {
+  // Jika skor ≥ threshold, gunakan warna merah (prioritas darurat)
+  if (priorityScore >= PRIORITY_THRESHOLD) {
     return PRIORITY_COLOR;
   }
 
   // Jika tidak prioritas, gunakan warna status
   return STATUS_CONFIG[status].color;
 }
+
