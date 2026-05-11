@@ -81,6 +81,8 @@ function ProfileButton({ isMobile = false }: { isMobile?: boolean }) {
           isMobile ? 'w-8 h-8' : 'w-10 h-10'
         }`}
         title={session?.user?.name || 'Profil'}
+        aria-label={`Menu profil ${session?.user?.name ?? 'pengguna'}`}
+        aria-expanded={isOpen}
       >
         <User className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} strokeWidth={1.5} />
       </button>
