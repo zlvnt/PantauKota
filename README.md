@@ -160,7 +160,7 @@ Schema: `prisma/schema.prisma` | Config: `prisma.config.ts`
 | 16 | Kelola User / Admin | ✅ Selesai (API + UI responsive card grid) |
 | 17 | Statistik & Grafik Laporan | 🟡 Statistik angka selesai, chart belum |
 | 18 | Tabel Monitoring Laporan | 🟡 Tabel 5 terbaru selesai |
-| 19 | Kelola Kategori | 🔲 Belum |
+| 19 | Kelola Kategori | ✅ Selesai (CRUD, toggle aktif/nonaktif, seragam desain) |
 | 20 | Hapus Laporan (Warga) | ✅ Selesai (< 24 jam + status MENUNGGU) |
 | 21 | PWA Support | ✅ Selesai (konfigurasi next-pwa) |
 | 22 | Update Status Laporan | ✅ Selesai (completion modal + notifikasi) |
@@ -228,6 +228,16 @@ Schema: `prisma/schema.prisma` | Config: `prisma.config.ts`
 - Desain *template* email 100% responsif dan mematuhi panduan desain *Civic Clarity* (warna, *ambient shadow*, *no-line rule*).
 - Menambahkan tautan *direct link* dari email langsung menuju detail laporan.
 - Eksekusi *fire-and-forget* (tanpa `await`) di API Route agar performa respon untuk admin tetap instan.
+
+---
+
+### Kelola Kategori (PBI-19) ✅
+
+- Tersambung dengan database (`/api/kategori` & `/api/kategori/[id]`) untuk operasi CRUD penuh bagi Admin.
+- Kategori aktif otomatis tersinkronisasi sebagai filter di peta (warga/admin) dan opsi saat warga membuat laporan.
+- Penghapusan warna custom per kategori. Semua kategori kini memiliki tampilan ikon seragam (`bg-primary/10`, `text-primary`) menyesuaikan tema *Civic Clarity*.
+- Penambahan ikon baru yang lebih lengkap (`Car`, `Zap`, `Wind`, `ShieldAlert`, `VolumeX`, `Flame`, `Waves`) via komponen `DynamicIcon`.
+- Validasi ketat: Kategori tidak dapat dihapus jika masih ada laporan yang terhubung (opsi nonaktifkan digunakan sebagai gantinya).
 
 ---
 

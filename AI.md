@@ -1,6 +1,6 @@
 # AI.md — Panduan AI untuk PantauKota
 
-> **Baca sebelum coding.** Update: Mei 2026 (Responsivitas Desktop, Dashboard Limit, Halaman /laporan-saya, Hapus Laporan, Kamera Web, Kelola User, Deteksi Duplikasi, Notifikasi Email Resend)
+> **Baca sebelum coding.** Update: Mei 2026 (Responsivitas Desktop, Dashboard Limit, Halaman /laporan-saya, Hapus Laporan, Kamera Web, Kelola User, Deteksi Duplikasi, Notifikasi Email Resend, Kelola Kategori)
 
 ## 1. Identitas & Prinsip
 
@@ -190,6 +190,9 @@ Sebelum membuat laporan, panggil `GET /api/laporan/duplikat?lat=x&lng=y&kategori
 
 ### UI Kelola User (Anti-Terpotong)
 Halaman admin tidak boleh memakai `<table>` tradisional yang menyebabkan *horizontal scroll* di mobile. Selalu gunakan **Responsive Card Grid** (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3`) agar tersusun ke bawah di layar kecil.
+
+### Kelola Kategori & Ikon
+Kategori dikelola via `/kelola-kategori` dengan operasi CRUD penuh. Fitur edit warna per kategori **ditiadakan** untuk menjaga konsistensi desain *Civic Clarity*. Seluruh background ikon kategori wajib di-set seragam menggunakan kelas `bg-primary/10` dan warna ikon menggunakan `text-primary`. Ikon baru didaftarkan via `src/components/ui/DynamicIcon.tsx`.
 
 ---
 

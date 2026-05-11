@@ -6,6 +6,13 @@ import {
   TreePine,
   MapPin,
   Trash2,
+  Car,
+  Zap,
+  Wind,
+  ShieldAlert,
+  VolumeX,
+  Flame,
+  Waves,
   LucideProps,
   LucideIcon
 } from 'lucide-react';
@@ -18,6 +25,13 @@ const iconMap: Record<string, LucideIcon> = {
   Building2,
   TreePine,
   MapPin,
+  Car,
+  Zap,
+  Wind,
+  ShieldAlert,
+  VolumeX,
+  Flame,
+  Waves,
 };
 
 interface DynamicIconProps extends LucideProps {

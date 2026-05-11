@@ -112,6 +112,10 @@ box-shadow: 0 8px 30px rgba(42, 52, 57, 0.12);
 - **Active:** `bg-primary text-white` (contrast 7:1)
 - **Inactive:** `bg-surface-container-low text-[#677177]`
 
+### Category Icons
+- **Uniform Styling:** Semua ikon kategori pada daftar laporan maupun halaman manajemen menggunakan styling seragam (`bg-primary/10` untuk latar, `text-primary` untuk ikon). Dilarang memberikan warna latar custom per kategori.
+- **Icon Set:** Menggunakan komponen `DynamicIcon` yang memetakan string dari database ke ikon spesifik `lucide-react` (mis: Car, Zap, Waves, dll).
+
 ### Toast Notifications
 - **Position:** Fixed top center (`top-6 left-1/2 -translate-x-1/2`)
 - **Background:** Solid `surface-container-lowest`
