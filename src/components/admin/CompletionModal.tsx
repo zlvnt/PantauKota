@@ -155,9 +155,9 @@ export default function CompletionModal({
         />
       ))}
 
-      <div 
+      <div
         id="modal-root"
-        className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 flex items-center justify-center p-4 bg-black/60"
         style={{ zIndex: 999999, pointerEvents: 'auto' }}
         onClick={(e) => {
           if (e.target === e.currentTarget && !isSubmitting && !isUploading) {
@@ -165,12 +165,12 @@ export default function CompletionModal({
           }
         }}
       >
-        <div 
-          className="bg-surface-container-lowest rounded-2xl shadow-[0_8px_30px_rgba(42,52,57,0.12)] w-full max-w-md overflow-hidden"
+        <div
+          className="bg-surface-container-lowest rounded-2xl shadow-ambient w-full max-w-md overflow-hidden"
           style={{ pointerEvents: 'auto' }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center justify-between p-5 border-b border-outline-variant/15">
+          <div className="flex items-center justify-between p-5 bg-surface-container-low">
             <div className="min-w-0 flex-1">
               <h2 className="text-lg font-bold text-on-surface">
                 Selesaikan Laporan
@@ -277,7 +277,7 @@ export default function CompletionModal({
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 p-5 border-t border-outline-variant/15">
+          <div className="flex items-center justify-end gap-3 p-5 bg-surface-container-low">
             <button
               onClick={handleClose}
               disabled={isSubmitting || isUploading}
