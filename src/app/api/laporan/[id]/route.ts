@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { kirimNotifikasi } from '@/lib/notifications';
+import { kirimEmailNotifikasi } from '@/lib/email';
 import { z } from 'zod';
 
 // GET /api/laporan/[id] — Detail laporan
@@ -107,6 +108,12 @@ export async function PATCH(
         prioritas: true,
         selesaiAt: true,
         userId: true,
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
       },
     });
 
@@ -118,6 +125,17 @@ export async function PATCH(
         pesan: `Laporan "${updated.judul}" kini berstatus: ${STATUS_LABEL[updated.status]}.`,
         laporanId: updated.id,
       });
+
+      // Kirim email notifikasi (fire-and-forget, no await to keep API fast)
+      if (updated.user?.email) {
+        kirimEmailNotifikasi(
+          updated.user.email,
+          updated.user.name || 'Warga',
+          updated.judul,
+          STATUS_LABEL[updated.status],
+          updated.id
+        );
+      }
     }
 
     return NextResponse.json({

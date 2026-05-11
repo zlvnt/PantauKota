@@ -26,6 +26,7 @@ PWA pelaporan masalah perkotaan (sampah, jalan rusak, fasilitas umum) dengan buk
 | UI | `lucide-react`, sistem desain "Civic Clarity / Editorial Ledger" |
 | PWA | `next-pwa` |
 | Real-Time | Server-Sent Events (SSE) |
+| Email | Resend |
 
 ---
 
@@ -163,7 +164,7 @@ Schema: `prisma/schema.prisma` | Config: `prisma.config.ts`
 | 20 | Hapus Laporan (Warga) | ✅ Selesai (< 24 jam + status MENUNGGU) |
 | 21 | PWA Support | ✅ Selesai (konfigurasi next-pwa) |
 | 22 | Update Status Laporan | ✅ Selesai (completion modal + notifikasi) |
-| 23 | Notifikasi Otomatis | 🔲 Belum |
+| 23 | Notifikasi Otomatis | ✅ Selesai (Email via Resend terintegrasi dengan desain sistem) |
 
 **Legenda:**
 - ✅ Selesai — Fitur lengkap dan terintegrasi
@@ -218,6 +219,15 @@ Schema: `prisma/schema.prisma` | Config: `prisma.config.ts`
 
 - **Kelola User (`/kelola-user`):** Menggunakan *responsive card grid* (mencegah horizontal scroll di mobile), integrasi API toggle status aktif/nonaktif dan hapus user.
 - **Deteksi Duplikasi (`/api/laporan/duplikat`):** Mengecek otomatis laporan baru terhadap laporan existing (radius 50m, kategori sama, < 30 hari).
+
+---
+
+### Notifikasi Email Otomatis (PBI-23) ✅
+
+- Integrasi **Resend** untuk mengirim email pemberitahuan otomatis ke pembuat laporan saat admin mengubah status laporan.
+- Desain *template* email 100% responsif dan mematuhi panduan desain *Civic Clarity* (warna, *ambient shadow*, *no-line rule*).
+- Menambahkan tautan *direct link* dari email langsung menuju detail laporan.
+- Eksekusi *fire-and-forget* (tanpa `await`) di API Route agar performa respon untuk admin tetap instan.
 
 ---
 
