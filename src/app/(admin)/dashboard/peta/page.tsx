@@ -365,6 +365,9 @@ export default function AdminPetaPage() {
         onClick={() => setIsPanelOpen(!isPanelOpen)}
         className="absolute top-1/2 -translate-y-1/2 z-20 bg-surface-container-lowest hover:bg-surface-container-low shadow-ambient border border-[rgba(169,180,185,0.2)] rounded-r-lg p-1.5 transition-all"
         style={{ left: isPanelOpen ? (typeof window !== 'undefined' && window.innerWidth >= 1280 ? '24rem' : '20rem') : '0' }}
+        aria-label={isPanelOpen ? 'Tutup panel daftar laporan' : 'Buka panel daftar laporan'}
+        aria-expanded={isPanelOpen}
+        title={isPanelOpen ? 'Tutup panel' : 'Buka panel'}
       >
         {isPanelOpen
           ? <ChevronLeft className="w-4 h-4 text-[#677177]" strokeWidth={2} />

@@ -1,6 +1,6 @@
 # PantauKota — Aplikasi Lapor Lingkungan
 
-**Update:** 11 Mei 2026 | PBI-03, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 22 ✅
+**Update:** 12 Mei 2026 | PBI-03, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 22 ✅ | Pre-production refactor pass
 
 ---
 
@@ -127,7 +127,7 @@ Schema: `prisma/schema.prisma` | Config: `prisma.config.ts`
 
 ## 🎨 Sistem Desain
 
-**Dokumen:** `DESIGN.md`, `AI.md`
+**Dokumen:** `DESIGN.md`, `AGENTS.md`
 
 **Prinsip:**
 - **Editorial Ledger** — No glassmorphism, warna solid
@@ -241,6 +241,24 @@ Schema: `prisma/schema.prisma` | Config: `prisma.config.ts`
 
 ---
 
+### Pre-Production Refactor Pass (12 Mei 2026) 🔧
+
+Pembersihan kode menjelang deploy production:
+
+- **`src/lib/constants.ts`** — Sentralisasi magic numbers (durasi 24 jam, batas file 5MB, threshold prioritas, dll)
+- **`src/lib/utils.ts`** — Tambah 6 utility function: `getDeleteDeadline`, `canDeleteLaporan`, `calculatePriorityScore`, `getRemainingDeleteTime`, `isValidCoordinates`, `sanitizeSearchQuery`
+- **`src/lib/api-helpers.ts`** — Helper standardized error handling, file validation, query builder
+- **`AdminStatusUpdater.tsx`** — Komponen baru di halaman detail laporan admin: 3 tombol status (MENUNGGU/DIPROSES/SELESAI), trigger `CompletionModal` saat → SELESAI
+- **Database indexes** (`prisma/migrations/20260511000000_add_performance_indexes/`) — Composite & single indexes pada model `Laporan` & `Notifikasi` untuk speed up filter/sort
+- **PWA polish** — `public/manifest.json` + icons (`192x192`, `512x512`)
+- **Email service expansion** — `src/lib/email.ts` dirombak (+341 lines) untuk dukung notifikasi email pas admin update status laporan
+- **Rename:** `AI.md` → `AGENTS.md` (mengikuti konvensi standar agent doc)
+- **Docs baru:** `docs/EMAIL-SERVICE.md`, `docs/SMART-REDIRECT.md`
+
+> **Catatan:** Audit pre-production (`SUMMARY-AUDIT.md`, `FINAL-CHECKLIST.md`, dll) adalah artefak proses, bukan kebenaran absolut. Selalu verify dengan testing manual sebelum klaim production-ready.
+
+---
+
 ### Chart Dashboard Admin (PBI-17) ✅
 
 - 3 chart di `/dashboard` admin pakai `recharts`:
@@ -286,4 +304,4 @@ Implementasi: `src/middleware.ts`
 
 ---
 
-*Detail arsitektur: `AI.md` | Detail desain: `DESIGN.md` | Detail maintenance: `MAINTENANCE.md`*
+*Detail arsitektur: `AGENTS.md` | Detail desain: `DESIGN.md` | Detail maintenance: `MAINTENANCE.md`*

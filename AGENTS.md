@@ -1,6 +1,6 @@
-# AI.md — Panduan AI untuk PantauKota
+# AGENTS.md — Panduan AI untuk PantauKota
 
-> **Baca sebelum coding.** Update: Mei 2026 (Responsivitas Desktop, Dashboard Limit, Halaman /laporan-saya, Hapus Laporan, Kamera Web, Kelola User, Deteksi Duplikasi, Notifikasi Email Resend, Kelola Kategori)
+> **Baca sebelum coding.** Update: 12 Mei 2026 (+ refactor pre-production: constants & helpers, database indexes, AdminStatusUpdater, PWA polish)
 
 ## 1. Identitas & Prinsip
 
@@ -84,11 +84,42 @@
 | **StatusTimeline** | `@/components/laporan/StatusTimeline` | 3 tahap tracking |
 | **PrioritasScore** | `@/components/laporan/PrioritasScore` | Badge skor prioritas |
 | **CompletionModal** | `@/components/admin/CompletionModal` | Modal selesaikan laporan |
+| **AdminStatusUpdater** | `@/app/(admin)/dashboard/laporan/[id]/AdminStatusUpdater` | 3 tombol status (MENUNGGU/DIPROSES/SELESAI), trigger CompletionModal saat → SELESAI |
 | **DeleteLaporanButton** | `@/components/laporan/DeleteLaporanButton` | Hapus laporan (warga, < 24 jam, MENUNGGU) |
 | **CameraModal** | `@/components/ui/CameraModal` | Ambil foto langsung via kamera |
 | **LocationPicker** | `@/components/map/LocationPicker` | Pilih lokasi + GPS + klik peta |
 
 **Toast Rules:** ✅ Semua feedback | ❌ Jangan inline error `<div className="bg-error/10">`
+
+---
+
+## 3.5 Konstanta & Helpers (WAJIB PAKAI)
+
+### Constants (`src/lib/constants.ts`)
+Pakai konstanta global, jangan hardcode magic number:
+- `HOURS_24_MS`, `TOAST_DURATION_MS`, `GEOLOCATION_TIMEOUT_MS`, `DEBOUNCE_DELAY_MS`
+- `MAX_FILE_SIZE_BYTES` (5MB), `ALLOWED_IMAGE_MIME_TYPES`
+- `PRIORITY_THRESHOLD` (50), `PRIORITY_VOTE_MULTIPLIER` (2)
+- `LAPORAN_PER_PAGE` (10), `DASHBOARD_LAPORAN_LIMIT` (3)
+- `DUPLICATE_RADIUS_METERS` (50), `DUPLICATE_DAYS_THRESHOLD` (30)
+- `MIN_SEARCH_LENGTH`, `MAX_SEARCH_LENGTH`
+- `LATITUDE_MIN/MAX`, `LONGITUDE_MIN/MAX`
+
+### Utility Functions (`src/lib/utils.ts`)
+| Function | Fungsi |
+|----------|--------|
+| `cn(...)` | Merge Tailwind classes (clsx + twMerge) |
+| `getDeleteDeadline(createdAt)` | Hitung batas waktu hapus laporan (24 jam) |
+| `canDeleteLaporan(createdAt, status, isOwner)` | Validasi 3 syarat hapus |
+| `calculatePriorityScore(votes, createdAt)` | Formula `votes × 2 + hari` |
+| `getRemainingDeleteTime(createdAt)` | Format sisa waktu (`X jam Y menit`) |
+| `isValidCoordinates(lat, lng)` | Validasi koordinat geografis |
+| `sanitizeSearchQuery(query, maxLen?)` | Trim, min length, slice max |
+
+### API Helpers (`src/lib/api-helpers.ts`)
+Helper untuk standardized API code: error handling, file validation, query builder.
+
+**JANGAN duplikat logic.** Selalu cek `utils.ts` & `constants.ts` sebelum nulis logic yang bisa dipakai ulang.
 
 ---
 
@@ -282,13 +313,17 @@ initLeafletIcons();
 - ❌ Jangan biarkan kode duplikat tertumpuk di file (tulis ulang bersih)
 
 ### File Sensitif (Jangan Modifikasi Sembarangan)
-- `prisma/schema.prisma` — Perlu migrasi
+- `prisma/schema.prisma` — Perlu migrasi (ada `@@index` untuk performa, jangan dihapus)
 - `src/middleware.ts` — Route protection
 - `src/lib/auth.ts` — NextAuth config
 - `src/lib/prisma.ts` — Singleton
+- `src/lib/constants.ts` — Magic numbers global
 - `src/types/laporan.ts` — Shared types
 - `src/app/globals.css` — Global styles
 - `DESIGN.md` — Design system
+
+### Database Indexes (Performance)
+Migration `20260511000000_add_performance_indexes` menambah composite & single indexes pada model `Laporan` & `Notifikasi`. Kalau bikin query baru yang berat (filter status + tanggal, etc), cek dulu apakah ada index yang relevan sebelum tambah index baru.
 
 ---
 
