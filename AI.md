@@ -1,6 +1,6 @@
 # AI.md — Panduan AI untuk PantauKota
 
-> **Baca sebelum coding.** Update: Mei 2026 (Responsivitas Desktop, Dashboard Limit, Halaman /laporan-saya, Hapus Laporan, Kamera Web, Kelola User, Deteksi Duplikasi)
+> **Baca sebelum coding.** Update: Mei 2026 (Responsivitas Desktop, Dashboard Limit, Halaman /laporan-saya, Hapus Laporan, Kamera Web, Kelola User, Deteksi Duplikasi, Notifikasi Email Resend)
 
 ## 1. Identitas & Prinsip
 
@@ -105,15 +105,22 @@
 
 ---
 
-## 5. Notifikasi Real-Time (SSE)
+## 5. Notifikasi & Email (SSE + Resend)
 
-**Files:** `src/lib/notifications.ts`, `src/app/api/notifikasi/sse/route.ts`  
-**Trigger:** Admin ubah status → notif ke pemilik
+**Files:** `src/lib/notifications.ts`, `src/app/api/notifikasi/sse/route.ts`, `src/lib/email.ts`  
+**Trigger:** Admin ubah status → notif in-app & email ke pemilik
 
-**Tambah Trigger:**
+**Trigger Notif In-App:**
 ```typescript
 import { kirimNotifikasi } from '@/lib/notifications';
 await kirimNotifikasi({ userId, judul, pesan, laporanId });
+```
+
+**Trigger Email (Fire-and-forget):**
+```typescript
+import { kirimEmailNotifikasi } from '@/lib/email';
+// Panggil tanpa await agar tidak memblokir API
+kirimEmailNotifikasi(email, nama, judulLaporan, statusBaru, laporanId);
 ```
 
 ---

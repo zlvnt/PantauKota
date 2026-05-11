@@ -1,6 +1,6 @@
 # 📚 Panduan Maintenance PantauKota
 
-> **Update:** Mei 2026 — Tambah halaman /laporan-saya, hapus laporan, kamera web, kelola user, deteksi duplikasi.
+> **Update:** Mei 2026 — Tambah halaman /laporan-saya, hapus laporan, kamera web, kelola user, deteksi duplikasi, notifikasi email via Resend.
 
 ## 🏗️ Struktur Project
 
@@ -47,9 +47,10 @@ pantaukota/
 - `prisma/schema.prisma` — Definisi model database (6 model: User, Laporan, Kategori, Vote, Notifikasi, Komentar)
 - `src/lib/prisma.ts` — Konfigurasi Prisma Client dengan adapter PostgreSQL
 
-### Autentikasi
+### Autentikasi & Layanan Eksternal
 - `src/lib/auth.ts` — Konfigurasi NextAuth.js
 - `src/middleware.ts` — Middleware untuk proteksi route
+- `src/lib/email.ts` — Utilitas pengiriman email via Resend
 
 ### API Endpoints
 | File | Method | Fungsi |
@@ -138,6 +139,12 @@ Gunakan `prisma.$transaction` untuk hapus relasi (komentar, votes, notifikasi) s
 **File:** `src/app/api/user/profile/[id]/route.ts`
 - Endpoint untuk PATCH (toggle aktif/nonaktif) dan DELETE user.
 - Terdapat validasi: Admin tidak bisa menonaktifkan atau menghapus akunnya sendiri.
+
+### 11. Notifikasi Email Otomatis
+**File:** `src/lib/email.ts` & `src/app/api/laporan/[id]/route.ts`
+- Menggunakan **Resend** (`RESEND_API_KEY`).
+- Berjalan asinkron secara *fire-and-forget* (tanpa `await`) setelah update status laporan, agar waktu respon API admin tidak tertunda.
+- Base URL email di-generate via `process.env.NEXTAUTH_URL`.
 
 ---
 
