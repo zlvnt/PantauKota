@@ -19,10 +19,17 @@ export async function kirimEmailNotifikasi(
   const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
   const urlLaporan = `${baseUrl}/laporan/${laporanId}`;
 
+  // OVERRIDE UNTUK TESTING:
+  // Akun Resend gratis (tanpa domain terverifikasi) hanya bisa mengirim ke email pendaftar.
+  // Jika di tahap development, kita paksa kirim ke emailmu. Nanti hapus ini jika sudah punya domain.
+  const emailPenerima = process.env.NODE_ENV === 'production' 
+    ? emailTujuan 
+    : 'zikrihilmi15@gmail.com';
+
   try {
     const { data, error } = await resend.emails.send({
       from: 'PantauKota <onboarding@resend.dev>', // Ubah dengan domain terverifikasi saat ke production
-      to: emailTujuan,
+      to: emailPenerima,
       subject: 'Pembaruan Status Laporan Anda di PantauKota',
       html: `
         <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; background-color: #f7f9fb; border-radius: 24px;">
