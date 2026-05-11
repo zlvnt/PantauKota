@@ -36,7 +36,7 @@ export default function KelolaLaporanPage() {
 
   // Fetch kategori
   useEffect(() => {
-    fetch('/api/kategori')
+    fetch('/api/kategori?all=true')
       .then((res) => res.json())
       .then((data) => setKategori(data))
       .catch(console.error);

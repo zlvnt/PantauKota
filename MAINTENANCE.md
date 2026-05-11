@@ -1,6 +1,6 @@
 # 📚 Panduan Maintenance PantauKota
 
-> **Update:** Mei 2026 — Tambah halaman /laporan-saya, hapus laporan, kamera web, kelola user, deteksi duplikasi, notifikasi email via Resend.
+> **Update:** Mei 2026 — Tambah halaman /laporan-saya, hapus laporan, kamera web, kelola user, deteksi duplikasi, notifikasi email via Resend, kelola kategori CRUD.
 
 ## 🏗️ Struktur Project
 
@@ -145,6 +145,12 @@ Gunakan `prisma.$transaction` untuk hapus relasi (komentar, votes, notifikasi) s
 - Menggunakan **Resend** (`RESEND_API_KEY`).
 - Berjalan asinkron secara *fire-and-forget* (tanpa `await`) setelah update status laporan, agar waktu respon API admin tidak tertunda.
 - Base URL email di-generate via `process.env.NEXTAUTH_URL`.
+
+### 12. Manajemen Kategori (Kelola Kategori)
+**File:** `src/app/(admin)/kelola-kategori/page.tsx`, `src/app/api/kategori/[id]/route.ts`
+- Operasi CRUD kategori dengan sinkronisasi instan ke form dan peta.
+- Penghapusan hanya diizinkan jika kategori belum terkait dengan laporan apapun.
+- Desain background menggunakan warna tema seragam (`bg-primary/10` dan `text-primary`) alih-alih warna kustom per-kategori. Tambahan ikon harus didaftarkan di `src/components/ui/DynamicIcon.tsx`.
 
 ---
 
