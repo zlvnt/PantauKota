@@ -1,6 +1,6 @@
 # PantauKota — Aplikasi Lapor Lingkungan
 
-**Update:** 07 Mei 2026 | PBI-03, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 22 ✅
+**Update:** 11 Mei 2026 | PBI-03, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 22 ✅
 
 ---
 
@@ -158,8 +158,8 @@ Schema: `prisma/schema.prisma` | Config: `prisma.config.ts`
 | 14 | Kelola Laporan | ✅ Selesai (filter, search, sorting) |
 | 15 | Deteksi Duplikasi | ✅ Selesai (cek lokasi & kategori < 50m) |
 | 16 | Kelola User / Admin | ✅ Selesai (API + UI responsive card grid) |
-| 17 | Statistik & Grafik Laporan | 🟡 Statistik angka selesai, chart belum |
-| 18 | Tabel Monitoring Laporan | 🟡 Tabel 5 terbaru selesai |
+| 17 | Statistik & Grafik Laporan | ✅ Selesai (donut status + bar kategori + area trend 30 hari) |
+| 18 | Tabel Monitoring Laporan | ✅ Selesai (preview 5 terbaru + link "Lihat Semua →" ke /kelola-laporan) |
 | 19 | Kelola Kategori | ✅ Selesai (CRUD, toggle aktif/nonaktif, seragam desain) |
 | 20 | Hapus Laporan (Warga) | ✅ Selesai (< 24 jam + status MENUNGGU) |
 | 21 | PWA Support | ✅ Selesai (konfigurasi next-pwa) |
@@ -238,6 +238,23 @@ Schema: `prisma/schema.prisma` | Config: `prisma.config.ts`
 - Penghapusan warna custom per kategori. Semua kategori kini memiliki tampilan ikon seragam (`bg-primary/10`, `text-primary`) menyesuaikan tema *Civic Clarity*.
 - Penambahan ikon baru yang lebih lengkap (`Car`, `Zap`, `Wind`, `ShieldAlert`, `VolumeX`, `Flame`, `Waves`) via komponen `DynamicIcon`.
 - Validasi ketat: Kategori tidak dapat dihapus jika masih ada laporan yang terhubung (opsi nonaktifkan digunakan sebagai gantinya).
+
+---
+
+### Chart Dashboard Admin (PBI-17) ✅
+
+- 3 chart di `/dashboard` admin pakai `recharts`:
+  1. **Donut** — Distribusi status (Menunggu/Diproses/Selesai) dengan center label total + legenda persentase
+  2. **Bar horizontal** — Top 6 kategori paling banyak dilaporkan
+  3. **Area chart** — Trend laporan masuk 30 hari terakhir
+- File: `src/components/admin/DashboardCharts.tsx` (client component)
+- Data fetching di server (`dashboard/page.tsx`) lalu pass via props
+- Styling sesuai *Civic Clarity*: `bg-surface-container-lowest`, `rounded-2xl`, `shadow-ambient` — no border, no glassmorphism
+
+### Link Tabel Monitoring (PBI-18) ✅
+
+- Section "Laporan Terbaru" di dashboard admin sekarang punya link **"Lihat Semua →"** menuju `/kelola-laporan` (tabel monitoring lengkap dengan search/filter/pagination)
+- Dashboard tetap fokus sebagai preview ringkas (5 laporan terbaru), bukan tabel monitoring lengkap
 
 ---
 
