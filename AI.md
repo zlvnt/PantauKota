@@ -1,6 +1,6 @@
 # AI.md — Panduan AI untuk PantauKota
 
-> **Baca sebelum coding.** Update: Mei 2026 (Responsivitas Desktop, Dashboard Limit, Halaman /laporan-saya, Hapus Laporan, Kamera Web)
+> **Baca sebelum coding.** Update: Mei 2026 (Responsivitas Desktop, Dashboard Limit, Halaman /laporan-saya, Hapus Laporan, Kamera Web, Kelola User, Deteksi Duplikasi)
 
 ## 1. Identitas & Prinsip
 
@@ -177,6 +177,12 @@ Di `/beranda`, daftar laporan dibatasi **3 item terbaru** saja. Ada tombol "Liha
 
 ### Kamera Web (CameraModal)
 Komponen `CameraModal` mengakses `navigator.mediaDevices.getUserMedia()`. Di desktop (Chromium), kamera aktif hanya setelah user grant permission browser. Hindari memanggil getUserMedia di luar interaksi user (klik button).
+
+### Deteksi Duplikasi Laporan
+Sebelum membuat laporan, panggil `GET /api/laporan/duplikat?lat=x&lng=y&kategoriId=z`. Sistem mengecek radius 50m dengan kategori yang sama dalam 30 hari terakhir. Jika ada, cegah atau peringatkan user.
+
+### UI Kelola User (Anti-Terpotong)
+Halaman admin tidak boleh memakai `<table>` tradisional yang menyebabkan *horizontal scroll* di mobile. Selalu gunakan **Responsive Card Grid** (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3`) agar tersusun ke bawah di layar kecil.
 
 ---
 
