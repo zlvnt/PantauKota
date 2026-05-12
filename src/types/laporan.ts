@@ -67,19 +67,6 @@ export interface LaporanAdminMapItem extends LaporanMapItem {
 }
 
 
-// Tipe data lengkap untuk halaman detail (PBI-09)
-export interface LaporanDetail extends LaporanMapItem {
-  deskripsi: string;
-  foto: string[];
-  catatanAdmin: string | null;
-  fotoPenyelesaian: string | null;
-  selesaiAt: string | null;
-  user: {
-    id: string;
-    name: string;
-  };
-}
-
 // Label & warna untuk status laporan
 export const STATUS_CONFIG = {
   MENUNGGU: {

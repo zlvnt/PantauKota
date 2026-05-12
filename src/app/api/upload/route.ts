@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentSession } from '@/lib/auth';
 import { v2 as cloudinary } from 'cloudinary';
 import type { UploadApiResponse } from 'cloudinary';
 import { validateUploadFile, handleApiError } from '@/lib/api-helpers';
 import { MAX_FILE_SIZE_BYTES, ALLOWED_IMAGE_MIME_TYPES } from '@/lib/constants';
+
+export const dynamic = 'force-dynamic';
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -14,7 +15,7 @@ cloudinary.config({
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getCurrentSession();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Tidak terautentikasi.' }, { status: 401 });
     }
@@ -37,17 +38,16 @@ export async function POST(req: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
+    // Upload ke Cloudinary tanpa eager transformation
+    // agar secure_url langsung bisa diakses.
+    // Optimasi kualitas diterapkan saat delivery via URL parameter.
     const result = await new Promise<UploadApiResponse>((resolve, reject) => {
       cloudinary.uploader
         .upload_stream(
-          { 
-            folder: 'pantaukota', 
+          {
+            folder: 'pantaukota',
             resource_type: 'image',
-            // Tambahan security: transformasi untuk optimasi
-            transformation: [
-              { quality: 'auto', fetch_format: 'auto' }
-            ]
-          }, 
+          },
           (error, res) => {
             if (error || !res) reject(error);
             else resolve(res);
@@ -56,9 +56,12 @@ export async function POST(req: NextRequest) {
         .end(buffer);
     });
 
-    return NextResponse.json({ url: result.secure_url });
+    console.log('[Upload] Cloudinary public_id:', result.public_id);
+    return NextResponse.json({
+      publicId: result.public_id,
+      url: result.secure_url,
+    });
   } catch (error) {
     return handleApiError(error, 'POST /upload');
   }
 }
-

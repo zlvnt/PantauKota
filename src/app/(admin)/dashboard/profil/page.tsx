@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/hooks/useAuthSession';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
@@ -109,14 +109,7 @@ export default function AdminProfilPage() {
         // Refresh user data
         await fetchUserProfile();
         
-        // Update session NextAuth untuk refresh nama di navbar/sidebar
-        await update({
-          ...session,
-          user: {
-            ...session?.user,
-            name: data.user.name,
-          },
-        });
+        await update();
 
         // Reset password fields
         setFormData(prev => ({

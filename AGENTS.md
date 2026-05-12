@@ -1,295 +1,238 @@
-# AI.md — Panduan AI untuk PantauKota
+# AGENTS.md - Panduan AI PantauKota
 
-> **Baca sebelum coding.** Update: Mei 2026 (Responsivitas Desktop, Dashboard Limit, Halaman /laporan-saya, Hapus Laporan, Kamera Web, Kelola User, Deteksi Duplikasi, Notifikasi Email Resend, Kelola Kategori)
+Update: 12 Mei 2026 (rev 3). Baca sebelum mengubah kode.
 
-## 1. Identitas & Prinsip
+## Ringkasan
 
-**PantauKota** — PWA pelaporan perkotaan (Next.js 14 App Router)  
-**Aktor:** Warga (lapor, vote, komentar) | Admin (tinjau, ubah status, kelola)
+PantauKota adalah PWA pelaporan perkotaan berbasis Next.js 14 App Router.
 
-### Prinsip Desain (Detail: `DESIGN.md`)
-- ❌ **No Glassmorphism** — Warna solid, no transparency
-- ❌ **No-Line Rule** — Pemisah pakai whitespace/tonal, bukan border 1px
-- ✅ **Floating UI** — Navbar/sidebar melayang, `rounded-2xl`, shadow ambient
-- ✅ **Tonal Layering** — `surface` → `surface-container-lowest/low/high`
-- ✅ **Responsive** — Mobile (360px) to desktop (1440px+), `max-w-6xl` untuk halaman warga
+Aktor:
+- Warga: membuat laporan, vote, komentar, melihat notifikasi, menghapus laporan sendiri jika memenuhi syarat.
+- Admin: meninjau laporan, mengubah status, mengelola kategori dan user.
 
-**Warna:** `primary` #426464 | `tertiary` #006d4a (SELESAI) | `error` #B3261E
+Arsitektur final:
+- Database: Supabase PostgreSQL, diakses lewat Prisma 7 + `@prisma/adapter-pg`.
+- Auth: Supabase Auth via `@supabase/ssr`.
+- Realtime: Supabase Realtime untuk tabel `Notifikasi`.
+- Images: Cloudinary public id + delivery transformations.
+- Deployment: Vercel.
 
----
+## File Penting
 
-## 2. Arsitektur
+- `src/lib/auth.ts`: helper server `getCurrentSession()` dan `getCurrentUser()`.
+- `src/lib/supabase/`: Supabase browser/server/middleware client.
+- `src/hooks/useAuthSession.tsx`: session client pengganti NextAuth.
+- `src/middleware.ts`: refresh session Supabase dan guard route.
+- `src/lib/prisma.ts`: Prisma singleton.
+- `src/lib/notifications.ts`: create notifikasi di database.
+- `src/hooks/useNotifications.ts`: fetch notifikasi + subscribe Supabase Realtime.
+- `src/lib/cloudinary.ts`: helper URL Cloudinary backward-compatible untuk `public_id` dan URL lama.
+- `src/lib/client-image.ts`: kompresi client + upload foto sebelum simpan laporan.
+- `src/lib/constants.ts`, `src/lib/utils.ts`, `src/lib/api-helpers.ts`: pakai sebelum menulis logic baru.
+- `src/types/laporan.ts`: shared types, `STATUS_CONFIG`, `getMarkerColor()`.
+- `src/lib/map.ts`: Leaflet config.
+- `prisma/schema.prisma`: schema utama.
+- `prisma/seed.ts`: seed database dan akun Supabase Auth jika `SUPABASE_SERVICE_ROLE_KEY` valid.
+- `prisma/supabase-init.sql`: fallback init schema via Supabase SQL Editor.
 
-### Rute & Guards
+## Route Guard
+
+Route warga wajib login:
+- `/beranda`
+- `/laporan/buat`
+- `/laporan-saya`
+- `/notifikasi`
+- `/profil`
+
+Route admin wajib login dan role `ADMIN`:
+- `/dashboard`
+- `/kelola-laporan`
+- `/kelola-kategori`
+- `/kelola-user`
+
+Untuk server code, jangan pakai NextAuth. Pakai:
+
+```ts
+import { getCurrentSession } from '@/lib/auth';
+
+const session = await getCurrentSession();
+if (!session?.user?.id) {
+  // unauthorized
+}
 ```
-/app
-├── (auth)/         → Login/Register (publik)
-├── (warga)/        → Guard: login | WargaNavbar
-│   ├── beranda/    → Dashboard warga (limit 3 laporan + link Lihat Semua)
-│   ├── laporan-saya/ → Halaman penuh daftar laporan warga
-│   ├── laporan/buat/ → Form buat laporan (grid 2 kolom desktop)
-│   ├── laporan/[id]/ → Detail laporan warga (grid 2 kolom desktop)
-│   ├── peta/       → Peta warga
-│   ├── notifikasi/ → Notifikasi warga
-│   └── profil/     → Profil warga
-└── (admin)/        → Guard: ADMIN | AdminSidebar
-    ├── dashboard/  → Dashboard admin
-    ├── dashboard/laporan/[id]/ → Detail laporan admin (grid 2 kolom desktop)
-    ├── kelola-laporan/ → List semua laporan
-    ├── kelola-kategori/ → Manajemen kategori
-    └── kelola-user/ → Manajemen user
-```
 
-### Layout Grid Dua Kolom (POLA STANDAR — halaman detail)
+Role aplikasi tetap di tabel `User`. Mapping Supabase Auth ke tabel `User` menggunakan email.
+
+## Desain
+
+Detail ada di `DESIGN.md`. Prinsip wajib:
+- No glassmorphism.
+- No-Line Rule: hindari border 1px sebagai pemisah utama; pakai whitespace/tonal layering.
+- Floating UI untuk navbar/sidebar.
+- Tonal layering: `surface`, `surface-container-lowest`, `surface-container-low`, `surface-container-high`.
+- Halaman warga pakai `max-w-6xl`, admin pakai `max-w-7xl`.
+- Mobile 360px sampai desktop 1440px+ harus rapi.
+
+Warna utama:
+- `primary`: `#426464`
+- `tertiary`: `#006d4a`
+- `error`: `#B3261E`
+
+## Komponen dan Hook Reusable
+
+Gunakan yang sudah ada sebelum membuat baru:
+- `StatusBadge` dari `@/components/ui/Badge`
+- `Spinner` dari `@/components/ui/Spinner`
+- `DynamicIcon` dari `@/components/ui/DynamicIcon`
+- `Toast` + `useToast`
+- `VoteButton`
+- `StatusTimeline`
+- `PrioritasScore`
+- `CompletionModal`
+- `DeleteLaporanButton`
+- `CameraModal`
+- `LocationPicker`
+
+Hook:
+- `useAuthSession`
+- `useDebounce`
+- `useLaporanMap`
+- `useGeolocation`
+- `useVote`
+- `useToast`
+- `useNotifications`
+
+Feedback user harus lewat Toast bila memungkinkan, bukan inline error baru yang tidak konsisten.
+
+## Pola Layout Detail Laporan
+
+Komentar harus menjadi grid item terpisah agar tampil paling bawah di mobile.
+
 ```tsx
-// Desktop: 2 kolom | Mobile: 1 kolom, urutan DOM = urutan tampil
 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-  {/* Kolom kiri atas: konten utama */}
   <div className="lg:col-span-7 space-y-6">
-    {/* Foto, Deskripsi */}
+    {/* Foto, deskripsi */}
   </div>
 
-  {/* Kolom kanan: sidebar sticky, row-span-2 */}
   <div className="lg:col-span-5 lg:row-span-2">
     <div className="lg:sticky lg:top-24 space-y-6">
-      {/* Peta, Timeline */}
+      {/* Peta, timeline */}
     </div>
   </div>
 
-  {/* Kolom kiri bawah: SELALU TERAKHIR (komentar) */}
   <div className="lg:col-span-7">
     {/* Komentar */}
   </div>
 </div>
 ```
 
-> **PENTING:** Komentar **harus** menjadi grid item terpisah di bawah, bukan di dalam `lg:col-span-7` atas. Ini memastikan komentar tampil di bawah di mobile (setelah Peta & Timeline).
+## Aturan Bisnis
 
-### Leaflet Config
-**File:** `src/lib/map.ts` — `OSM_TILE_URL`, `MAP_DEFAULT_CENTER`, `initLeafletIcons()`  
-**Fix SSR:** Panggil `initLeafletIcons()` di level module  
-**MapResizer:** Wajib di `<MapContainer>` untuk prevent abu-abu saat resize
+Hapus laporan hanya jika semua benar:
+- Pemilik laporan adalah user saat ini.
+- Umur laporan kurang dari 24 jam.
+- Status masih `MENUNGGU`.
 
----
+Dashboard warga:
+- `/beranda` menampilkan maksimal 3 laporan terbaru.
+- Daftar lengkap ada di `/laporan-saya`.
 
-## 3. Komponen Reusable (WAJIB PAKAI)
+Prioritas:
+- Formula: `voteCount * 2 + hari_sejak_dibuat`.
+- Threshold dari `PRIORITY_THRESHOLD`.
+- Warna marker wajib pakai `getMarkerColor()`.
 
-| Komponen | Import | Usage |
-|----------|--------|-------|
-| **StatusBadge** | `@/components/ui/Badge` | `<StatusBadge status="MENUNGGU" />` |
-| **Spinner** | `@/components/ui/Spinner` | `<Spinner size="sm\|md\|lg" />` |
-| **DynamicIcon** | `@/components/ui/DynamicIcon` | `<DynamicIcon iconName={kat.icon} />` |
-| **Toast** | `@/components/ui/Toast` + `useToast` | `success('OK')` `error('Fail')` |
-| **VoteButton** | `@/components/ui/VoteButton` | Optimistic UI, unlimited vote |
-| **StatusTimeline** | `@/components/laporan/StatusTimeline` | 3 tahap tracking |
-| **PrioritasScore** | `@/components/laporan/PrioritasScore` | Badge skor prioritas |
-| **CompletionModal** | `@/components/admin/CompletionModal` | Modal selesaikan laporan |
-| **DeleteLaporanButton** | `@/components/laporan/DeleteLaporanButton` | Hapus laporan (warga, < 24 jam, MENUNGGU) |
-| **CameraModal** | `@/components/ui/CameraModal` | Ambil foto langsung via kamera |
-| **LocationPicker** | `@/components/map/LocationPicker` | Pilih lokasi + GPS + klik peta |
+Duplikasi laporan:
+- Cek radius 50m, kategori sama, dalam 30 hari.
+- Endpoint saat ini: `/api/laporan/cek-duplikasi`.
 
-**Toast Rules:** ✅ Semua feedback | ❌ Jangan inline error `<div className="bg-error/10">`
+Kategori:
+- CRUD di `/kelola-kategori`.
+- Ikon kategori harus tampil seragam: `bg-primary/10`, `text-primary`.
+- Tambah ikon baru lewat `src/components/ui/DynamicIcon.tsx`.
 
----
+Realtime notifikasi:
+- Insert tetap lewat `kirimNotifikasi()`.
+- Client subscribe di `useNotifications()`.
+- Pastikan `Notifikasi` masuk publication `supabase_realtime`.
+- **PENTING:** Filter realtime `postgres_changes` di `useNotifications.ts` TIDAK menggunakan `filter:` option karena kolom camelCase PostgreSQL tidak dikenali parser Supabase. Validasi `userId` dilakukan client-side di callback menggunakan `RealtimePostgresInsertPayload<Notifikasi>` dari `@supabase/supabase-js`.
 
-## 4. Hooks Custom (WAJIB PAKAI)
+## API Utama
 
-| Hook | Fungsi |
-|------|--------|
-| **useDebounce** | Delay nilai (jangan setTimeout manual) |
-| **useLaporanMap** | Fetch peta dengan filter |
-| **useGeolocation** | GPS browser |
-| **useVote** | Vote optimistic UI, unlimited |
-| **useToast** | Toast notifications |
-| **useNotifications** | Fetch + SSE real-time |
-
----
-
-## 5. Notifikasi & Email (SSE + Resend)
-
-**Files:** `src/lib/notifications.ts`, `src/app/api/notifikasi/sse/route.ts`, `src/lib/email.ts`  
-**Trigger:** Admin ubah status → notif in-app & email ke pemilik
-
-**Trigger Notif In-App:**
-```typescript
-import { kirimNotifikasi } from '@/lib/notifications';
-await kirimNotifikasi({ userId, judul, pesan, laporanId });
-```
-
-**Trigger Email (Fire-and-forget):**
-```typescript
-import { kirimEmailNotifikasi } from '@/lib/email';
-// Panggil tanpa await agar tidak memblokir API
-kirimEmailNotifikasi(email, nama, judulLaporan, statusBaru, laporanId);
-```
-
----
-
-## 6. Prioritas & Marker Warna
-
-### Formula
-```typescript
-score = (voteCount × 2) + hari_sejak_dibuat
-```
-
-### Warna Marker (CRITICAL)
-**File:** `src/types/laporan.ts` → `getMarkerColor()`
-
-1. **SELESAI** → Hijau (#006d4a) — selalu
-2. **Prioritas (belum selesai)** → Merah (#dc2626) jika flag=true ATAU skor≥50
-3. **Non-Prioritas** → MENUNGGU=Amber, DIPROSES=Blue
-
-**WAJIB:** Gunakan `getMarkerColor()`, jangan buat logic sendiri
-
-### Completion Modal (TC-11.3)
-**File:** `src/components/admin/CompletionModal.tsx`  
-**Input:** Catatan (wajib), Foto (opsional, max 5MB)  
-**API:** `PATCH /api/laporan/[id]` → `{ status, catatanAdmin, fotoPenyelesaian: string|null }`
-
----
-
-## 7. Tipe Data & API
-
-### Tipe (`src/types/laporan.ts`)
-```typescript
-STATUS_CONFIG.MENUNGGU/DIPROSES/SELESAI
-PRIORITY_COLOR, getMarkerColor()
-LaporanMapItem, LaporanAdminMapItem, LaporanDetail, LaporanSaya, KategoriItem
-```
-
-### API Routes
 | Method | Endpoint | Fungsi |
-|--------|----------|--------|
-| GET | `/api/laporan` | List (query: status, kategoriId, search, adminView, userId) |
-| PATCH | `/api/laporan/[id]` | Update status, prioritas, catatanAdmin, fotoPenyelesaian |
-| DELETE | `/api/laporan/[id]` | Hapus laporan (owner, < 24 jam, status MENUNGGU) |
-| POST | `/api/vote` | Toggle vote (unlimited) |
-| POST | `/api/upload` | Upload foto (max 5MB) |
-| GET | `/api/notifikasi/sse` | SSE stream |
+| --- | --- | --- |
+| GET/POST | `/api/laporan` | List dan buat laporan |
+| GET/PATCH/DELETE | `/api/laporan/[id]` | Detail, update, hapus laporan |
+| GET | `/api/laporan/saya` | Laporan user |
+| GET | `/api/laporan/cek-duplikasi` | Cek laporan mirip |
+| POST | `/api/vote` | Toggle vote |
+| GET/POST | `/api/komentar` | List dan tambah komentar |
+| DELETE | `/api/komentar/[id]` | Hapus komentar |
+| GET/PATCH/DELETE | `/api/notifikasi` | Notifikasi user |
+| GET/POST | `/api/kategori` | List dan tambah kategori |
+| PATCH/DELETE | `/api/kategori/[id]` | Edit/hapus kategori |
+| POST | `/api/upload` | Upload foto Cloudinary |
+| GET/PATCH | `/api/user/profile` | Profil sendiri |
+| GET/PATCH/DELETE | `/api/user/profile/[id]` | Kelola user admin |
 
----
+## Checklist Sebelum Selesai
 
-## 8. Aturan Bisnis Penting
+- Pakai helper, constants, dan component existing.
+- Auth server memakai `getCurrentSession()`, bukan NextAuth.
+- Query DB lewat Prisma.
+- Upload media tetap ke Cloudinary.
+- Realtime notifikasi lewat Supabase Realtime.
+- Layout responsive dan tidak ada horizontal scroll.
+- Tidak membuat logic warna marker sendiri.
+- Tidak hardcode magic number jika sudah ada di `constants.ts`.
+- Jalankan:
 
-### Hapus Laporan (DELETE /api/laporan/[id])
-Laporan hanya bisa dihapus jika **semua** syarat terpenuhi:
-1. User adalah pemilik laporan (`userId === session.user.id`)
-2. Laporan berusia < 24 jam (`createdAt > now - 24h`)
-3. Status masih **MENUNGGU** (belum diproses admin)
-
-Penghapusan dilakukan via `prisma.$transaction` untuk menghapus relasi (komentar, votes, notifikasi) terlebih dahulu sebelum laporan dihapus.
-
-### Dashboard Warga — Limit Laporan
-Di `/beranda`, daftar laporan dibatasi **3 item terbaru** saja. Ada tombol "Lihat Semua →" menuju `/laporan-saya` di header section, dan tombol "Lihat Semua X Laporan" di bagian bawah daftar jika total > 3.
-
-### Kamera Web (CameraModal)
-Komponen `CameraModal` mengakses `navigator.mediaDevices.getUserMedia()`. Di desktop (Chromium), kamera aktif hanya setelah user grant permission browser. Hindari memanggil getUserMedia di luar interaksi user (klik button).
-
-### Deteksi Duplikasi Laporan
-Sebelum membuat laporan, panggil `GET /api/laporan/duplikat?lat=x&lng=y&kategoriId=z`. Sistem mengecek radius 50m dengan kategori yang sama dalam 30 hari terakhir. Jika ada, cegah atau peringatkan user.
-
-### UI Kelola User (Anti-Terpotong)
-Halaman admin tidak boleh memakai `<table>` tradisional yang menyebabkan *horizontal scroll* di mobile. Selalu gunakan **Responsive Card Grid** (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3`) agar tersusun ke bawah di layar kecil.
-
-### Kelola Kategori & Ikon
-Kategori dikelola via `/kelola-kategori` dengan operasi CRUD penuh. Fitur edit warna per kategori **ditiadakan** untuk menjaga konsistensi desain *Civic Clarity*. Seluruh background ikon kategori wajib di-set seragam menggunakan kelas `bg-primary/10` dan warna ikon menggunakan `text-primary`. Ikon baru didaftarkan via `src/components/ui/DynamicIcon.tsx`.
-
----
-
-## 9. Pola Kode (CRITICAL PATTERNS)
-
-### Responsive Layout — max-width standard
-```tsx
-// Halaman warga: max-w-6xl (mengisi penuh desktop)
-<div className="max-w-6xl mx-auto px-4 sm:px-6">
-
-// Halaman admin: max-w-7xl (sidebar menyempitkan ruang)
-<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+```bash
+npx tsc --noEmit
+npx tsc -p tsconfig.seed.json --noEmit
 ```
 
-### Box Foto & Konten — Ukuran Seragam
-```tsx
-// Foto card (fixed height agar sama tinggi dengan deskripsi)
-<div className="relative bg-surface-container-lowest rounded-2xl shadow-ambient overflow-hidden h-72 sm:h-80">
-  <img className="w-full h-full object-cover" />
-</div>
+## Catatan Implementasi Penting
 
-// Deskripsi card (min-height sesuai foto)
-<div className="bg-surface-container-lowest rounded-2xl shadow-ambient p-6 sm:p-8 min-h-[288px] sm:min-h-[320px] flex flex-col">
-  <p className="flex-1">...</p>
-</div>
+### Auth: Sinkronisasi Profil User
+
+`getCurrentUser()` di `src/lib/auth.ts` menggunakan `prisma.user.upsert()` (bukan `create()`) untuk membuat profil User saat pertama kali login via Supabase Auth. Ini mencegah race condition ketika beberapa request paralel memanggil `getCurrentSession()` secara bersamaan sehingga tidak terjadi error `P2002 Unique constraint` yang menyebabkan pesan "Akun belum tersinkron".
+
+### Upload Cloudinary
+
+`/api/upload` di `src/app/api/upload/route.ts` **tidak** boleh menggunakan opsi `transformation` di dalam `upload_stream()`. Transformation di saat upload bekerja sebagai eager transform yang dapat mengubah format URL `secure_url` sehingga gambar tidak bisa langsung diakses. Optimasi gambar dilakukan via URL parameter saat delivery, bukan saat upload.
+
+Response upload harus mempertahankan bentuk:
+
+```ts
+{ publicId: result.public_id, url: result.secure_url }
 ```
 
-### Password Visibility Toggle
-```tsx
-const [showPassword, setShowPassword] = useState(false);
-<button
-  type="button"  // Prevent form submit
-  onClick={() => setShowPassword(!showPassword)}
-  tabIndex={-1}  // Prevent focus interference
->
-  {showPassword ? <EyeOff /> : <Eye />}
-</button>
-```
+Data baru disimpan ke field lama sebagai `public_id`:
+- `Laporan.foto`: `String[]` berisi `pantaukota/...`.
+- `Laporan.fotoPenyelesaian`: `String?` berisi `pantaukota/...`.
 
-### Debounce
-```tsx
-const debouncedSearch = useDebounce(searchQuery, 400);
-```
+Jangan rename kolom database untuk tahap ini. Data lama yang masih berupa URL harus tetap aman dengan `getCloudinaryImageUrl()` dari `src/lib/cloudinary.ts`.
 
-### Badge Status
-```tsx
-<StatusBadge status={item.status} />
-```
+Render gambar laporan wajib lewat `getCloudinaryImageUrl()`:
+- Detail: `CLOUDINARY_DETAIL_IMAGE_OPTIONS` (`c_limit,w_1200/f_auto,q_auto`).
+- Thumbnail/peta/list: `CLOUDINARY_THUMBNAIL_IMAGE_OPTIONS` (`c_fill,w_320,h_220,g_auto/f_auto,q_auto`).
 
-### Leaflet Config
-```tsx
-import { initLeafletIcons, OSM_TILE_URL, MAP_DEFAULT_CENTER } from '@/lib/map';
-initLeafletIcons();
-<TileLayer url={OSM_TILE_URL} />
-```
+Client wajib kompres foto lewat `uploadCompressedImage()` di `src/lib/client-image.ts` sebelum menyimpan laporan atau penyelesaian. Jangan simpan full `secure_url` untuk data baru kecuali fallback jika response lama tidak punya `publicId`.
 
----
+### CSP Headers
 
-## 10. Checklist Fitur Baru
+`next.config.mjs` sudah mengandung `Content-Security-Policy` dan `Permissions-Policy` headers untuk mengizinkan domain Cloudinary (`res.cloudinary.com`) dan Supabase, sehingga Edge Tracking Prevention tidak memblokir gambar. Jika menambah domain eksternal baru, update header ini.
 
-- [ ] Pakai komponen reusable? (Spinner, StatusBadge, Toast, CompletionModal, DeleteLaporanButton)
-- [ ] Pakai hook existing? (useDebounce, useToast, useVote, useLaporanMap)
-- [ ] Responsif mobile-desktop? (`max-w-6xl`, grid `lg:grid-cols-12`)
-- [ ] `overflow-x: hidden` untuk prevent horizontal scroll?
-- [ ] Password toggle pattern benar? (`type="button"`, `tabIndex={-1}`)
-- [ ] Button text `text-white` untuk high contrast?
-- [ ] Marker color pakai `getMarkerColor()`?
-- [ ] No border 1px untuk pemisah (No-Line Rule)?
-- [ ] No glassmorphism?
-- [ ] Toast untuk feedback (bukan inline error)?
-- [ ] Foto upload max 5MB?
-- [ ] Leaflet import dari `lib/map.ts` + `<MapResizer />`?
-- [ ] Komentar sebagai grid item terpisah (selalu paling bawah di mobile)?
-- [ ] Aturan bisnis hapus laporan diterapkan di API (< 24 jam + MENUNGGU + owner)?
-- [ ] `npx tsc --noEmit` sebelum commit?
+## File Sensitif
 
----
-
-## 11. Anti-Redundansi
-
-### Jangan Buat Duplikat
-- ✅ Cek `src/components/ui/`, `src/hooks/` dulu
-- ❌ Jangan buat komponen/hook baru jika sudah ada
-- ❌ Jangan buat inline error messages (pakai Toast)
-- ❌ Jangan buat password toggle logic sendiri
-- ❌ Jangan buat marker color logic sendiri
-- ❌ Jangan biarkan kode duplikat tertumpuk di file (tulis ulang bersih)
-
-### File Sensitif (Jangan Modifikasi Sembarangan)
-- `prisma/schema.prisma` — Perlu migrasi
-- `src/middleware.ts` — Route protection
-- `src/lib/auth.ts` — NextAuth config
-- `src/lib/prisma.ts` — Singleton
-- `src/types/laporan.ts` — Shared types
-- `src/app/globals.css` — Global styles
-- `DESIGN.md` — Design system
-
----
-
-*Update setiap PBI selesai.*
+Jangan ubah sembarangan:
+- `prisma/schema.prisma`
+- `src/middleware.ts`
+- `src/lib/auth.ts`
+- `src/lib/prisma.ts`
+- `src/lib/constants.ts`
+- `src/types/laporan.ts`
+- `src/app/globals.css`
+- `next.config.mjs` (berisi CSP headers)
+- `DESIGN.md`

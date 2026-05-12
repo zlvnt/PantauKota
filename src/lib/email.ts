@@ -7,7 +7,7 @@ import { Resend } from 'resend';
 
 // ── Environment Validation ──────────────────────────────────────────────────
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const BASE_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || 'http://localhost:3000';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'PantauKota <onboarding@resend.dev>';
 

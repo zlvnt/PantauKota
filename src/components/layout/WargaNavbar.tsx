@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut, useSession } from '@/hooks/useAuthSession';
 import {
   LayoutDashboard,
   Map,

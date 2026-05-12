@@ -427,6 +427,12 @@ if (result.success) {
 
 ---
 
-**Last Updated:** 11 Mei 2026  
-**Version:** 2.0 (Production Ready)
+**Last Updated:** 12 Mei 2026  
+**Version:** 2.1 (Supabase Auth / Cloudinary public id compatible)
+
+## Maintenance Notes
+
+- Email status notification remains fire-and-forget in report status APIs.
+- Report images are not attached to email. Emails link back to the app detail page.
+- If an email template later needs report images, generate display URLs with `getCloudinaryImageUrl()` instead of using raw `foto` / `fotoPenyelesaian` values.
 

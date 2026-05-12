@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { LogOut, UserCircle2, Settings } from 'lucide-react';
-import { signOut } from 'next-auth/react';
+import { signOut } from '@/hooks/useAuthSession';
 import { useState, useRef, useEffect } from 'react';
 import NotificationBell from '@/components/NotificationBell';
 

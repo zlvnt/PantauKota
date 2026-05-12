@@ -1,5 +1,4 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import WargaNavbar from '@/components/layout/WargaNavbar';
 
@@ -9,7 +8,7 @@ export default async function WargaLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
 
   // Server-side guard: belum login → ke halaman login
   if (!session) {

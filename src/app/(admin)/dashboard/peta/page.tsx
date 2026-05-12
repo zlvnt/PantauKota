@@ -6,6 +6,8 @@ import { useLaporanMap } from '@/hooks/useLaporanMap';
 import { useDebounce } from '@/hooks/useDebounce';
 import { STATUS_CONFIG } from '@/types/laporan';
 import type { LaporanAdminMapItem, KategoriItem } from '@/types/laporan';
+import { PRIORITY_THRESHOLD } from '@/lib/constants';
+import { calculatePriorityScore } from '@/lib/utils';
 import {
   ThumbsUp,
   RefreshCw,
@@ -48,7 +50,10 @@ function AdminLaporanCard({
   isSelected: boolean;
   onClick: () => void;
 }) {
-  const isUrgent = item.voteCount >= 30 && item.status === 'MENUNGGU';
+  const isUrgent =
+    item.status !== 'SELESAI' &&
+    (item.prioritas ||
+      calculatePriorityScore(item.voteCount, item.createdAt) >= PRIORITY_THRESHOLD);
 
   return (
     <button
@@ -153,7 +158,12 @@ export default function AdminPetaPage() {
     menunggu: displayLaporan.filter((l) => l.status === 'MENUNGGU').length,
     diproses: displayLaporan.filter((l) => l.status === 'DIPROSES').length,
     selesai: displayLaporan.filter((l) => l.status === 'SELESAI').length,
-    urgent: displayLaporan.filter((l) => l.voteCount >= 30 && l.status === 'MENUNGGU').length,
+    urgent: displayLaporan.filter(
+      (l) =>
+        l.status !== 'SELESAI' &&
+        (l.prioritas ||
+          calculatePriorityScore(l.voteCount, l.createdAt) >= PRIORITY_THRESHOLD)
+    ).length,
   };
 
   const handleMarkerClick = (id: string) => {
@@ -404,7 +414,7 @@ export default function AdminPetaPage() {
           
           <div className="border-t border-[rgba(169,180,185,0.1)] mt-2 pt-2">
             <p className="text-[9px] text-[#8a969c] leading-tight">
-              Prioritas: Skor ≥50 atau flag manual
+              Prioritas: Skor ≥50
             </p>
           </div>
         </div>

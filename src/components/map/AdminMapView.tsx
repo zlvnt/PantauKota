@@ -27,6 +27,7 @@ import type { LaporanAdminMapItem } from '@/types/laporan';
 import { getMarkerColor } from '@/types/laporan';
 import Link from 'next/link';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
+import { CLOUDINARY_THUMBNAIL_IMAGE_OPTIONS, getCloudinaryImageUrl } from '@/lib/cloudinary';
 import { initLeafletIcons, OSM_TILE_URL, OSM_ATTRIBUTION, MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM } from '@/lib/map';
 import CompletionModal from '@/components/admin/CompletionModal';
 
@@ -170,7 +171,11 @@ function AdminMarker({
           {item.foto && item.foto.length > 0 ? (
             <div className="relative h-28 w-full overflow-hidden bg-surface-container-low">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.foto[0]} alt={item.judul} className="w-full h-full object-cover" />
+              <img
+                src={getCloudinaryImageUrl(item.foto[0], CLOUDINARY_THUMBNAIL_IMAGE_OPTIONS)}
+                alt={item.judul}
+                className="w-full h-full object-cover"
+              />
               {item.foto.length > 1 && (
                 <span className="absolute bottom-1.5 right-1.5 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1">
                   <ImageIcon className="w-2.5 h-2.5" />

@@ -42,8 +42,8 @@ export default function AdminStatusUpdater({ laporanId, initialStatus, judul }: 
 
       success('Status laporan berhasil diperbarui');
       router.refresh();
-    } catch (err: any) {
-      error(err.message || 'Terjadi kesalahan');
+    } catch (err) {
+      error(err instanceof Error ? err.message : 'Terjadi kesalahan');
     } finally {
       setLoading(null);
     }
@@ -69,8 +69,8 @@ export default function AdminStatusUpdater({ laporanId, initialStatus, judul }: 
       success('Laporan berhasil diselesaikan');
       setShowCompletionModal(false);
       router.refresh();
-    } catch (err: any) {
-      error(err.message || 'Terjadi kesalahan');
+    } catch (err) {
+      error(err instanceof Error ? err.message : 'Terjadi kesalahan');
       throw err;
     }
   };

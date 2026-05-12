@@ -6,8 +6,11 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": false,
+    "skipLibCheck": true,
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
-  }
+  },
+  "include": ["prisma/seed.ts"]
 }

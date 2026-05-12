@@ -1,5 +1,4 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import DashboardClient from './DashboardClient';
@@ -13,7 +12,7 @@ export const metadata = {
 // Server Component — fetch data langsung dari DB, bukan via API route.
 // Lebih efisien karena tidak ada round-trip HTTP.
 export default async function RiwayatPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
 
   if (!session?.user?.id) {
     redirect('/login');

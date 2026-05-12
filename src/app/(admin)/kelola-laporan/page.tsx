@@ -21,6 +21,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import StatusBadge from '@/components/ui/Badge';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import Spinner from '@/components/ui/Spinner';
+import { CLOUDINARY_THUMBNAIL_IMAGE_OPTIONS, getCloudinaryImageUrl } from '@/lib/cloudinary';
 import type { LaporanAdminMapItem, KategoriItem } from '@/types/laporan';
 
 export default function KelolaLaporanPage() {
@@ -355,7 +356,7 @@ export default function KelolaLaporanPage() {
                       <div className="relative w-full sm:w-32 h-32 sm:h-24 flex-shrink-0 rounded-xl overflow-hidden bg-surface-container-low">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={item.foto[0]}
+                          src={getCloudinaryImageUrl(item.foto[0], CLOUDINARY_THUMBNAIL_IMAGE_OPTIONS)}
                           alt={item.judul}
                           className="w-full h-full object-cover"
                         />

@@ -16,6 +16,7 @@ import type { LaporanMapItem } from '@/types/laporan';
 import { STATUS_CONFIG, getMarkerColor } from '@/types/laporan';
 import Link from 'next/link';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
+import { CLOUDINARY_THUMBNAIL_IMAGE_OPTIONS, getCloudinaryImageUrl } from '@/lib/cloudinary';
 import { initLeafletIcons, OSM_TILE_URL, OSM_ATTRIBUTION, MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM } from '@/lib/map';
 
 // Inisialisasi icon Leaflet (mencegah broken image di Next.js)
@@ -94,7 +95,7 @@ function LaporanMarker({
             <div className="relative h-28 w-full overflow-hidden bg-surface-container-low">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={item.foto[0]}
+                src={getCloudinaryImageUrl(item.foto[0], CLOUDINARY_THUMBNAIL_IMAGE_OPTIONS)}
                 alt={item.judul}
                 className="w-full h-full object-cover"
               />

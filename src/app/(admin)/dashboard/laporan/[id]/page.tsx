@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { Calendar, MapPin, User, ArrowLeft, Flame, ThumbsUp, MessageCircle } from 'lucide-react';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
@@ -8,6 +7,7 @@ import StatusBadge from '@/components/ui/Badge';
 import KomentarSection from '@/components/komentar/KomentarSection';
 import StatusTimeline from '@/components/laporan/StatusTimeline';
 import PrioritasScore from '@/components/laporan/PrioritasScore';
+import { CLOUDINARY_DETAIL_IMAGE_OPTIONS, getCloudinaryImageUrl } from '@/lib/cloudinary';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import AdminStatusUpdater from './AdminStatusUpdater';
@@ -24,7 +24,7 @@ interface Props {
 }
 
 export default async function AdminDetailLaporanPage({ params }: Props) {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
 
   if (!session || session.user.role !== 'ADMIN') {
     notFound();
@@ -129,13 +129,12 @@ export default async function AdminDetailLaporanPage({ params }: Props) {
         </div>
 
         {/* ── MAIN GRID ─────────────────────────────────────────────────
-            Desktop: [Foto+Deskripsi (7)] | [Peta+Status sticky (5, row-span-2)]
-                     [Komentar (7)]       |
-            Mobile:  Foto → Deskripsi → Peta → Status+Aksi → Komentar
+            Desktop: [Foto+Deskripsi+Komentar (7)] | [Peta+Status sticky (5)]
+            Mobile:  Foto → Deskripsi → Komentar → Peta → Status+Aksi
         ───────────────────────────────────────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          {/* ── KOLOM KIRI: Foto + Deskripsi (komentar ada di bawah, setelah kolom kanan) ── */}
+          {/* ── KOLOM KIRI: Foto + Deskripsi + Komentar ── */}
           <div className="lg:col-span-7 flex flex-col gap-6">
 
             {/* Card: Foto */}
@@ -144,7 +143,7 @@ export default async function AdminDetailLaporanPage({ params }: Props) {
                 laporan.foto.length === 1 ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={laporan.foto[0]}
+                    src={getCloudinaryImageUrl(laporan.foto[0], CLOUDINARY_DETAIL_IMAGE_OPTIONS)}
                     alt={`Foto ${laporan.judul}`}
                     className="w-full h-full object-cover"
                   />
@@ -154,7 +153,11 @@ export default async function AdminDetailLaporanPage({ params }: Props) {
                     {laporan.foto.map((url, i) => (
                       <div key={i} className="relative shrink-0 w-full h-full snap-center">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={url} alt={`Foto ${laporan.judul} ${i + 1}`} className="w-full h-full object-cover" />
+                        <img
+                          src={getCloudinaryImageUrl(url, CLOUDINARY_DETAIL_IMAGE_OPTIONS)}
+                          alt={`Foto ${laporan.judul} ${i + 1}`}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                     ))}
                     <span className="absolute bottom-3 right-3 bg-black/60 text-white text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm">
@@ -181,6 +184,11 @@ export default async function AdminDetailLaporanPage({ params }: Props) {
               <p className="text-on-surface/90 leading-[1.6] whitespace-pre-wrap flex-1">
                 {laporan.deskripsi}
               </p>
+            </div>
+
+            {/* Card: Komentar */}
+            <div className="bg-surface-container-lowest rounded-2xl shadow-ambient p-6 sm:p-8">
+              <KomentarSection laporanId={laporan.id} />
             </div>
 
           </div>
@@ -230,13 +238,6 @@ export default async function AdminDetailLaporanPage({ params }: Props) {
                 />
               </div>
 
-            </div>
-          </div>
-
-          {/* ── KOMENTAR — paling bawah di mobile & desktop ────────────── */}
-          <div className="lg:col-span-7 order-4 lg:order-3 mt-0 lg:-mt-40">
-            <div className="bg-surface-container-lowest rounded-2xl shadow-ambient p-6 sm:p-8">
-              <KomentarSection laporanId={laporan.id} />
             </div>
           </div>
 

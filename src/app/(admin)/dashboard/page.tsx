@@ -1,13 +1,6 @@
 import { prisma } from '@/lib/prisma';
-import {
-  FileText,
-  Loader,
-  CheckCircle,
-  Users,
-  TrendingUp,
-  Clock,
-} from 'lucide-react';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
+import DashboardStatCards from '@/components/admin/DashboardStatCards';
 
 // Data fetching di server — tidak perlu API call
 async function getDashboardStats() {
@@ -44,47 +37,6 @@ const STATUS_STYLE = {
 export default async function DashboardPage() {
   const stats = await getDashboardStats();
 
-  const cards = [
-    {
-      label: 'Total Laporan',
-      value: stats.totalLaporan,
-      icon: FileText,
-      color: 'bg-surface-container-high text-on-surface',
-    },
-    {
-      label: 'Menunggu',
-      value: stats.menunggu,
-      icon: Clock,
-      color: 'bg-error/10 text-error',
-    },
-    {
-      label: 'Diproses',
-      value: stats.diproses,
-      icon: Loader,
-      color: 'bg-primary-dim/10 text-primary-dim',
-    },
-    {
-      label: 'Selesai',
-      value: stats.selesai,
-      icon: CheckCircle,
-      color: 'bg-tertiary/10 text-tertiary',
-    },
-    {
-      label: 'Total Warga',
-      value: stats.totalUser,
-      icon: Users,
-      color: 'bg-surface-container-high text-on-surface',
-    },
-    {
-      label: 'Tingkat Penyelesaian',
-      value: stats.totalLaporan > 0
-        ? `${Math.round((stats.selesai / stats.totalLaporan) * 100)}%`
-        : '0%',
-      icon: TrendingUp,
-      color: 'bg-primary/10 text-primary',
-    },
-  ];
-
   return (
     <div className="p-8 space-y-8">
       {/* Header */}
@@ -98,31 +50,13 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
-        {cards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <div
-              key={card.label}
-              className="bg-surface-container-lowest rounded-xl p-5 shadow-ambient border border-[rgba(169,180,185,0.1)]"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-[#677177]">
-                    {card.label}
-                  </p>
-                  <p className="text-4xl font-display font-bold text-on-surface mt-2">
-                    {card.value}
-                  </p>
-                </div>
-                <div className={`p-2.5 rounded-lg ${card.color}`}>
-                  <Icon className="w-5 h-5" strokeWidth={1.5} />
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <DashboardStatCards
+        totalLaporan={stats.totalLaporan}
+        menunggu={stats.menunggu}
+        diproses={stats.diproses}
+        selesai={stats.selesai}
+        totalUser={stats.totalUser}
+      />
 
       {/* Laporan Terbaru */}
       <div className="bg-surface-container-low rounded-xl p-4 sm:p-6 overflow-hidden">

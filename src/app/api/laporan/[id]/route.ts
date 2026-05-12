@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { kirimNotifikasi } from '@/lib/notifications';
+import { kirimNotifikasi, kirimNotifikasiDaruratAdmin } from '@/lib/notifications';
 import { kirimEmailNotifikasi } from '@/lib/email';
 import { z } from 'zod';
+
+export const dynamic = 'force-dynamic';
 
 // GET /api/laporan/[id] — Detail laporan
 export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Tidak terautentikasi.' }, { status: 401 });
   }
@@ -61,7 +62,7 @@ const UpdateSchema = z.object({
 
 const STATUS_LABEL: Record<string, string> = {
   MENUNGGU: 'Menunggu',
-  DIPROSES: 'Sedang Diproses',
+  DIPROSES: 'Diproses',
   SELESAI: 'Selesai',
 };
 
@@ -69,7 +70,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -91,6 +92,15 @@ export async function PATCH(
 
     const { status, prioritas, catatanAdmin, fotoPenyelesaian } = result.data;
 
+    const existing = await prisma.laporan.findUnique({
+      where: { id: params.id },
+      select: { id: true, prioritas: true, status: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Laporan tidak ditemukan' }, { status: 404 });
+    }
+
     const updated = await prisma.laporan.update({
       where: { id: params.id },
       data: {
@@ -106,6 +116,7 @@ export async function PATCH(
         judul: true,
         status: true,
         prioritas: true,
+        voteCount: true,
         selesaiAt: true,
         userId: true,
         user: {
@@ -138,6 +149,19 @@ export async function PATCH(
       }
     }
 
+    if (
+      prioritas === true &&
+      !existing.prioritas &&
+      updated.status !== 'SELESAI'
+    ) {
+      await kirimNotifikasiDaruratAdmin({
+        laporanId: updated.id,
+        judulLaporan: updated.judul,
+        pesan: `Admin menandai laporan sebagai prioritas darurat`,
+        excludeUserId: session.user.id,
+      });
+    }
+
     return NextResponse.json({
       id: updated.id,
       status: updated.status,
@@ -159,7 +183,7 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Tidak terautentikasi.' }, { status: 401 });
   }

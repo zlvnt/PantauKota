@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { PRIORITY_THRESHOLD } from '@/lib/constants';
+import { kirimNotifikasiDaruratAdmin } from '@/lib/notifications';
+import { calculatePriorityScore } from '@/lib/utils';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/vote — Toggle vote/unvote laporan
@@ -17,7 +21,7 @@ import { prisma } from '@/lib/prisma';
  * Catatan: Batasan 3x per hari hanya untuk MEMBUAT laporan, bukan vote
  */
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -37,7 +41,14 @@ export async function POST(req: NextRequest) {
     // Cek apakah laporan ada
     const laporan = await prisma.laporan.findUnique({
       where: { id: laporanId },
-      select: { id: true },
+      select: {
+        id: true,
+        judul: true,
+        status: true,
+        prioritas: true,
+        voteCount: true,
+        createdAt: true,
+      },
     });
 
     if (!laporan) {
@@ -80,6 +91,8 @@ export async function POST(req: NextRequest) {
       });
     } else {
       // ── VOTE: Langsung buat vote baru tanpa cek batas ──
+      const previousScore = calculatePriorityScore(laporan.voteCount, laporan.createdAt);
+
       await prisma.$transaction([
         prisma.vote.create({
           data: { userId, laporanId },
@@ -93,12 +106,32 @@ export async function POST(req: NextRequest) {
       // Ambil voteCount terbaru
       const updated = await prisma.laporan.findUnique({
         where: { id: laporanId },
-        select: { voteCount: true },
+        select: { voteCount: true, createdAt: true },
       });
+
+      const nextVoteCount = updated?.voteCount ?? 0;
+      const nextScore = calculatePriorityScore(
+        nextVoteCount,
+        updated?.createdAt ?? laporan.createdAt
+      );
+
+      if (
+        laporan.status !== 'SELESAI' &&
+        !laporan.prioritas &&
+        previousScore < PRIORITY_THRESHOLD &&
+        nextScore >= PRIORITY_THRESHOLD
+      ) {
+        await kirimNotifikasiDaruratAdmin({
+          laporanId,
+          judulLaporan: laporan.judul,
+          pesan: `Skor prioritas laporan mencapai ${nextScore}`,
+          excludeUserId: userId,
+        });
+      }
 
       return NextResponse.json({
         voted: true,
-        voteCount: updated?.voteCount ?? 0,
+        voteCount: nextVoteCount,
       });
     }
   } catch (error) {

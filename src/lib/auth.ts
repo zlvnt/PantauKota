@@ -1,64 +1,80 @@
-import { NextAuthOptions } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 
-export const authOptions: NextAuthOptions = {
-  providers: [
-    CredentialsProvider({
-      name: 'credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase() },
-        });
-
-        if (!user) return null;
-
-        // Cek apakah user aktif
-        if (!user.isActive) {
-          throw new Error('Akun Anda telah dinonaktifkan. Silakan hubungi administrator.');
-        }
-
-        const valid = await bcrypt.compare(credentials.password, user.password);
-        if (!valid) return null;
-
-        return { id: user.id, name: user.name, email: user.email, role: user.role as 'WARGA' | 'ADMIN' };
-      },
-    }),
-  ],
-  callbacks: {
-    async jwt({ token, user, trigger, session }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-        token.name = user.name;
-      }
-      
-      // Update token saat session.update() dipanggil dari client
-      if (trigger === 'update' && session?.user?.name) {
-        token.name = session.user.name;
-      }
-      
-      return token;
-    },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.name = token.name as string;
-      }
-      return session;
-    },
-  },
-  pages: {
-    signIn: '/login',
-  },
-  session: { strategy: 'jwt' },
-  secret: process.env.NEXTAUTH_SECRET,
+export type CurrentUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: 'WARGA' | 'ADMIN';
+  isActive: boolean;
 };
+
+export type CurrentSession = {
+  user: CurrentUser;
+};
+
+function getMetadataName(authUser: { email?: string; user_metadata?: Record<string, unknown> }) {
+  const name = authUser.user_metadata?.name;
+  if (typeof name === 'string' && name.trim().length >= 2) {
+    return name.trim();
+  }
+
+  return authUser.email?.split('@')[0] ?? 'Warga PantauKota';
+}
+
+export async function getCurrentUser(): Promise<CurrentUser | null> {
+  const supabase = createSupabaseServerClient();
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+
+  if (!authUser?.email) return null;
+  const email = authUser.email.toLowerCase();
+
+  let user = await prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      isActive: true,
+    },
+  });
+
+  if (!user) {
+    user = await prisma.user.upsert({
+      where: { email },
+      update: {},
+      create: {
+        name: getMetadataName(authUser),
+        email,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+      },
+    });
+  }
+
+  if (!user || !user.isActive) return null;
+
+  return user;
+}
+
+export async function getCurrentSession(): Promise<CurrentSession | null> {
+  const user = await getCurrentUser();
+  return user ? { user } : null;
+}
+
+export async function getSupabaseAuthUser() {
+  const supabase = createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  return user;
+}

@@ -3,9 +3,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Upload, Camera, Loader, CheckCircle } from 'lucide-react';
-import Spinner from '@/components/ui/Spinner';
 import Toast from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
+import { uploadCompressedImage } from '@/lib/client-image';
 
 interface CompletionModalProps {
   isOpen: boolean;
@@ -21,7 +21,8 @@ export default function CompletionModal({
   laporanJudul,
 }: CompletionModalProps) {
   const [catatanAdmin, setCatatanAdmin] = useState('');
-  const [foto, setFoto] = useState<string | null>(null);
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -34,6 +35,12 @@ export default function CompletionModal({
     setMounted(true);
     return () => setMounted(false);
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (fotoPreview) URL.revokeObjectURL(fotoPreview);
+    };
+  }, [fotoPreview]);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -70,7 +77,19 @@ export default function CompletionModal({
     }
   }, [isOpen]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const clearSelectedFoto = () => {
+    if (fotoPreview) URL.revokeObjectURL(fotoPreview);
+    setFotoFile(null);
+    setFotoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const resetForm = () => {
+    setCatatanAdmin('');
+    clearSelectedFoto();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -84,28 +103,10 @@ export default function CompletionModal({
       return;
     }
 
-    setIsUploading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error('Upload gagal');
-
-      const data = await res.json();
-      setFoto(data.url);
-      success('Foto berhasil diunggah');
-    } catch (err) {
-      showError('Gagal mengunggah foto');
-      console.error(err);
-    } finally {
-      setIsUploading(false);
-    }
+    if (fotoPreview) URL.revokeObjectURL(fotoPreview);
+    setFotoFile(file);
+    setFotoPreview(URL.createObjectURL(file));
+    e.target.value = '';
   };
 
   const handleSubmit = async () => {
@@ -117,13 +118,19 @@ export default function CompletionModal({
     setIsSubmitting(true);
 
     try {
+      let fotoPenyelesaian: string | null = null;
+      if (fotoFile) {
+        setIsUploading(true);
+        fotoPenyelesaian = await uploadCompressedImage(fotoFile);
+        setIsUploading(false);
+      }
+
       await onSubmit({
         catatanAdmin: catatanAdmin.trim(),
-        fotoPenyelesaian: foto,
+        fotoPenyelesaian,
       });
 
-      setCatatanAdmin('');
-      setFoto(null);
+      resetForm();
       success('Laporan berhasil diselesaikan');
       onClose();
     } catch (err) {
@@ -131,14 +138,14 @@ export default function CompletionModal({
       const errorMessage = err instanceof Error ? err.message : 'Gagal menyimpan data penyelesaian';
       showError(errorMessage);
     } finally {
+      setIsUploading(false);
       setIsSubmitting(false);
     }
   };
 
   const handleClose = () => {
     if (isSubmitting || isUploading) return;
-    setCatatanAdmin('');
-    setFoto(null);
+    resetForm();
     onClose();
   };
 
@@ -209,16 +216,16 @@ export default function CompletionModal({
                 Foto Bukti Penyelesaian (Opsional)
               </label>
 
-              {foto ? (
+              {fotoPreview ? (
                 <div className="relative rounded-xl overflow-hidden bg-surface-container-low">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={foto}
+                    src={fotoPreview}
                     alt="Bukti penyelesaian"
                     className="w-full h-48 object-cover"
                   />
                   <button
-                    onClick={() => setFoto(null)}
+                    onClick={clearSelectedFoto}
                     disabled={isSubmitting}
                     className="absolute top-2 right-2 p-2 bg-black/60 hover:bg-black/80 rounded-lg transition-colors disabled:opacity-50"
                   >
@@ -242,13 +249,9 @@ export default function CompletionModal({
                       disabled={isUploading || isSubmitting}
                       className="flex flex-col items-center justify-center gap-2 p-6 bg-surface-container-low hover:bg-surface-container-high rounded-xl border border-outline-variant/15 transition-colors disabled:opacity-50"
                     >
-                      {isUploading ? (
-                        <Spinner size="sm" />
-                      ) : (
-                        <Upload className="w-6 h-6 text-primary" strokeWidth={1.5} />
-                      )}
+                      <Upload className="w-6 h-6 text-primary" strokeWidth={1.5} />
                       <span className="text-xs font-medium text-on-surface">
-                        {isUploading ? 'Mengunggah...' : 'Pilih File'}
+                        Pilih File
                       </span>
                     </button>
 
@@ -290,7 +293,12 @@ export default function CompletionModal({
               disabled={isSubmitting || isUploading || !catatanAdmin.trim()}
               className="px-5 py-2.5 bg-primary hover:bg-primary-dim text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
             >
-              {isSubmitting ? (
+              {isUploading ? (
+                <>
+                  <Loader className="w-4 h-4 animate-spin" strokeWidth={2} />
+                  Mengunggah...
+                </>
+              ) : isSubmitting ? (
                 <>
                   <Loader className="w-4 h-4 animate-spin" strokeWidth={2} />
                   Menyimpan...

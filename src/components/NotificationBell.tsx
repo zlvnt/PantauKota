@@ -3,12 +3,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bell, CheckCheck, Loader2, X } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useSession } from '@/hooks/useAuthSession';
 import { useRouter } from 'next/navigation';
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { data: session } = useSession();
   const { notifikasi, unreadCount, loading, tandaiBaca, tandaiBacaSemua, hapusNotifikasi } = useNotifications();
 
   useEffect(() => {
@@ -24,7 +26,13 @@ export default function NotificationBell() {
   const handleKlik = async (id: string, laporanId: string | null) => {
     await tandaiBaca(id);
     setOpen(false);
-    if (laporanId) router.push(`/laporan/${laporanId}`);
+    if (laporanId) {
+      const href =
+        session?.user?.role === 'ADMIN'
+          ? `/dashboard/laporan/${laporanId}`
+          : `/laporan/${laporanId}`;
+      router.push(href);
+    }
   };
 
   return (
