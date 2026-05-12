@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import DashboardStatCards from '@/components/admin/DashboardStatCards';
 
-// Data fetching di server — tidak perlu API call
+// Data fetching di server - tidak perlu API call
 async function getDashboardStats() {
   const [totalLaporan, menunggu, diproses, selesai, totalUser] = await Promise.all([
     prisma.laporan.count(),
@@ -82,7 +82,7 @@ export default async function DashboardPage() {
                   <div className="min-w-0 flex flex-col justify-center">
                     <p className="text-sm font-bold text-on-surface truncate">{l.judul}</p>
                     <p className="text-[11px] font-semibold uppercase tracking-widest text-[#677177] mt-1">
-                      {l.user.name} • {l.kategori.nama}
+                      {l.user.name} - {l.kategori.nama}
                     </p>
                   </div>
                 </div>
