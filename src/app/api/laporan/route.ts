@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
+import { kirimNotifikasiAdmin } from '@/lib/notifications';
+
+export const dynamic = 'force-dynamic';
 
 // GET /api/laporan
 // Query params:
@@ -13,7 +16,7 @@ import { prisma } from '@/lib/prisma';
 // Auto-hide: Laporan SELESAI > 24 jam otomatis hilang dari peta
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getCurrentSession();
     const userId = session?.user?.id;
 
     const { searchParams } = req.nextUrl;
@@ -26,7 +29,7 @@ export async function GET(req: NextRequest) {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     // Build select object dynamically
-    const selectObject: any = {
+    const selectObject = {
       id: true,
       judul: true,
       latitude: true,
@@ -43,21 +46,17 @@ export async function GET(req: NextRequest) {
       _count: {
         select: { komentar: true },
       },
-    };
-
-    // PBI-10: Include votes hanya jika user login
-    if (userId) {
-      selectObject.votes = {
-        where: { userId },
+      votes: {
+        where: { userId: userId ?? '__anonymous__' },
         select: { id: true },
-      };
-    }
-
-    // Hanya tampilkan data pelapor untuk admin
-    if (adminView) {
-      selectObject.user = { select: { id: true, name: true } };
-      selectObject.selesaiAt = true; // Untuk cek 24 jam
-    }
+      },
+      ...(adminView
+        ? {
+            user: { select: { id: true, name: true } },
+            selesaiAt: true,
+          }
+        : {}),
+    } satisfies Prisma.LaporanSelect;
 
     const laporan = await prisma.laporan.findMany({
       where: {
@@ -111,7 +110,7 @@ export async function GET(req: NextRequest) {
 
     // Transform data: tambahkan _hasVoted field (PBI-10)
     const laporanWithVoteStatus = laporan.map((item) => {
-      const { votes, ...rest } = item as any;
+      const { votes, ...rest } = item;
       return {
         ...rest,
         _hasVoted: userId ? (votes?.length ?? 0) > 0 : false,
@@ -130,7 +129,7 @@ export async function GET(req: NextRequest) {
 
 // POST /api/laporan — Buat laporan baru
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Tidak terautentikasi.' }, { status: 401 });
   }
@@ -153,6 +152,19 @@ export async function POST(req: NextRequest) {
         longitude,
         alamat: alamat ?? null,
       },
+      select: {
+        id: true,
+        judul: true,
+        kategori: { select: { nama: true } },
+        user: { select: { name: true } },
+      },
+    });
+
+    await kirimNotifikasiAdmin({
+      judul: 'Laporan baru masuk',
+      pesan: `${laporan.user.name} membuat laporan "${laporan.judul}" pada kategori ${laporan.kategori.nama}.`,
+      laporanId: laporan.id,
+      excludeUserId: session.user.id,
     });
 
     return NextResponse.json({ id: laporan.id }, { status: 201 });

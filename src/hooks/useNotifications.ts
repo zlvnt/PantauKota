@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/hooks/useAuthSession';
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import { RealtimePostgresInsertPayload } from '@supabase/supabase-js';
 
 interface Notifikasi {
   id: string;
+  userId: string;
   judul: string;
   pesan: string;
   laporanId: string | null;
@@ -32,26 +35,36 @@ export function useNotifications() {
     }
   }, []);
 
-  // SSE connection
+  // Supabase Realtime subscription
   useEffect(() => {
     if (!session?.user?.id) return;
 
     fetchNotifikasi();
 
-    const es = new EventSource('/api/notifikasi/sse');
+    const supabase = createSupabaseBrowserClient();
+    const channelName = `notifikasi:${session.user.id}:${Date.now()}:${Math.random()
+      .toString(36)
+      .slice(2)}`;
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'Notifikasi',
+        },
+        (payload: RealtimePostgresInsertPayload<Notifikasi>) => {
+          if (payload.new && payload.new.userId === session.user.id) {
+            setNotifikasi((prev) => [payload.new as Notifikasi, ...prev]);
+          }
+        }
+      )
+      .subscribe();
 
-    es.onmessage = (e) => {
-      try {
-        const notif: Notifikasi = JSON.parse(e.data);
-        setNotifikasi((prev) => [notif, ...prev]);
-      } catch {
-        // ping frame, abaikan
-      }
+    return () => {
+      supabase.removeChannel(channel);
     };
-
-    es.onerror = () => es.close();
-
-    return () => es.close();
   }, [session?.user?.id, fetchNotifikasi]);
 
   const tandaiBacaSemua = useCallback(async () => {

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
 
 // GET /api/kategori
 // Query params:
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
 
     // ?all=true hanya untuk admin — validasi sesi
     if (all) {
-      const session = await getServerSession(authOptions);
+      const session = await getCurrentSession();
       if (!session || session.user.role !== 'ADMIN') {
         return NextResponse.json({ error: 'Tidak diizinkan.' }, { status: 403 });
       }
@@ -47,7 +48,7 @@ export async function GET(req: NextRequest) {
 // POST /api/kategori — Tambah kategori baru (khusus admin)
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getCurrentSession();
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Tidak diizinkan.' }, { status: 403 });
     }

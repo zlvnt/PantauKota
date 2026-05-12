@@ -25,7 +25,9 @@ export const metadata: Metadata = {
   description: "Aplikasi Lapor Lingkungan / PantauKota",
   manifest: "/manifest.json",
   icons: {
-    apple: "/icons/icon-192x192.png",
+    icon: "/icons/icon-192x192.png",
+    shortcut: "/icons/icon-192x192.png",
+    apple: "/icons/apple-touch-icon.png",
   },
 };
 

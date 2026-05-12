@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession, signOut } from '@/hooks/useAuthSession';
 import { useLaporanMap } from '@/hooks/useLaporanMap';
 import { STATUS_CONFIG } from '@/types/laporan';
 import type { KategoriItem } from '@/types/laporan';
@@ -142,7 +142,7 @@ export default function PetaPage() {
   }, []);
 
   // Hook Laporan
-  const { laporan, isLoading, refetch } = useLaporanMap({
+  const { laporan } = useLaporanMap({
     search: searchTerm || undefined,
     kategoriId: selectedKategoriId || undefined,
     status: selectedStatus || undefined,

@@ -9,6 +9,7 @@ import Spinner from '@/components/ui/Spinner';
 import Toast from '@/components/ui/Toast';
 import CameraModal from '@/components/ui/CameraModal';
 import { useToast } from '@/hooks/useToast';
+import { uploadCompressedImage } from '@/lib/client-image';
 import type { KategoriItem } from '@/types/laporan';
 
 const LocationPicker = dynamic(() => import('@/components/map/LocationPicker'), {
@@ -73,15 +74,7 @@ export default function BuatLaporanPage() {
 
     setSubmitting(true);
     try {
-      const uploadedUrls: string[] = [];
-      for (const file of fotoFiles) {
-        const fd = new FormData();
-        fd.append('file', file);
-        const res = await fetch('/api/upload', { method: 'POST', body: fd });
-        if (!res.ok) throw new Error('Gagal mengunggah foto.');
-        const data = await res.json();
-        uploadedUrls.push(data.url);
-      }
+      const uploadedPhotos = await Promise.all(fotoFiles.map(uploadCompressedImage));
 
       const res = await fetch('/api/laporan', {
         method: 'POST',
@@ -90,7 +83,7 @@ export default function BuatLaporanPage() {
           judul: judul.trim(),
           deskripsi: deskripsi.trim(),
           kategoriId,
-          foto: uploadedUrls,
+          foto: uploadedPhotos,
           latitude: lokasi.latitude,
           longitude: lokasi.longitude,
           alamat: lokasi.alamat,

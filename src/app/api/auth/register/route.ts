@@ -1,21 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
-// Validasi input menggunakan Zod
 const RegisterSchema = z.object({
   name: z.string().min(2, 'Nama minimal 2 karakter'),
   email: z.string().email('Format email tidak valid'),
   password: z.string().min(8, 'Kata sandi minimal 8 karakter'),
 });
 
+function getAppUrl(req: NextRequest) {
+  const configuredUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL;
+  if (configuredUrl) return configuredUrl.replace(/\/$/, '');
+
+  const forwardedProto = req.headers.get('x-forwarded-proto');
+  const forwardedHost = req.headers.get('x-forwarded-host');
+
+  if (forwardedHost) {
+    return `${forwardedProto ?? 'https'}://${forwardedHost}`;
+  }
+
+  return req.nextUrl.origin;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-
-    // Validasi input
     const result = RegisterSchema.safeParse(body);
+
     if (!result.success) {
       return NextResponse.json(
         { error: result.error.issues[0].message },
@@ -23,9 +35,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, email, password } = result.data;
+    const { name, password } = result.data;
+    const email = result.data.email.toLowerCase();
 
-    // Cek apakah email sudah terdaftar
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       return NextResponse.json(
@@ -34,16 +46,37 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const supabase = createSupabaseServerClient();
+    const emailRedirectTo = `${getAppUrl(req)}/auth/callback?next=/beranda`;
 
-    // Buat user baru (role default: WARGA)
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo,
+        data: { name, role: 'WARGA' },
+      },
+    });
+
+    if (error) {
+      return NextResponse.json(
+        { error: error.message || 'Gagal membuat akun Supabase Auth' },
+        { status: 400 }
+      );
+    }
+
     await prisma.user.create({
-      data: { name, email, password: hashedPassword },
+      data: {
+        name,
+        email,
+      },
     });
 
     return NextResponse.json(
-      { message: 'Akun berhasil dibuat' },
+      {
+        message: 'Akun berhasil dibuat',
+        needsEmailConfirmation: !data.session,
+      },
       { status: 201 }
     );
   } catch (error) {

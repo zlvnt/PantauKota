@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+
+export const dynamic = 'force-dynamic';
 
 // Schema untuk update profil
 const updateProfileSchema = z.object({
@@ -15,7 +16,7 @@ const updateProfileSchema = z.object({
 // GET - Ambil data profil user
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getCurrentSession();
     
     if (!session?.user?.id) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -46,7 +47,7 @@ export async function GET() {
 // PATCH - Update profil user
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getCurrentSession();
     
     if (!session?.user?.id) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -91,7 +92,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Siapkan data update
-    const updateData: { name: string; password?: string } = { name };
+    const updateData: { name: string } = { name };
 
     // Jika ingin mengubah password
     if (newPassword) {
@@ -99,15 +100,23 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ message: 'Password saat ini diperlukan' }, { status: 400 });
       }
 
-      // Verifikasi password saat ini
-      const isPasswordValid = await bcrypt.compare(currentPassword, currentUser.password);
-      if (!isPasswordValid) {
+      const supabase = createSupabaseServerClient();
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: currentUser.email,
+        password: currentPassword,
+      });
+
+      if (verifyError) {
         return NextResponse.json({ message: 'Password saat ini salah' }, { status: 400 });
       }
 
-      // Hash password baru
-      const hashedNewPassword = await bcrypt.hash(newPassword, 12);
-      updateData.password = hashedNewPassword;
+      const { error: updatePasswordError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (updatePasswordError) {
+        return NextResponse.json({ message: 'Gagal memperbarui password' }, { status: 400 });
+      }
     }
 
     // Update user

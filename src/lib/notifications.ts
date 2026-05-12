@@ -1,22 +1,14 @@
 import { prisma } from '@/lib/prisma';
 
-// Simpan di globalThis agar tidak di-reset saat Next.js HMR (hot reload).
-// Tanpa ini, Map akan dikosongkan setiap kali ada perubahan kode di development,
-// menyebabkan SSE push tidak bekerja meski koneksi masih aktif.
-declare global {
-  // eslint-disable-next-line no-var
-  var sseClients: Map<string, ReadableStreamDefaultController> | undefined;
-}
-
-const sseClients: Map<string, ReadableStreamDefaultController> =
-  globalThis.sseClients ?? (globalThis.sseClients = new Map());
-
-export function registerSSEClient(userId: string, controller: ReadableStreamDefaultController) {
-  sseClients.set(userId, controller);
-}
-
-export function unregisterSSEClient(userId: string) {
-  sseClients.delete(userId);
+async function getAdminRecipients(excludeUserId?: string) {
+  return prisma.user.findMany({
+    where: {
+      role: 'ADMIN',
+      isActive: true,
+      ...(excludeUserId ? { id: { not: excludeUserId } } : {}),
+    },
+    select: { id: true },
+  });
 }
 
 export async function kirimNotifikasi({
@@ -30,20 +22,69 @@ export async function kirimNotifikasi({
   pesan: string;
   laporanId?: string;
 }) {
-  const notifikasi = await prisma.notifikasi.create({
+  return prisma.notifikasi.create({
     data: { userId, judul, pesan, laporanId },
   });
+}
 
-  // Push real-time ke client jika sedang online
-  const controller = sseClients.get(userId);
-  if (controller) {
-    try {
-      const data = `data: ${JSON.stringify(notifikasi)}\n\n`;
-      controller.enqueue(new TextEncoder().encode(data));
-    } catch {
-      sseClients.delete(userId);
-    }
-  }
+export async function kirimNotifikasiAdmin({
+  judul,
+  pesan,
+  laporanId,
+  excludeUserId,
+}: {
+  judul: string;
+  pesan: string;
+  laporanId?: string;
+  excludeUserId?: string;
+}) {
+  const admins = await getAdminRecipients(excludeUserId);
+  if (admins.length === 0) return { count: 0 };
 
-  return notifikasi;
+  return prisma.notifikasi.createMany({
+    data: admins.map((admin) => ({
+      userId: admin.id,
+      judul,
+      pesan,
+      laporanId,
+    })),
+  });
+}
+
+export async function kirimNotifikasiDaruratAdmin({
+  laporanId,
+  judulLaporan,
+  pesan,
+  excludeUserId,
+}: {
+  laporanId: string;
+  judulLaporan: string;
+  pesan: string;
+  excludeUserId?: string;
+}) {
+  const judul = 'Laporan darurat perlu ditinjau';
+  const admins = await getAdminRecipients(excludeUserId);
+  if (admins.length === 0) return { count: 0 };
+
+  const existing = await prisma.notifikasi.findMany({
+    where: {
+      laporanId,
+      judul,
+      userId: { in: admins.map((admin) => admin.id) },
+    },
+    select: { userId: true },
+  });
+  const notifiedAdminIds = new Set(existing.map((item) => item.userId));
+  const recipients = admins.filter((admin) => !notifiedAdminIds.has(admin.id));
+
+  if (recipients.length === 0) return { count: 0 };
+
+  return prisma.notifikasi.createMany({
+    data: recipients.map((admin) => ({
+      userId: admin.id,
+      judul,
+      pesan: `${pesan} "${judulLaporan}".`,
+      laporanId,
+    })),
+  });
 }

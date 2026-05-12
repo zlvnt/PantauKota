@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/hooks/useAuthSession';
 import { Trash2, Send, MessageSquare, Loader2 } from 'lucide-react';
 import Toast from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';

@@ -1,5 +1,4 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import AdminLayoutClient from '@/components/layout/AdminLayoutClient';
 
@@ -8,7 +7,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/profil'); // Redirect warga ke profil warga

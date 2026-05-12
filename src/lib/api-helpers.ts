@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 
 /**
  * Standardized error handler untuk API routes
@@ -54,10 +55,10 @@ export function buildLaporanWhereClause(filters: {
   userId?: string;
   search?: string;
   adminView?: boolean;
-}) {
+}): Prisma.LaporanWhereInput {
   const { status, kategoriId, userId, search, adminView } = filters;
   
-  const conditions: any[] = [];
+  const conditions: Prisma.LaporanWhereInput[] = [];
 
   // Filter status
   if (status) {

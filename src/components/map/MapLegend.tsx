@@ -10,7 +10,7 @@ interface MapLegendProps {
  * Legend komponen untuk menampilkan keterangan warna marker di peta
  * 
  * Warna marker:
- * - 🔴 Merah: Prioritas (manual flag atau skor ≥30)
+ * - 🔴 Merah: Prioritas Darurat
  * - 🟡 Amber: Status MENUNGGU
  * - 🔵 Blue: Status DIPROSES
  * - 🟢 Green: Status SELESAI
@@ -20,7 +20,7 @@ export default function MapLegend({ className = '' }: MapLegendProps) {
     {
       color: PRIORITY_COLOR,
       label: 'Prioritas Darurat',
-      description: '30+ suara atau flag manual',
+      description: '50+ suara',
     },
     {
       color: STATUS_CONFIG.MENUNGGU.color,

@@ -22,6 +22,35 @@ const nextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        // Terapkan ke semua halaman
+        source: "/(.*)",
+        headers: [
+          {
+            // Izinkan browser memuat resource dari Cloudinary tanpa blokir tracking prevention
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://*.tile.openstreetmap.org https://unpkg.com",
+              "media-src 'self' blob:",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.cloudinary.com",
+              "frame-src 'none'",
+            ].join("; "),
+          },
+          {
+            // Informasikan browser bahwa ini bukan tracker
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=(self)",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default withPWA(nextConfig);

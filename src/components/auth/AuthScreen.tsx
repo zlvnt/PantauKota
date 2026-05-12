@@ -3,19 +3,22 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
-import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 
 interface AuthScreenProps {
   defaultIsLogin?: boolean;
+  initialError?: string;
+  initialNotice?: string;
 }
 
-export default function AuthScreen({ defaultIsLogin = true }: AuthScreenProps) {
+export default function AuthScreen({ defaultIsLogin = true, initialError = '', initialNotice = '' }: AuthScreenProps) {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(defaultIsLogin);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(initialError);
+  const [notice, setNotice] = useState(initialNotice);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -24,31 +27,42 @@ export default function AuthScreen({ defaultIsLogin = true }: AuthScreenProps) {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) setError(''); // Reset error saat user mengetik
+    if (error) setError('');
+    if (notice) setNotice('');
   };
 
-  // ─── Submit: Login via NextAuth ───────────────────────────────────────────
   const handleLogin = async () => {
     setIsLoading(true);
     setError('');
+    setNotice('');
 
-    const result = await signIn('credentials', {
-      email: formData.email,
+    const supabase = createSupabaseBrowserClient();
+    const { error: loginError } = await supabase.auth.signInWithPassword({
+      email: formData.email.toLowerCase(),
       password: formData.password,
-      redirect: false,
     });
 
-    setIsLoading(false);
-
-    if (result?.error) {
-      setError('Email atau kata sandi tidak valid. Periksa kembali.');
+    if (loginError) {
+      const message = loginError.message.toLowerCase();
+      setError(
+        message.includes('email not confirmed')
+          ? 'Email belum dikonfirmasi. Buka inbox email Anda lalu klik link konfirmasi dari Supabase.'
+          : 'Email atau kata sandi tidak valid. Periksa kembali.'
+      );
+      setIsLoading(false);
       return;
     }
 
-    // Redirect berdasarkan role — NextAuth session sudah berisi role
-    // Kita fetch session untuk cek role
     const sessionRes = await fetch('/api/auth/session');
     const session = await sessionRes.json();
+
+    setIsLoading(false);
+
+    if (!session?.user) {
+      setError('Akun berhasil masuk di Supabase Auth, tetapi profil aplikasi belum siap. Coba muat ulang halaman lalu masuk lagi.');
+      await supabase.auth.signOut();
+      return;
+    }
 
     if (session?.user?.role === 'ADMIN') {
       router.push('/dashboard');
@@ -61,6 +75,7 @@ export default function AuthScreen({ defaultIsLogin = true }: AuthScreenProps) {
   const handleRegister = async () => {
     setIsLoading(true);
     setError('');
+    setNotice('');
 
     // Validasi dasar di client
     if (formData.name.trim().length < 2) {
@@ -88,14 +103,14 @@ export default function AuthScreen({ defaultIsLogin = true }: AuthScreenProps) {
       return;
     }
 
-    // Langsung login setelah register berhasil
-    await signIn('credentials', {
-      email: formData.email,
-      password: formData.password,
-      redirect: false,
-    });
-
     setIsLoading(false);
+    if (data.needsEmailConfirmation) {
+      setIsLogin(true);
+      setFormData({ email: formData.email.toLowerCase(), password: '', name: '' });
+      setNotice('Pendaftaran berhasil. Kami mengirim link konfirmasi ke email Anda. Buka email tersebut, klik konfirmasi, lalu masuk kembali.');
+      return;
+    }
+
     router.push('/beranda');
   };
 
@@ -113,6 +128,7 @@ export default function AuthScreen({ defaultIsLogin = true }: AuthScreenProps) {
     setFormData({ email: '', password: '', name: '' });
     setShowPassword(false);
     setError('');
+    setNotice('');
   };
 
   return (
@@ -160,6 +176,13 @@ export default function AuthScreen({ defaultIsLogin = true }: AuthScreenProps) {
             <div className="flex items-start gap-2.5 mb-6 p-3.5 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700">
               <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" strokeWidth={2} />
               <span>{error}</span>
+            </div>
+          )}
+
+          {notice && (
+            <div className="flex items-start gap-2.5 mb-6 p-3.5 bg-[#006d4a]/10 rounded-lg text-sm text-[#006d4a]">
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" strokeWidth={2} />
+              <span>{notice}</span>
             </div>
           )}
 
@@ -236,12 +259,6 @@ export default function AuthScreen({ defaultIsLogin = true }: AuthScreenProps) {
                   <span className="ml-3 text-sm text-[#677177] group-hover:text-on-surface transition-colors">Tetap masuk</span>
                 </label>
               </div>
-            )}
-
-            {error && (
-              <p className="text-sm text-error bg-error/10 px-4 py-2.5 rounded-[0.375rem]">
-                {error}
-              </p>
             )}
 
             <button

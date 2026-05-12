@@ -1,5 +1,4 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import LaporanSayaClient from './LaporanSayaClient';
@@ -11,7 +10,7 @@ export const metadata = {
 };
 
 export default async function LaporanSayaPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
 
   if (!session?.user?.id) {
     redirect('/login');

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getCurrentSession } from '@/lib/auth';
 import { prisma } from "@/lib/prisma";
+
+export const dynamic = 'force-dynamic';
 
 // Radius deteksi duplikasi dalam kilometer
 const RADIUS_KM = 0.5;
@@ -22,7 +23,7 @@ function hitungJarak(lat1: number, lon1: number, lat2: number, lon2: number): nu
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

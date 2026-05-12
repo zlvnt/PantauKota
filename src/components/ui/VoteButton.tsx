@@ -2,7 +2,7 @@
 
 import { ThumbsUp } from 'lucide-react';
 import { useVote } from '@/hooks/useVote';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/hooks/useAuthSession';
 import { useState, useEffect } from 'react';
 
 interface VoteButtonProps {

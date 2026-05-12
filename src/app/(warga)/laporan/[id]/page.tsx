@@ -1,6 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { STATUS_CONFIG } from '@/types/laporan';
 import { Calendar, MapPin, User, ArrowLeft } from 'lucide-react';
@@ -9,6 +8,7 @@ import VoteButton from '@/components/ui/VoteButton';
 import KomentarSection from '@/components/komentar/KomentarSection';
 import StatusTimeline from '@/components/laporan/StatusTimeline';
 import DeleteLaporanButton from '@/components/laporan/DeleteLaporanButton';
+import { CLOUDINARY_DETAIL_IMAGE_OPTIONS, getCloudinaryImageUrl } from '@/lib/cloudinary';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 
@@ -24,7 +24,7 @@ interface Props {
 }
 
 export default async function DetailLaporanPage({ params }: Props) {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
   const userId = session?.user?.id;
 
   // ── Smart Redirect: Admin → Admin Dashboard ──────────────────────────────
@@ -124,13 +124,21 @@ export default async function DetailLaporanPage({ params }: Props) {
               <div className="relative bg-surface-container-lowest rounded-2xl shadow-ambient overflow-hidden h-72 sm:h-80">
                 {laporan.foto.length === 1 ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={laporan.foto[0]} alt={`Foto ${laporan.judul}`} className="w-full h-full object-cover" />
+                  <img
+                    src={getCloudinaryImageUrl(laporan.foto[0], CLOUDINARY_DETAIL_IMAGE_OPTIONS)}
+                    alt={`Foto ${laporan.judul}`}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <div className="flex h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide">
                     {laporan.foto.map((url, i) => (
                       <div key={i} className="relative shrink-0 w-full h-full snap-center">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={url} alt={`Foto ${laporan.judul} ${i + 1}`} className="w-full h-full object-cover" />
+                        <img
+                          src={getCloudinaryImageUrl(url, CLOUDINARY_DETAIL_IMAGE_OPTIONS)}
+                          alt={`Foto ${laporan.judul} ${i + 1}`}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                     ))}
                   </div>

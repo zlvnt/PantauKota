@@ -1,4 +1,5 @@
 import { CheckCircle, Clock, Loader2, CalendarCheck, MessageSquareText, ImageIcon } from 'lucide-react';
+import { CLOUDINARY_DETAIL_IMAGE_OPTIONS, getCloudinaryImageUrl } from '@/lib/cloudinary';
 
 type Status = 'MENUNGGU' | 'DIPROSES' | 'SELESAI';
 
@@ -21,15 +22,6 @@ const STEP_INDEX: Record<Status, number> = {
   DIPROSES: 1,
   SELESAI: 2,
 };
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('id-ID', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
 
 function formatDateTime(dateStr: string) {
   const date = new Date(dateStr);
@@ -183,7 +175,7 @@ export default function StatusTimeline({
               </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={fotoPenyelesaian}
+                src={getCloudinaryImageUrl(fotoPenyelesaian, CLOUDINARY_DETAIL_IMAGE_OPTIONS)}
                 alt="Bukti penyelesaian laporan"
                 className="w-full max-h-64 object-cover rounded-lg border border-green-200"
               />
