@@ -78,12 +78,12 @@ export default function AdminStatusUpdater({ laporanId, initialStatus, judul }: 
   const actions = [
     { status: 'MENUNGGU' as const, label: 'Menunggu', icon: Clock, activeClass: 'bg-amber-500 text-white', inactiveClass: 'bg-amber-50 text-amber-700 hover:bg-amber-100' },
     { status: 'DIPROSES' as const, label: 'Diproses', icon: Loader, activeClass: 'bg-blue-500 text-white', inactiveClass: 'bg-blue-50 text-blue-700 hover:bg-blue-100' },
-    { status: 'SELESAI' as const, label: 'Selesai', icon: CheckCircle, activeClass: 'bg-emerald-600 text-white', inactiveClass: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
+    { status: 'SELESAI' as const, label: 'Selesai', icon: CheckCircle, activeClass: 'bg-tertiary text-white', inactiveClass: 'bg-tertiary/10 text-tertiary hover:bg-tertiary/15' },
   ];
 
   return (
     <>
-      <div className="mt-6 pt-5 border-t border-outline-variant/15">
+      <div className="mt-6 pt-5">
         <div className="text-[11px] font-bold uppercase tracking-widest text-on-surface/60 mb-3">
           Ubah Status Laporan
         </div>

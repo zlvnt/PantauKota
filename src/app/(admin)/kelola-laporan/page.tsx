@@ -202,7 +202,7 @@ export default function KelolaLaporanPage() {
         {isStatusModalOpen && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 px-4">
             <div className="bg-surface-container-lowest rounded-2xl shadow-ambient w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-              <div className="flex items-center justify-between p-5 border-b border-outline-variant/15">
+              <div className="flex items-center justify-between p-5 bg-surface-container-low">
                 <h3 className="font-display font-semibold text-on-surface text-lg">Pilih Status</h3>
                 <button
                   onClick={() => setIsStatusModalOpen(false)}
@@ -235,7 +235,7 @@ export default function KelolaLaporanPage() {
         {isKategoriModalOpen && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 px-4">
             <div className="bg-surface-container-lowest rounded-2xl shadow-ambient w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-              <div className="flex items-center justify-between p-5 border-b border-outline-variant/15">
+              <div className="flex items-center justify-between p-5 bg-surface-container-low">
                 <h3 className="font-display font-semibold text-on-surface text-lg">Pilih Kategori</h3>
                 <button
                   onClick={() => setIsKategoriModalOpen(false)}
@@ -284,7 +284,7 @@ export default function KelolaLaporanPage() {
         {isSortModalOpen && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 px-4">
             <div className="bg-surface-container-lowest rounded-2xl shadow-ambient w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-              <div className="flex items-center justify-between p-5 border-b border-outline-variant/15">
+              <div className="flex items-center justify-between p-5 bg-surface-container-low">
                 <h3 className="font-display font-semibold text-on-surface text-lg">Urutkan Berdasarkan</h3>
                 <button
                   onClick={() => setIsSortModalOpen(false)}
@@ -347,7 +347,7 @@ export default function KelolaLaporanPage() {
               <div
                 key={item.id}
                 onClick={() => router.push(`/dashboard/laporan/${item.id}`)}
-                className="bg-surface-container-lowest rounded-2xl shadow-ambient hover:shadow-[0_4px_16px_rgba(42,52,57,0.12)] transition-all cursor-pointer overflow-hidden"
+                className="bg-surface-container-lowest rounded-2xl shadow-ambient hover:bg-surface-container-low transition-all cursor-pointer overflow-hidden"
               >
                 <div className="p-4 sm:p-6">
                   <div className="flex flex-col sm:flex-row gap-4">
