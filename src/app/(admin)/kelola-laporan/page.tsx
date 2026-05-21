@@ -16,6 +16,7 @@ import {
   SlidersHorizontal,
   ChevronDown,
   X,
+  CheckCircle,
 } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
 import StatusBadge from '@/components/ui/Badge';

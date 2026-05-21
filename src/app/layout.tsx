@@ -3,6 +3,7 @@ import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import Providers from "@/components/Providers";
+import PWARegister from './pwa-register';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -39,6 +40,7 @@ export default function RootLayout({
   return (
     <html lang="id" className={cn("font-sans overflow-x-hidden", inter.variable, manrope.variable)}>
       <body className={`${inter.variable} ${manrope.variable} antialiased text-on-surface bg-surface overflow-x-hidden`}>
+        <PWARegister />
         <Providers>{children}</Providers>
       </body>
     </html>
