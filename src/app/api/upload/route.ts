@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
         .end(buffer);
     });
 
-    console.log('[Upload] Cloudinary public_id:', result.public_id);
+
     return NextResponse.json({
       publicId: result.public_id,
       url: result.secure_url,

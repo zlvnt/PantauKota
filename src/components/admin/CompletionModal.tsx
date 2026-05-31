@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Upload, Camera, Loader, CheckCircle } from 'lucide-react';
+import { X, Upload, Loader, CheckCircle } from 'lucide-react';
 import Toast from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { uploadCompressedImage } from '@/lib/client-image';
@@ -36,11 +36,7 @@ export default function CompletionModal({
     return () => setMounted(false);
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (fotoPreview) URL.revokeObjectURL(fotoPreview);
-    };
-  }, [fotoPreview]);
+
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -243,31 +239,15 @@ export default function CompletionModal({
                     className="hidden"
                   />
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div>
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading || isSubmitting}
-                      className="flex flex-col items-center justify-center gap-2 p-6 bg-surface-container-low hover:bg-surface-container-high rounded-xl border border-outline-variant/15 transition-colors disabled:opacity-50"
+                      className="w-full flex flex-col items-center justify-center gap-2 p-6 bg-surface-container-low hover:bg-surface-container-high rounded-xl border border-outline-variant/15 transition-colors disabled:opacity-50"
                     >
                       <Upload className="w-6 h-6 text-primary" strokeWidth={1.5} />
                       <span className="text-xs font-medium text-on-surface">
                         Pilih File
-                      </span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        if (fileInputRef.current) {
-                          fileInputRef.current.setAttribute('capture', 'environment');
-                          fileInputRef.current.click();
-                        }
-                      }}
-                      disabled={isUploading || isSubmitting}
-                      className="flex flex-col items-center justify-center gap-2 p-6 bg-surface-container-low hover:bg-surface-container-high rounded-xl border border-outline-variant/15 transition-colors disabled:opacity-50"
-                    >
-                      <Camera className="w-6 h-6 text-primary" strokeWidth={1.5} />
-                      <span className="text-xs font-medium text-on-surface">
-                        Ambil Foto
                       </span>
                     </button>
                   </div>
