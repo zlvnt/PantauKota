@@ -49,7 +49,7 @@ export default function BuatLaporanPage() {
     const files = Array.from(e.target.files ?? []).slice(0, 3 - fotoFiles.length);
     if (!files.length) return;
     setFotoFiles((prev) => [...prev, ...files]);
-    setFotoPreviews((prev) => [...prev, ...files.map(URL.createObjectURL)]);
+    setFotoPreviews((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
     e.target.value = '';
   };
 
