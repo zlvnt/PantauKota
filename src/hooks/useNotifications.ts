@@ -76,8 +76,13 @@ export function useNotifications() {
           table: 'Notifikasi',
         },
         (payload: RealtimePostgresInsertPayload<Notifikasi>) => {
-          if (payload.new && payload.new.userId === session.user.id) {
+        if (payload.new && payload.new.userId === session.user.id) {
             setNotifikasi((prev) => [payload.new as Notifikasi, ...prev]);
+
+            showBrowserNotification(
+              payload.new.judul,
+              payload.new.pesan
+            );
           }
         }
       )
