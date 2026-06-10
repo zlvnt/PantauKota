@@ -15,6 +15,17 @@ interface Notifikasi {
   createdAt: string;
 }
 
+function showBrowserNotification(title: string, body: string) {
+  if (!("Notification" in window)) return;
+
+  if (Notification.permission === "granted") {
+    new Notification(title, {
+      body,
+      icon: "/icon-192x192.png",
+    });
+  }
+}
+
 export function useNotifications() {
   const { data: session } = useSession();
   const [notifikasi, setNotifikasi] = useState<Notifikasi[]>([]);
