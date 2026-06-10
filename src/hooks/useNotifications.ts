@@ -48,7 +48,17 @@ export function useNotifications() {
 
   // Supabase Realtime subscription
   useEffect(() => {
-    if (!session?.user?.id) return;
+    useEffect(() => {
+  if (!session?.user?.id) return;
+
+  if (
+    "Notification" in window &&
+    Notification.permission === "default"
+  ) {
+    Notification.requestPermission();
+  }
+
+  fetchNotifikasi();
 
     fetchNotifikasi();
 
