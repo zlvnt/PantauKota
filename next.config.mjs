@@ -5,6 +5,11 @@ const withPWA = withPWAInit({
   disable: process.env.NODE_ENV === "development",
   register: true,
   skipWaiting: true,
+  buildExcludes: [
+    /app-build-manifest\.json$/,
+    /middleware-build-manifest\.js$/,
+    /middleware-manifest\.json$/,
+  ],
 });
 
 /** @type {import('next').NextConfig} */
