@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { kirimNotifikasi, kirimNotifikasiDaruratAdmin } from '@/lib/notifications';
+import { kirimNotifikasi } from '@/lib/notifications';
 import { kirimEmailNotifikasi } from '@/lib/email';
 import { z } from 'zod';
 
@@ -52,10 +52,9 @@ export async function GET(
   }
 }
 
-// PATCH /api/laporan/[id] — Admin update status atau prioritas laporan
+// PATCH /api/laporan/[id] — Admin update status laporan
 const UpdateSchema = z.object({
   status: z.enum(['MENUNGGU', 'DIPROSES', 'SELESAI']).optional(),
-  prioritas: z.boolean().optional(),
   catatanAdmin: z.string().optional(),
   fotoPenyelesaian: z.string().nullable().optional(),
 });
@@ -90,11 +89,11 @@ export async function PATCH(
       );
     }
 
-    const { status, prioritas, catatanAdmin, fotoPenyelesaian } = result.data;
+    const { status, catatanAdmin, fotoPenyelesaian } = result.data;
 
     const existing = await prisma.laporan.findUnique({
       where: { id: params.id },
-      select: { id: true, prioritas: true, status: true },
+      select: { id: true, status: true },
     });
 
     if (!existing) {
@@ -105,7 +104,6 @@ export async function PATCH(
       where: { id: params.id },
       data: {
         ...(status !== undefined ? { status } : {}),
-        ...(prioritas !== undefined ? { prioritas } : {}),
         ...(catatanAdmin !== undefined ? { catatanAdmin } : {}),
         ...(fotoPenyelesaian !== undefined ? { fotoPenyelesaian } : {}),
         ...(status === 'SELESAI' ? { selesaiAt: new Date() } : {}),
@@ -115,7 +113,6 @@ export async function PATCH(
         id: true,
         judul: true,
         status: true,
-        prioritas: true,
         voteCount: true,
         selesaiAt: true,
         userId: true,
@@ -149,23 +146,11 @@ export async function PATCH(
       }
     }
 
-    if (
-      prioritas === true &&
-      !existing.prioritas &&
-      updated.status !== 'SELESAI'
-    ) {
-      await kirimNotifikasiDaruratAdmin({
-        laporanId: updated.id,
-        judulLaporan: updated.judul,
-        pesan: `Admin menandai laporan sebagai prioritas darurat`,
-        excludeUserId: session.user.id,
-      });
-    }
+
 
     return NextResponse.json({
       id: updated.id,
       status: updated.status,
-      prioritas: updated.prioritas,
       selesaiAt: updated.selesaiAt,
     });
   } catch (error) {
