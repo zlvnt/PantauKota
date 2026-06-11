@@ -39,6 +39,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.cloudinary.com",
+              "worker-src 'self'",
               "frame-src 'none'",
             ].join("; "),
           },
