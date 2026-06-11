@@ -43,7 +43,7 @@ const nextConfig = {
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.cloudinary.com https://*.tile.openstreetmap.org https://unpkg.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.cloudinary.com https://res.cloudinary.com https://*.tile.openstreetmap.org https://nominatim.openstreetmap.org https://unpkg.com https://images.unsplash.com https://fonts.googleapis.com https://fonts.gstatic.com",
               "worker-src 'self'",
               "frame-src 'none'",
             ].join("; "),
